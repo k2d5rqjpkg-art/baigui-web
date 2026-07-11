@@ -30,8 +30,9 @@ export default defineConfig({
         'src/core/sim/index.ts',
         'src/core/components.ts',
         'src/core/ecs.ts',
-        'src/core/llm/**', // LLM 靠 fallback + scripts/test-llm.ts 验证
         'src/core/log.ts', // 测试覆盖
+        // LLM 的脚本端到端测试在 scripts/test-llm.ts, 但 client/cache/fallback/index 由 vitest 覆盖
+        'src/core/llm/prompts/**',
       ],
       // 阈值只针对 sim 核心 + game.ts (浏览器 sim 集成层)
       // 这两个是项目核心逻辑,必须保持高覆盖
@@ -41,6 +42,28 @@ export default defineConfig({
           functions: 80,
           branches: 75,
           statements: 85,
+        },
+        'src/core/llm/': {
+          lines: 80,
+          functions: 85,
+          branches: 75,
+          statements: 80,
+        },
+        'server/state.ts': {
+          lines: 75,
+          functions: 80,
+          branches: 65,
+          statements: 75,
+        },
+        'server/bridge.ts': {
+          // bridge.ts 是 HTTP 入口, 80% 是 HTTP 路由 (createServer + req/res 处理)
+          // 单测覆盖 computeRewardFromEvents (纯函数) + 部分 utils
+          // 完整 HTTP 覆盖靠 scripts/test-multiplayer.ts E2E
+          // 阈值定很低反映单测范围
+          lines: 10,
+          functions: 15,
+          branches: 10,
+          statements: 10,
         },
         'src/hosts/browser/game.ts': {
           lines: 75,

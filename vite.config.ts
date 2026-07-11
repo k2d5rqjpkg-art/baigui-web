@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
@@ -9,6 +10,64 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  plugins: [
+    VitePWA({
+      // Day8+ PWA: 离线 cache + installable
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg'],
+      manifest: {
+        name: '百鬼夜行录',
+        short_name: '百鬼夜行',
+        description: 'Hundred Night Parade — 浏览器肉鸽 MMO',
+        theme_color: '#1a1a2e',
+        background_color: '#1a1a2e',
+        display: 'fullscreen',
+        orientation: 'landscape',
+        start_url: './',
+        scope: './',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        // 预缓存主 bundle (启动时直接可用)
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // 运行时缓存策略
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.deepseek\.com\//,
+            handler: 'NetworkOnly', // LLM API 不缓存 (避免 stale)
+            options: {
+              backgroundSync: { name: 'llm-queue', options: { maxRetentionTime: 24 * 60 } },
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+        ],
+      },
+    }),
+  ],
   server: {
     port: 3000,
     open: false,

@@ -113,4 +113,78 @@ describe('BrowserGame', () => {
     game.reset();
     expect(deathCalled).toBe(false); // 没死
   });
+
+  // ============ Day3: AI + auto-pickup ============
+
+  it('computeAutoPickup 在玩家与物品同格时生成 pickup action', () => {
+    // 找一个 item entity, 把它挪到玩家旁边 (1 格内)
+    const state = game.getState();
+    const player = state.entities[BrowserGame.PLAYER_ID];
+    const itemEntry = Object.entries(state.entities).find(([_, e]) => e.kind === 'item');
+    expect(itemEntry).toBeTruthy();
+    if (!itemEntry) return;
+    const [itemId, item] = itemEntry;
+    // 直接 mutate sim state 模拟 "玩家走到物品上" 的情况
+    // 通过 Reflect 是因为 state 是 readonly
+    (game as any).state.entities[itemId] = {
+      ...item,
+      pos: { x: player.pos.x, y: player.pos.y },
+    };
+    const pickupActions = (game as any).computeAutoPickup() as any[];
+    expect(pickupActions.length).toBeGreaterThanOrEqual(1);
+    expect(pickupActions[0].type).toBe('pickup');
+    expect(pickupActions[0].entityId).toBe(BrowserGame.PLAYER_ID);
+    expect(pickupActions[0].payload.itemId).toBe(itemId);
+  });
+
+  it('computeAIActions 在玩家邻接怪物时生成 attack action', () => {
+    const state = game.getState();
+    const player = state.entities[BrowserGame.PLAYER_ID];
+    const monsterEntry = Object.entries(state.entities).find(
+      ([_, e]) => e.kind === 'monster' && e.hp > 0,
+    );
+    expect(monsterEntry).toBeTruthy();
+    if (!monsterEntry) return;
+    const [mId, m] = monsterEntry;
+    // 把怪物挪到玩家正右 1 格
+    (game as any).state.entities[mId] = {
+      ...m,
+      pos: { x: player.pos.x + 1, y: player.pos.y },
+    };
+    const aiActions = (game as any).computeAIActions() as any[];
+    const attackOnPlayer = aiActions.find(
+      (a) => a.type === 'attack' && a.payload.targetId === BrowserGame.PLAYER_ID,
+    );
+    expect(attackOnPlayer).toBeTruthy();
+  });
+
+  it('computeAIActions 在玩家远时怪物朝玩家移动', () => {
+    const state = game.getState();
+    const player = state.entities[BrowserGame.PLAYER_ID];
+    const monsterEntry = Object.entries(state.entities).find(
+      ([_, e]) => e.kind === 'monster' && e.hp > 0,
+    );
+    expect(monsterEntry).toBeTruthy();
+    if (!monsterEntry) return;
+    const [mId, m] = monsterEntry;
+    // 把怪物挪到玩家远 5 格 (玩家 (px, py), 怪物 (px, py+5))
+    (game as any).state.entities[mId] = {
+      ...m,
+      pos: { x: player.pos.x, y: player.pos.y + 5 },
+    };
+    const aiActions = (game as any).computeAIActions() as any[];
+    const moveOnMonster = aiActions.find((a) => a.entityId === mId && a.type === 'move');
+    expect(moveOnMonster).toBeTruthy();
+    // dy > 0, 应该朝 -1 方向移动 (向上 = 朝玩家)
+    expect(moveOnMonster!.payload.dy).toBe(-1);
+  });
+
+  it('玩家死亡时 AI 不再生成 actions', () => {
+    const state = game.getState();
+    const player = state.entities[BrowserGame.PLAYER_ID];
+    // 强制设 hp=0
+    (game as any).state.entities[BrowserGame.PLAYER_ID] = { ...player, hp: 0 };
+    const aiActions = (game as any).computeAIActions() as any[];
+    expect(aiActions.length).toBe(0);
+  });
 });

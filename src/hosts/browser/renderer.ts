@@ -18,8 +18,21 @@
 import * as THREE from 'three';
 import type { BrowserGame } from './game';
 import type { SimEntity, GameEvent } from '../../core/sim';
+import {
+  createPlayerTexture,
+  createEnemyTexture,
+} from '../../entities/sprites';
+import type { EnemyType } from '../../core/components';
 
 const CELL_SIZE = 0.18; // sim 1 格 = 0.18 世界单位 (40x30 地图 → 7.2 x 5.4 世界单位)
+
+// sim 怪物 (5 种) → Day0 EnemyType (4 种) 映射, 按 baseLevel 选最贴切的 sprite
+function pickEnemySpriteType(level: number): EnemyType {
+  if (level >= 8) return '夜叉';
+  if (level >= 5) return '妖狐';
+  if (level >= 3) return '兵煞';
+  return '游魂';
+}
 
 export class GameRenderer {
   private scene: THREE.Scene;
@@ -185,15 +198,6 @@ export class GameRenderer {
 
       // 更新位置
       mesh.position.set(this.gridX(e.pos.x), this.gridY(e.pos.y), 0);
-
-      // HP 条 (怪物头顶)
-      const hpBar = (mesh as any).__hpBar as THREE.PlaneGeometry | undefined;
-      if (hpBar && e.kind === 'monster' && e.maxHp > 0) {
-        const ratio = e.hp / e.maxHp;
-        hpBar.scale(ratio, 1, 1);
-        // 简化:直接缩放 x
-        (mesh as any).__hpRatio = ratio;
-      }
     }
 
     // 清理已不存在的 entities
@@ -208,42 +212,22 @@ export class GameRenderer {
   /** 根据 entity kind 创建对应 mesh */
   private createMesh(e: SimEntity): THREE.Object3D {
     if (e.kind === 'player') {
-      // 玩家: 64x64 像素风格 sprite (用色块占位, 后面 Day3 接 sprite 图)
-      const tex = this.makePlayerTexture();
+      // 玩家: Day0 像素风 sprite (默认书生职业)
+      const tex = createPlayerTexture('书生');
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
       const sprite = new THREE.Sprite(mat);
       sprite.scale.set(CELL_SIZE * 1.2, CELL_SIZE * 1.2, 1);
       return sprite;
     }
     if (e.kind === 'monster') {
-      // 怪物: 红色方块 + 头顶 HP 条
-      const group = new THREE.Group();
-      const tex = this.makeMonsterTexture();
+      // 怪物: Day0 sprite 工厂
+      const tex = createEnemyTexture(pickEnemySpriteType(e.level));
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
       const sprite = new THREE.Sprite(mat);
       sprite.scale.set(CELL_SIZE * 1.0, CELL_SIZE * 1.0, 1);
-      group.add(sprite);
-
-      // HP 条 (背景)
-      const hpBg = new THREE.Mesh(
-        new THREE.PlaneGeometry(CELL_SIZE * 0.9, CELL_SIZE * 0.12),
-        new THREE.MeshBasicMaterial({ color: 0x330000 }),
-      );
-      hpBg.position.set(0, CELL_SIZE * 0.65, 0.1);
-      group.add(hpBg);
-
-      // HP 条 (前景)
-      const hpFg = new THREE.Mesh(
-        new THREE.PlaneGeometry(CELL_SIZE * 0.9, CELL_SIZE * 0.12),
-        new THREE.MeshBasicMaterial({ color: 0xcc3333 }),
-      );
-      hpFg.position.set(0, CELL_SIZE * 0.65, 0.2);
-      group.add(hpFg);
-      (group as any).__hpBar = hpFg;
-
-      return group;
+      return sprite;
     }
-    // item: 金色光点
+    // item: 金色光点 (保留色块 — Day0 没做物品 sprite)
     const tex = this.makeItemTexture();
     const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
     const sprite = new THREE.Sprite(mat);
@@ -299,8 +283,7 @@ export class GameRenderer {
 
   /** sim grid X → Three.js world X (中心化) */
   private gridX(gx: number): number {
-    const mapSize = this.scene; // unused, just to keep reference
-    return void mapSize, (gx - 20) * CELL_SIZE;
+    return (gx - 20) * CELL_SIZE;
   }
 
   private gridY(gy: number): number {
@@ -350,36 +333,7 @@ export class GameRenderer {
     setTimeout(() => flash.remove(), 400);
   }
 
-  // ============ 临时色块纹理 (Day3 接 sprite 图) ============
-
-  private makePlayerTexture(): THREE.CanvasTexture {
-    return makeCanvasTexture(64, (ctx) => {
-      ctx.fillStyle = '#e8b87a';
-      ctx.fillRect(16, 24, 32, 36);
-      ctx.fillStyle = '#f5e6c8';
-      ctx.fillRect(18, 8, 28, 20);
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(22, 14, 6, 6);
-      ctx.fillRect(36, 14, 6, 6);
-      ctx.fillStyle = '#d4a017';
-      ctx.fillRect(20, 30, 24, 4);
-    });
-  }
-
-  private makeMonsterTexture(): THREE.CanvasTexture {
-    return makeCanvasTexture(64, (ctx) => {
-      ctx.fillStyle = '#8e44ad';
-      ctx.beginPath();
-      ctx.arc(32, 32, 22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ff3333';
-      ctx.fillRect(22, 28, 8, 8);
-      ctx.fillRect(34, 28, 8, 8);
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(24, 30, 4, 4);
-      ctx.fillRect(36, 30, 4, 4);
-    });
-  }
+  // ============ 物品临时色块 (Day0 没做物品 sprite, 后续替换) ============
 
   private makeItemTexture(): THREE.CanvasTexture {
     return makeCanvasTexture(64, (ctx) => {

@@ -272,8 +272,13 @@ export class BrowserGame {
     // 取出所有 pending actions (一次性处理)
     const actions = this.pendingActions.splice(0);
 
+    // 注入 AI actions (怪物主动追玩家) + auto-pickup
+    const aiActions = this.computeAIActions();
+    const autoPickup = this.computeAutoPickup();
+    const allActions = [...actions, ...aiActions, ...autoPickup];
+
     // 调 sim 核心
-    const result = simTick(this.state, actions, dt, { layout: this.layout });
+    const result = simTick(this.state, allActions, dt, { layout: this.layout });
 
     // 更新状态 (sim 返回新 state, 我们替换)
     this.state = result.state;
@@ -302,5 +307,87 @@ export class BrowserGame {
         if (this.onPlayerKill) this.onPlayerKill(e.target);
       }
     }
+  }
+
+  // ============ AI / 自动行为 (Day3) ============
+
+  /**
+   * 怪物 AI:
+   *   - 邻接玩家 (曼哈顿 ≤ 1) → 自动 attack
+   *   - 否则朝玩家方向移动一格 (每只怪物每 tick 都尝试一次)
+   *   - 跳过已死亡怪物
+   *   - 限制怪物总数 ≤ MAX_AI_PER_TICK, 防止一帧过多 action
+   *
+   * 复杂度: O(M) where M = alive monsters
+   */
+  private computeAIActions(): Action[] {
+    const player = this.state.entities[BrowserGame.PLAYER_ID];
+    if (!player || player.hp <= 0) return [];
+
+    const actions: Action[] = [];
+    const MAX_AI_PER_TICK = 8;
+    let aiCount = 0;
+
+    for (const [id, e] of Object.entries(this.state.entities) as [EntityId, SimEntity][]) {
+      if (aiCount >= MAX_AI_PER_TICK) break;
+      if (e.kind !== 'monster' || e.hp <= 0) continue;
+
+      const dx = player.pos.x - e.pos.x;
+      const dy = player.pos.y - e.pos.y;
+      const dist = Math.abs(dx) + Math.abs(dy);
+
+      if (dist <= 1) {
+        // 邻接 → 攻击
+        actions.push({
+          type: 'attack',
+          entityId: id,
+          payload: { targetId: BrowserGame.PLAYER_ID },
+        });
+      } else if (dist > 1 && dist <= 12) {
+        // 视野内 (≤12 曼哈顿) → 追玩家
+        // 选差值更大的轴先移动 (简单贪心)
+        const stepDx = Math.sign(dx);
+        const stepDy = Math.sign(dy);
+        if (Math.abs(dx) >= Math.abs(dy) && stepDx !== 0) {
+          actions.push({
+            type: 'move',
+            entityId: id,
+            payload: { dx: stepDx, dy: 0 },
+          });
+        } else if (stepDy !== 0) {
+          actions.push({
+            type: 'move',
+            entityId: id,
+            payload: { dx: 0, dy: stepDy },
+          });
+        }
+      }
+      aiCount++;
+    }
+
+    return actions;
+  }
+
+  /**
+   * Auto-pickup:
+   *   玩家与某物品同格子 → 自动 emit pickup action
+   *   (避免玩家需要按 E 才能拿东西 — 肉鸽标配)
+   */
+  private computeAutoPickup(): Action[] {
+    const player = this.state.entities[BrowserGame.PLAYER_ID];
+    if (!player || player.hp <= 0) return [];
+
+    const actions: Action[] = [];
+    for (const [id, e] of Object.entries(this.state.entities) as [EntityId, SimEntity][]) {
+      if (e.kind !== 'item') continue;
+      if (e.pos.x === player.pos.x && e.pos.y === player.pos.y) {
+        actions.push({
+          type: 'pickup',
+          entityId: BrowserGame.PLAYER_ID,
+          payload: { itemId: id },
+        });
+      }
+    }
+    return actions;
   }
 }

@@ -30,5 +30,20 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsInlineLimit: 0,
+    // Three.js 本身就 500KB+,超过 Vite 默认 500KB warning 阈值是必然的
+    // 调到 1MB 让 warning 不打扰,真实性能影响用动态 import 优化 (Day5+ P1)
+    chunkSizeWarningLimit: 1024,
+    rollupOptions: {
+      output: {
+        // 手动分 chunk 让浏览器优先缓存 sim 核心和宿主代码
+        manualChunks(id) {
+          if (id.includes('/src/core/sim/')) return 'sim-core';
+          if (id.includes('/src/core/')) return 'core';
+          if (id.includes('/src/hosts/browser/')) return 'browser-host';
+          if (id.includes('/src/entities/')) return 'entities';
+          if (id.includes('node_modules')) return 'vendor';
+        },
+      },
+    },
   },
 });

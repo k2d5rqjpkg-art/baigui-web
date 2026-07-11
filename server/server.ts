@@ -22,6 +22,7 @@ import http from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { GameRoom, ROOM_PLAYER_ID } from './state.js';
 import type { Action, EntityId } from '../src/core/sim/types.js';
+import { log } from '../src/core/log.js';
 
 const PORT = parseInt(process.env.SERVER_PORT ?? '8787', 10);
 const TICK_HZ = 20;
@@ -49,7 +50,7 @@ const http_server = http.createServer((req, res) => {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('not found');
   } catch (err) {
-    console.error('[ws-http] error:', err);
+    log.error('[ws-http] error:', err);
     try {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('internal error');
@@ -64,7 +65,7 @@ function broadcast(msg: object) {
   for (const ws of wss.clients) {
     if (ws.readyState === WebSocket.OPEN) {
       try { ws.send(data); }
-      catch (err) { console.error('[ws] broadcast error:', err); }
+      catch (err) { log.error('[ws] broadcast error:', err); }
     }
   }
 }
@@ -117,7 +118,7 @@ function translateDiscrete(
 wss.on('connection', (ws: WebSocket) => {
   // 每个连接默认占 RL slot (e_player_1),复杂分配留 Day2
   let assignedEid: EntityId = ROOM_PLAYER_ID;
-  console.log(`[ws] connected, total=${wss.clients.size}`);
+  log.info(`[ws] connected, total=${wss.clients.size}`);
 
   ws.on('message', (raw) => {
     try {
@@ -128,7 +129,7 @@ wss.on('connection', (ws: WebSocket) => {
           // 让 client 占一个 slot;若 RL slot 已占,fallback to first free
           const wanted = Number(msg.slotId ?? 1);
           const eid = room.addPlayer(wanted);
-          if (eid == null) {
+          if (eid === null || eid === undefined) {
             // 没 slot 了,继续用 RL slot
             assignedEid = ROOM_PLAYER_ID;
           } else {
@@ -161,7 +162,7 @@ wss.on('connection', (ws: WebSocket) => {
       }
     } catch (err) {
       // bad JSON / handler error — 不让 server 崩
-      console.error('[ws] message error:', err);
+      log.error('[ws] message error:', err);
       try {
         ws.send(JSON.stringify({ type: 'error', message: 'bad message' }));
       } catch { /* socket closed */ }
@@ -170,23 +171,23 @@ wss.on('connection', (ws: WebSocket) => {
 
   ws.on('close', () => {
     try { room.removePlayer(assignedEid); }
-    catch (err) { console.error('[ws] removePlayer error:', err); }
-    console.log(`[ws] closed, total=${wss.clients.size}`);
+    catch (err) { log.error('[ws] removePlayer error:', err); }
+    log.info(`[ws] closed, total=${wss.clients.size}`);
   });
 
   ws.on('error', (err) => {
-    console.error('[ws] socket error:', err);
+    log.error('[ws] socket error:', err);
   });
 });
 
 wss.on('error', (err) => {
-  console.error('[ws] server error:', err);
+  log.error('[ws] server error:', err);
 });
 
 // 20Hz tick loop —— try/catch 包住,不让单次错误中断 server
 setInterval(() => {
   try {
-    let actions: Action[] = [];
+    const actions: Action[] = [];
     if (pendingDiscrete.length > 0) {
       const items = pendingDiscrete;
       pendingDiscrete = [];
@@ -204,13 +205,13 @@ setInterval(() => {
       events: result.events,
     });
   } catch (err) {
-    console.error('[tick-loop] error:', err);
+    log.error('[tick-loop] error:', err);
   }
 }, TICK_DT_MS);
 
 http_server.listen(PORT, () => {
-  console.log(`[server] WebSocket + HTTP listening on http://localhost:${PORT}`);
-  console.log(`[server] ws://localhost:${PORT}  (WebSocket)`);
-  console.log(`[server] http://localhost:${PORT}/health`);
-  console.log(`[server] room=${room.id}, entities=${room.entityCount}, tickHz=${TICK_HZ}`);
+  log.info(`[server] WebSocket + HTTP listening on http://localhost:${PORT}`);
+  log.info(`[server] ws://localhost:${PORT}  (WebSocket)`);
+  log.info(`[server] http://localhost:${PORT}/health`);
+  log.info(`[server] room=${room.id}, entities=${room.entityCount}, tickHz=${TICK_HZ}`);
 });

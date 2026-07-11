@@ -17,6 +17,7 @@ import { GameRenderer } from './renderer';
 import { GameInput } from './input';
 import { GameHud } from './hud';
 import { GameClient, defaultWsUrl } from './network';
+import { log } from '../../core/log';
 /// <reference types="vite/client" />
 
 const CONTAINER_ID = 'game-container';
@@ -44,10 +45,10 @@ class BrowserHost {
       this.client?.hello(1);
     };
     this.client.onError = (msg) => {
-      console.warn('[host] server error:', msg.message);
+      log.warn('[host] server error:', msg.message);
     };
     this.client.onClose = () => {
-      console.log('[host] disconnected, will keep local mode if not yet in network');
+      log.info('[host] disconnected, will keep local mode if not yet in network');
     };
 
     this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
@@ -78,7 +79,7 @@ class BrowserHost {
 function startHost(): void {
   const container = document.getElementById(CONTAINER_ID);
   if (!container) {
-    console.error(`[host/browser] #${CONTAINER_ID} not found`);
+    log.error(`[host/browser] #${CONTAINER_ID} not found`);
     return;
   }
   // HMR 防御: 销毁旧实例
@@ -86,12 +87,12 @@ function startHost(): void {
     try {
       window[INSTANCE_KEY].dispose();
     } catch (err) {
-      console.warn('[host/browser] dispose old instance failed:', err);
+      log.warn('[host/browser] dispose old instance failed:', err);
     }
   }
   container.innerHTML = '';
   window[INSTANCE_KEY] = new BrowserHost(container);
-  console.log('[host/browser] started. WASD 移动 · J/空格 攻击 · E 拾取 · R 重置');
+  log.info('[host/browser] started. WASD 移动 · J/空格 攻击 · 自动拾取 · R 重置');
 }
 
 if (document.readyState === 'loading') {

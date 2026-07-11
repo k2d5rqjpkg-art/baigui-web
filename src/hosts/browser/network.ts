@@ -20,6 +20,7 @@
  */
 
 import type { GameEvent, SimEntity } from '../../core/sim';
+import { log } from '../../core/log';
 
 export type WsEventType = 'welcome' | 'state' | 'error';
 
@@ -106,7 +107,7 @@ export class GameClient {
     try {
       this.ws = new WebSocket(this.url);
     } catch (err) {
-      console.error('[client] WebSocket construct failed:', err);
+      log.error('[client] WebSocket construct failed:', err);
       this.scheduleReconnect();
       return;
     }
@@ -114,7 +115,7 @@ export class GameClient {
     this.ws.onopen = () => {
       this.connected = true;
       this.reconnectDelay = 1000; // 重置退避
-      console.log('[client] connected to', this.url);
+      log.info('[client] connected to', this.url);
       // flush pending intents
       const queued = this.pendingIntents.splice(0);
       for (const a of queued) {
@@ -134,12 +135,12 @@ export class GameClient {
             this.onState?.(msg);
             break;
           case 'error':
-            console.warn('[client] server error:', msg.message);
+            log.warn('[client] server error:', msg.message);
             this.onError?.(msg);
             break;
         }
       } catch (err) {
-        console.error('[client] bad message:', err);
+        log.error('[client] bad message:', err);
       }
     };
 
@@ -152,7 +153,7 @@ export class GameClient {
     };
 
     this.ws.onerror = (ev) => {
-      console.warn('[client] ws error:', ev);
+      log.warn('[client] ws error:', ev);
       // onclose 会跟着触发
     };
   }
@@ -161,7 +162,7 @@ export class GameClient {
     if (this.disposed) return;
     const delay = this.reconnectDelay;
     this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.MAX_RECONNECT_DELAY);
-    console.log(`[client] reconnect in ${delay}ms`);
+    log.info(`[client] reconnect in ${delay}ms`);
     setTimeout(() => this.connect(), delay);
   }
 
@@ -170,7 +171,7 @@ export class GameClient {
     try {
       this.ws.send(JSON.stringify(msg));
     } catch (err) {
-      console.error('[client] send failed:', err);
+      log.error('[client] send failed:', err);
     }
   }
 }

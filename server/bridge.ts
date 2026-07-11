@@ -22,13 +22,10 @@
  */
 
 import http from 'node:http';
-import { GameRoom, ROOM_PLAYER_ID } from './state.js';
-import type {
-  Action,
-  EntityId,
-  GameEvent,
-  SimEntity,
-} from '../src/core/sim/types.js';
+import { GameRoom } from './state.js';
+import { ROOM_PLAYER_ID } from './state.js';
+import type { Intent, EntityId, GameEvent, SimEntity } from '../src/core/sim/types.js';
+import { log } from '../src/core/log.js';
 
 const PORT = parseInt(process.env.PORT ?? process.env.SERVER_PORT ?? '8787', 10);
 const TICK_DT_MS = 50; // 20Hz
@@ -238,12 +235,12 @@ const server = http.createServer(async (req, res) => {
 
     send(res, 404, { error: 'not found', path: url.pathname });
   } catch (err) {
-    console.error('[bridge] handler error:', err);
+    log.error('[bridge] handler error:', err);
     send(res, 500, { error: String(err instanceof Error ? err.message : err) });
   }
 });
 
 server.listen(PORT, () => {
-  console.log(`[bridge] HTTP bridge + RL hook listening on http://localhost:${PORT}`);
-  console.log(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health`);
+  log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${PORT}`);
+  log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health`);
 });

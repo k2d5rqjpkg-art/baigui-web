@@ -17,7 +17,6 @@
  *   - events 流是渲染层唯一的更新信号
  */
 
-import * as THREE from 'three';
 import {
   tick as simTick,
   emptyState,
@@ -35,6 +34,7 @@ import type {
   EntityId,
   ItemTemplate,
 } from '../../core/sim';
+import { log } from '../../core/log';
 import type { GameClient, StateMessage, WelcomeMessage } from './network';
 
 // ============ 类型 ============
@@ -104,7 +104,7 @@ export class BrowserGame {
   // 玩家死亡回调
   onPlayerDeath?: () => void;
 
-  // 玩家击杀回调 (用于音效/特效)
+  // 玩家击杀回调 (用于音效/特效) — Day4 占位, 主流程暂未订阅
   onPlayerKill?: (monsterId: EntityId) => void;
 
   constructor(options: BrowserGameOptions = {}) {
@@ -173,7 +173,7 @@ export class BrowserGame {
         entities: entitiesArrayToRecord(msg.snapshot.entities),
       };
       this.mode = 'network';
-      console.log(`[game] switched to network mode, eid=${this.networkEid}`);
+      log.info(`[game] switched to network mode, eid=${this.networkEid}`);
     };
 
     client.onState = (msg: StateMessage) => {
@@ -187,7 +187,7 @@ export class BrowserGame {
       // emit events 给订阅者
       for (const e of msg.events) {
         for (const h of this.eventHandlers) {
-          try { h(e); } catch (err) { console.error('[game] event handler error:', err); }
+          try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
         }
       }
       // 死亡检测
@@ -199,7 +199,7 @@ export class BrowserGame {
 
     client.onClose = () => {
       if (this.mode === 'network') {
-        console.warn('[game] network disconnected, falling back to local');
+        log.warn('[game] network disconnected, falling back to local');
         this.mode = 'local';
         this.start();
       }
@@ -281,7 +281,7 @@ export class BrowserGame {
     // network 模式: 发 reset intent 给 server (Day4+ 优化: 单独 /reset endpoint)
     // 当前简化: 不支持 network reset, 玩家按 R 提示重连
     if (this.mode === 'network') {
-      console.warn('[game] reset() not supported in network mode, please reconnect');
+      log.warn('[game] reset() not supported in network mode, please reconnect');
       return;
     }
 
@@ -400,7 +400,7 @@ export class BrowserGame {
         try {
           h(e);
         } catch (err) {
-          console.error('[game] event handler error:', err);
+          log.error('[game] event handler error:', err);
         }
       }
     }

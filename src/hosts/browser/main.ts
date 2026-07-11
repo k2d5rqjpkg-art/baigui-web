@@ -1,19 +1,25 @@
 /**
  * src/hosts/browser/main.ts
  *
- * Day2: 浏览器宿主入口
+ * 浏览器宿主入口 (异步加载 Three.js)
  *
  * 启动流程:
  *   1. 找到 #game-container
- *   2. 创建 BrowserGame (sim 权威) + GameRenderer + GameInput + GameHud
- *   3. 启动 20Hz tick
- *   4. 启动 60Hz 渲染
+ *   2. 显示 loading 提示 (主 bundle < 50KB)
+ *   3. 异步 import three + GameRenderer (~350KB chunk)
+ *   4. 创建 BrowserGame + 渲染层 + 输入 + HUD
+ *   5. 启动 20Hz tick + 60Hz 渲染
  *
- * 防止 HMR 重复实例化 (Day0 历史教训)。
+ * bundle 优化:
+ *   - main.ts 不静态 import 'three' 或 GameRenderer
+ *   - Vite 自动 code-split, 三大块 chunk 异步加载
+ *   - 首屏 < 50KB, 加载完后才看到 3D 场景
  */
 
 import { BrowserGame } from './game';
-import { GameRenderer } from './renderer';
+// ⚠️ 不 import './renderer' (static 会把 three 549KB 拉进主 bundle)
+// 改成 dynamic import 进 async startGame()
+import type { GameRenderer } from './renderer';
 import { GameInput } from './input';
 import { GameHud } from './hud';
 import { GameClient, defaultWsUrl } from './network';
@@ -31,7 +37,7 @@ declare global {
 
 class BrowserHost {
   game: BrowserGame;
-  renderer: GameRenderer;
+  renderer: GameRenderer | null = null;  // 异步加载, 加载完才有
   input: GameInput;
   hud: GameHud;
   client: GameClient | null = null;
@@ -52,25 +58,31 @@ class BrowserHost {
     };
 
     this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
-    this.renderer = new GameRenderer(this.game, container);
     this.input = new GameInput(this.game);
     this.hud = new GameHud(this.game, container);
-
-    // 每帧 renderer 同步 sim state
-    this.game.onEvent(() => this.renderer.refresh(this.game));
 
     // HUD 主动刷新 (HP/level 变化)
     setInterval(() => this.hud.refresh(), 200);
 
-    // 启动 (network 模式不跑 tick, 但 start() 不报错)
+    // 启动 sim tick (network 模式不跑 tick, 但 start() 不报错)
     this.game.start();
+  }
+
+  /** 异步加载 Three.js 渲染层 (~350KB chunk) */
+  async loadRenderer(container: HTMLElement): Promise<void> {
+    if (this.renderer) return; // 已加载
+    // 动态 import: 触发 Vite code-split, this 模块不进主 bundle
+    const { GameRenderer } = await import('./renderer');
+    this.renderer = new GameRenderer(this.game, container);
+    this.game.onEvent(() => this.renderer!.refresh(this.game));
     this.renderer.start();
+    log.info('[host] Three.js renderer loaded');
   }
 
   dispose(): void {
     this.game.stop();
     this.client?.close();
-    this.renderer.dispose();
+    this.renderer?.dispose();
     this.input.dispose();
     this.hud.dispose();
   }
@@ -91,8 +103,34 @@ function startHost(): void {
     }
   }
   container.innerHTML = '';
-  window[INSTANCE_KEY] = new BrowserHost(container);
-  log.info('[host/browser] started. WASD 移动 · J/空格 攻击 · 自动拾取 · R 重置');
+
+  // 显示 loading 提示 (Three.js 加载前)
+  const loading = document.createElement('div');
+  loading.style.cssText = `
+    position: absolute; inset: 0; display: flex;
+    align-items: center; justify-content: center; flex-direction: column;
+    background: #1a1a2e; color: #d4a017; font-family: 'Microsoft YaHei', sans-serif;
+  `;
+  loading.innerHTML = `
+    <div style="font-size: 32px; margin-bottom: 16px;">百鬼夜行录</div>
+    <div id="__loading_status" style="font-size: 14px; color: #888">正在加载...</div>
+  `;
+  container.appendChild(loading);
+
+  // 同步创建 sim + HUD (无 Three.js, 几十 KB)
+  const host = new BrowserHost(container);
+  window[INSTANCE_KEY] = host;
+  log.info('[host/browser] sim started. Loading renderer...');
+
+  // 异步加载 Three.js 渲染层 + 启动渲染
+  host.loadRenderer(container).then(() => {
+    loading.remove();
+    log.info('[host/browser] started. WASD 移动 · J/空格 攻击 · 自动拾取 · R 重置');
+  }).catch((err) => {
+    log.error('[host/browser] renderer load failed:', err);
+    const status = document.getElementById('__loading_status');
+    if (status) status.textContent = `加载失败: ${err.message}`;
+  });
 }
 
 if (document.readyState === 'loading') {

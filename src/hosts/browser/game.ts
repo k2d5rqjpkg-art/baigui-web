@@ -35,14 +35,26 @@ import type {
   EntityId,
   ItemTemplate,
 } from '../../core/sim';
+import type { GameClient, StateMessage, WelcomeMessage } from './network';
 
 // ============ 类型 ============
+
+export type GameMode = 'local' | 'network';
 
 export interface BrowserGameOptions {
   seed?: number;
   level?: number;
   tickHz?: number;
+  /** 启动时尝试的 network client (Day4); undefined = 纯 local */
+  networkClient?: GameClient | null;
 }
+
+type BrowserGameInternal = {
+  seed: number;
+  level: number;
+  tickHz: number;
+  networkClient: GameClient | null;
+};
 
 export type GameEventHandler = (event: GameEvent) => void;
 
@@ -62,10 +74,19 @@ export interface PlayerSnapshot {
 export class BrowserGame {
   private state: GameState;
   private layout: MapLayout;
-  private options: Required<BrowserGameOptions>;
+  private options: BrowserGameInternal;
 
   // 玩家固定为 e_player_1 (与 server/bridge.ts 对齐)
   static readonly PLAYER_ID: EntityId = 'e_player_1' as EntityId;
+
+  // 当前模式 (Day4): local 本地 sim, network 远端 server
+  private mode: GameMode = 'local';
+  // network 模式下服务端分配的真实 EntityId (可能不是 e_player_1)
+  private networkEid: EntityId = BrowserGame.PLAYER_ID;
+  // 持有的 network client (断线时不销毁, 让 GameHost 决定)
+  private client: GameClient | null = null;
+  // 上次接收到的 events (从 server 广播)
+  private networkEvents: GameEvent[] = [];
 
   // 20Hz tick 调度
   private tickIntervalId: number | null = null;
@@ -91,6 +112,7 @@ export class BrowserGame {
       seed: options.seed ?? Date.now() % 1_000_000,
       level: options.level ?? 1,
       tickHz: options.tickHz ?? 20,
+      networkClient: options.networkClient ?? null,
     };
 
     // 1. emptyState 初始化
@@ -101,16 +123,95 @@ export class BrowserGame {
 
     // 3-5. 加玩家 + 怪物 + 物品 (共用 seedEntities)
     this.seedEntities();
+
+    // Day4: 若传了 networkClient, 切换到 network 模式
+    if (this.options.networkClient) {
+      this.attachNetworkClient(this.options.networkClient);
+    }
   }
 
   // ============ 公共 API ============
 
   /** 启动 tick loop */
   start(): void {
+    if (this.mode === 'network') return; // network 模式不跑本地 tick
     if (this.tickIntervalId !== null) return;
     const intervalMs = 1000 / this.options.tickHz;
     this.lastTickTime = performance.now();
     this.tickIntervalId = window.setInterval(() => this.tick(), intervalMs);
+  }
+
+  /** 当前模式 (Day4) */
+  getMode(): GameMode {
+    return this.mode;
+  }
+
+  /** network 模式下玩家在服务端分配的真实 EntityId */
+  getNetworkPlayerId(): EntityId {
+    return this.networkEid;
+  }
+
+  /**
+   * 挂载 network client, 切换到 network 模式
+   *
+   * 行为:
+   *   - 停掉本地 sim tick
+   *   - 等 'welcome' (server 分配 EntityId + 初始 snapshot)
+   *   - 收到 'state' 后替换本地 state + emit events
+   *   - pushAction 改为发 intent 到 server (而非进本地 pendingActions)
+   */
+  attachNetworkClient(client: GameClient): void {
+    this.client = client;
+    this.stop(); // 停掉本地 tick
+
+    client.onWelcome = (msg: WelcomeMessage) => {
+      this.networkEid = msg.entityId as EntityId;
+      // 用 server 的 snapshot 替换本地 state (包括 player pos/HP/items/monsters)
+      const entities: Record<EntityId, SimEntity> = {} as any;
+      for (const e of msg.snapshot.entities) {
+        entities[e.id] = e;
+      }
+      this.state = {
+        tick: msg.snapshot.tick,
+        rng: this.state.rng, // 保留 RNG (客户端不参与随机)
+        entities,
+      };
+      this.mode = 'network';
+      console.log(`[game] switched to network mode, eid=${this.networkEid}`);
+    };
+
+    client.onState = (msg: StateMessage) => {
+      if (this.mode !== 'network') return;
+      const entities: Record<EntityId, SimEntity> = {} as any;
+      for (const e of msg.entities) {
+        entities[e.id] = e;
+      }
+      this.state = {
+        tick: msg.tick,
+        rng: this.state.rng,
+        entities,
+      };
+      this.networkEvents = msg.events;
+      // emit events 给订阅者
+      for (const e of msg.events) {
+        for (const h of this.eventHandlers) {
+          try { h(e); } catch (err) { console.error('[game] event handler error:', err); }
+        }
+      }
+      // 死亡检测
+      const player = this.state.entities[this.networkEid];
+      if (player && player.hp <= 0 && this.onPlayerDeath) {
+        this.onPlayerDeath();
+      }
+    };
+
+    client.onClose = () => {
+      if (this.mode === 'network') {
+        console.warn('[game] network disconnected, falling back to local');
+        this.mode = 'local';
+        this.start();
+      }
+    };
   }
 
   /** 停止 tick loop */
@@ -123,6 +224,12 @@ export class BrowserGame {
 
   /** 推入 Action (input 模块调用) */
   pushAction(action: Action): void {
+    if (this.mode === 'network') {
+      // network 模式: 把 Action 翻译成 Discrete (0..5), 发给 server
+      const discrete = actionToDiscrete(action);
+      if (discrete >= 0) this.client?.sendIntent(discrete);
+      return;
+    }
     this.pendingActions.push(action);
   }
 
@@ -147,7 +254,8 @@ export class BrowserGame {
 
   /** 获取玩家快照 (供 HUD 显示) */
   getPlayerSnapshot(): PlayerSnapshot | null {
-    const p = this.state.entities[BrowserGame.PLAYER_ID];
+    const id = this.mode === 'network' ? this.networkEid : BrowserGame.PLAYER_ID;
+    const p = this.state.entities[id];
     if (!p) return null;
     return {
       id: p.id,
@@ -178,6 +286,13 @@ export class BrowserGame {
 
   /** 重置游戏 */
   reset(seed?: number): void {
+    // network 模式: 发 reset intent 给 server (Day4+ 优化: 单独 /reset endpoint)
+    // 当前简化: 不支持 network reset, 玩家按 R 提示重连
+    if (this.mode === 'network') {
+      console.warn('[game] reset() not supported in network mode, please reconnect');
+      return;
+    }
+
     if (seed !== undefined) this.options.seed = seed;
     const oldEvents = this.recentEvents;
     const oldHandlers = this.eventHandlers;
@@ -265,6 +380,9 @@ export class BrowserGame {
   // ============ 内部 ============
 
   private tick(): void {
+    // network 模式不走本地 sim
+    if (this.mode === 'network') return;
+
     const now = performance.now();
     const dt = now - this.lastTickTime;
     this.lastTickTime = now;
@@ -389,5 +507,33 @@ export class BrowserGame {
       }
     }
     return actions;
+  }
+}
+
+// ============ 工具函数 ============
+
+/**
+ * Action → Discrete (0..5) 翻译, 与 server/translateDiscrete 对称
+ *
+ *   0=上, 1=下, 2=左, 3=右, 4=attack, 5=pickup
+ *   move 含 target/auto-target 信息的 (Day3 输入层) 被忽略
+ *   (server 端会重新找最近敌人/物品)
+ */
+function actionToDiscrete(action: Action): number {
+  switch (action.type) {
+    case 'move': {
+      const { dx, dy } = action.payload;
+      if (dx === 0 && dy === -1) return 0; // 上
+      if (dx === 0 && dy === 1) return 1;  // 下
+      if (dx === -1 && dy === 0) return 2; // 左
+      if (dx === 1 && dy === 0) return 3;  // 右
+      return -1;
+    }
+    case 'attack':
+      return 4;
+    case 'pickup':
+      return 5;
+    case 'use_item':
+      return -1; // Day1 stub
   }
 }

@@ -16,6 +16,7 @@ import { BrowserGame } from './game';
 import { GameRenderer } from './renderer';
 import { GameInput } from './input';
 import { GameHud } from './hud';
+import { GameClient, defaultWsUrl } from './network';
 /// <reference types="vite/client" />
 
 const CONTAINER_ID = 'game-container';
@@ -32,9 +33,25 @@ class BrowserHost {
   renderer: GameRenderer;
   input: GameInput;
   hud: GameHud;
+  client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
-    this.game = new BrowserGame({ tickHz: 20 });
+    // Day4: 启动时尝试连接 WebSocket server
+    // 成功 → network 模式 (server 权威);失败 → 本地 sim fallback
+    this.client = new GameClient(defaultWsUrl(), {
+      onOpen: () => {
+        // 加入 slot 1 (Day4: 简化 — 自动占 slot 1)
+        this.client?.hello(1);
+      },
+      onError: (msg) => {
+        console.warn('[host] server error:', msg.message);
+      },
+      onClose: () => {
+        console.log('[host] disconnected, will keep local mode if not yet in network');
+      },
+    });
+
+    this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
     this.renderer = new GameRenderer(this.game, container);
     this.input = new GameInput(this.game);
     this.hud = new GameHud(this.game, container);
@@ -45,13 +62,14 @@ class BrowserHost {
     // HUD 主动刷新 (HP/level 变化)
     setInterval(() => this.hud.refresh(), 200);
 
-    // 启动
+    // 启动 (network 模式不跑 tick, 但 start() 不报错)
     this.game.start();
     this.renderer.start();
   }
 
   dispose(): void {
     this.game.stop();
+    this.client?.close();
     this.renderer.dispose();
     this.input.dispose();
     this.hud.dispose();

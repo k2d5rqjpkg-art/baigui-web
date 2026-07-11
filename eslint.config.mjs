@@ -5,7 +5,18 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '*.cjs', '*.mjs', 'coverage/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '*.cjs',
+      '*.mjs',
+      'coverage/**',
+      // rl/.venv/ 是 Python virtualenv 里的 JS 文件, 不应被 ESLint 扫
+      'rl/.venv/**',
+      'rl/**/__pycache__/**',
+      // Day0 旧入口, tsconfig 已排除, ESLint 同步排除
+      'src/main.ts',
+    ],
   },
   js.configs.recommended,
   {
@@ -25,17 +36,31 @@ export default [
         WebSocket: 'readonly',
         CloseEvent: 'readonly',
         KeyboardEvent: 'readonly',
+        Event: 'readonly',
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',
+        HTMLSpanElement: 'readonly',
         HTMLCanvasElement: 'readonly',
         HTMLImageElement: 'readonly',
+        HTMLInputElement: 'readonly',
         Image: 'readonly',
         CanvasRenderingContext2D: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
+        // fetch / streams (Node 18+ / 浏览器原生)
+        fetch: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        Headers: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
+        ReadableStream: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
         // node
         process: 'readonly',
         global: 'readonly',

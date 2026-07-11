@@ -24,7 +24,7 @@
 import http from 'node:http';
 import { GameRoom } from './state.js';
 import { ROOM_PLAYER_ID } from './state.js';
-import type { Intent, EntityId, GameEvent, SimEntity } from '../src/core/sim/types.js';
+import type { Action, Intent, EntityId, GameEvent, SimEntity } from '../src/core/sim/types.js';
 import { log } from '../src/core/log.js';
 
 const PORT = parseInt(process.env.PORT ?? process.env.SERVER_PORT ?? '8787', 10);

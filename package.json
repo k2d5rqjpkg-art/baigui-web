@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint src/ server/ scripts/ rl/ --ext .ts,.js",
+    "lint": "eslint src/ server/ scripts/ --ext .ts,.js",
     "typecheck": "tsc --noEmit -p ."
   },
   "keywords": [],

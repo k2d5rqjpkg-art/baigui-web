@@ -11,6 +11,7 @@
 import type {
   EntityId,
   EquipSlot,
+  GameEvent,
   GameState,
   ItemTemplate,
   SimEntity,
@@ -118,12 +119,7 @@ export function sumAffixes(
 // ============ pickup 核心 ============
 
 export interface PickupResult {
-  events: Array<{
-    type: 'pickup' | 'equip_swap';
-    source: EntityId;
-    target: EntityId | null;
-    data: Record<string, string | number | boolean>;
-  }>;
+  events: GameEvent[];
   newState: GameState;
 }
 
@@ -222,6 +218,7 @@ export function pickup(
       source: entityId,
       target: null,
       data: { slot: tpl.slot, oldItem: oldEquip, newItem: templateId },
+      tick: state.tick,
     });
   }
   events.push({
@@ -229,6 +226,7 @@ export function pickup(
     source: entityId,
     target: null,
     data: { slot: tpl.slot, item: templateId, itemName: tpl.name },
+    tick: state.tick,
   });
 
   return {

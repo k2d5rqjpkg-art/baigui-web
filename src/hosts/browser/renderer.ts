@@ -243,8 +243,8 @@ export class GameRenderer {
       if (!targetId) return;
       const mesh = this.meshByEntityId.get(targetId);
       if (!mesh) return;
-      const amount = (e.data as any)?.amount ?? 0;
-      const crit = (e.data as any)?.crit ?? false;
+      const amount = 'amount' in e.data ? e.data.amount : 0;
+      const crit = 'crit' in e.data ? e.data.crit : false;
       this.showDamageText(mesh.position.x, mesh.position.y, amount, crit);
     } else if (e.type === 'death') {
       // 目标实体立即从 mesh 移除

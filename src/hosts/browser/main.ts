@@ -38,18 +38,17 @@ class BrowserHost {
   constructor(container: HTMLElement) {
     // Day4: 启动时尝试连接 WebSocket server
     // 成功 → network 模式 (server 权威);失败 → 本地 sim fallback
-    this.client = new GameClient(defaultWsUrl(), {
-      onOpen: () => {
-        // 加入 slot 1 (Day4: 简化 — 自动占 slot 1)
-        this.client?.hello(1);
-      },
-      onError: (msg) => {
-        console.warn('[host] server error:', msg.message);
-      },
-      onClose: () => {
-        console.log('[host] disconnected, will keep local mode if not yet in network');
-      },
-    });
+    this.client = new GameClient(defaultWsUrl());
+    this.client.onOpen = () => {
+      // 加入 slot 1 (Day4: 简化 — 自动占 slot 1)
+      this.client?.hello(1);
+    };
+    this.client.onError = (msg) => {
+      console.warn('[host] server error:', msg.message);
+    };
+    this.client.onClose = () => {
+      console.log('[host] disconnected, will keep local mode if not yet in network');
+    };
 
     this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
     this.renderer = new GameRenderer(this.game, container);

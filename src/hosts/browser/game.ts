@@ -167,14 +167,10 @@ export class BrowserGame {
     client.onWelcome = (msg: WelcomeMessage) => {
       this.networkEid = msg.entityId as EntityId;
       // 用 server 的 snapshot 替换本地 state (包括 player pos/HP/items/monsters)
-      const entities: Record<EntityId, SimEntity> = {} as any;
-      for (const e of msg.snapshot.entities) {
-        entities[e.id] = e;
-      }
       this.state = {
         tick: msg.snapshot.tick,
         rng: this.state.rng, // 保留 RNG (客户端不参与随机)
-        entities,
+        entities: entitiesArrayToRecord(msg.snapshot.entities),
       };
       this.mode = 'network';
       console.log(`[game] switched to network mode, eid=${this.networkEid}`);
@@ -182,14 +178,10 @@ export class BrowserGame {
 
     client.onState = (msg: StateMessage) => {
       if (this.mode !== 'network') return;
-      const entities: Record<EntityId, SimEntity> = {} as any;
-      for (const e of msg.entities) {
-        entities[e.id] = e;
-      }
       this.state = {
         tick: msg.tick,
         rng: this.state.rng,
-        entities,
+        entities: entitiesArrayToRecord(msg.entities),
       };
       this.networkEvents = msg.events;
       // emit events 给订阅者
@@ -536,4 +528,16 @@ function actionToDiscrete(action: Action): number {
     case 'use_item':
       return -1; // Day1 stub
   }
+}
+
+/**
+ * SimEntity[] → Record<EntityId, SimEntity> (服务端广播的快照转客户端 state 格式)
+ * 抽出来避免 onWelcome/onState 两处重复 boilerplate
+ */
+function entitiesArrayToRecord(entities: SimEntity[]): Record<EntityId, SimEntity> {
+  const map = {} as Record<EntityId, SimEntity>;
+  for (const e of entities) {
+    map[e.id] = e;
+  }
+  return map;
 }

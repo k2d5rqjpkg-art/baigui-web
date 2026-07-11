@@ -68,11 +68,6 @@ export class GameInput {
         action = this.makeAttack();
         break;
 
-      // 拾取
-      case 'KeyE':
-        action = this.makePickup();
-        break;
-
       // 重置
       case 'KeyR':
         this.game.reset();
@@ -113,16 +108,6 @@ export class GameInput {
     };
   }
 
-  private makePickup(): Action | null {
-    const itemId = this.findNearestItem();
-    if (!itemId) return null;
-    return {
-      type: 'pickup',
-      entityId: BrowserGame.PLAYER_ID,
-      payload: { itemId },
-    };
-  }
-
   // ============ 自动寻最近目标 ============
 
   private findNearestMonster(): EntityId | null {
@@ -139,23 +124,6 @@ export class GameInput {
       }
     }
     // 必须相邻 (曼哈顿距离 ≤ 1) 才攻击
-    return bestDist <= 1 ? best : null;
-  }
-
-  private findNearestItem(): EntityId | null {
-    const player = this.game.getState().entities[BrowserGame.PLAYER_ID];
-    if (!player) return null;
-    let best: EntityId | null = null;
-    let bestDist = Infinity;
-    for (const [id, e] of Object.entries(this.game.getState().entities) as [EntityId, SimEntity][]) {
-      if (e.kind !== 'item') continue;
-      const d = Math.abs(e.pos.x - player.pos.x) + Math.abs(e.pos.y - player.pos.y);
-      if (d < bestDist) {
-        bestDist = d;
-        best = id;
-      }
-    }
-    // 必须相邻 (≤ 1)
     return bestDist <= 1 ? best : null;
   }
 }

@@ -11,7 +11,7 @@
  */
 
 import { BrowserGame } from './game';
-import type { GameEvent, SimEntity } from '../../core/sim';
+import type { GameEvent, SimEntity, EntityId } from '../../core/sim';
 
 const MAX_LOG = 6;
 
@@ -137,8 +137,9 @@ export class GameHud {
 
     switch (e.type) {
       case 'damage': {
-        const amt = (e.data as any)?.amount ?? 0;
-        const crit = (e.data as any)?.crit ?? false;
+        // narrowed by e.type, data 一定是 DamageData (combat.ts 保证)
+        const amt = 'amount' in e.data ? e.data.amount : 0;
+        const crit = 'crit' in e.data ? e.data.crit : false;
         const srcName = e.source ? this.nameOf(e.source) : '?';
         const tgtName = e.target ? this.nameOf(e.target) : '?';
         text = `${srcName} → ${tgtName}: ${crit ? '暴击!' : ''}-${amt}`;
@@ -190,8 +191,8 @@ export class GameHud {
     this.gameOverBox.style.display = 'none';
   }
 
-  private nameOf(id: string): string {
-    const e: SimEntity | undefined = this.game.getState().entities[id as any];
+  private nameOf(id: EntityId): string {
+    const e: SimEntity | undefined = this.game.getState().entities[id];
     if (!e) return id;
     if (e.kind === 'player') return '你';
     if (e.kind === 'monster') return '鬼物';

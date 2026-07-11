@@ -45,33 +45,23 @@ export interface ErrorMessage {
 
 export type ServerMessage = WelcomeMessage | StateMessage | ErrorMessage;
 
-export interface ClientEvents {
-  onWelcome?: (msg: WelcomeMessage) => void;
-  onState?: (msg: StateMessage) => void;
-  onError?: (msg: ErrorMessage) => void;
-  onClose?: (event: CloseEvent) => void;
-  onOpen?: () => void;
-}
-
 export class GameClient {
   private url: string;
   private ws: WebSocket | null = null;
-  // 回调字段: 由外部 (BrowserGame.attachNetworkClient) 赋值
+  // 回调字段 (唯一回调源): 由外部 (BrowserGame.attachNetworkClient 或 main.ts) 赋值
   onWelcome: ((msg: WelcomeMessage) => void) | undefined;
   onState: ((msg: StateMessage) => void) | undefined;
   onError: ((msg: ErrorMessage) => void) | undefined;
   onClose: ((event: CloseEvent) => void) | undefined;
   onOpen: (() => void) | undefined;
-  private events: ClientEvents;
   private reconnectDelay = 1000;
   private readonly MAX_RECONNECT_DELAY = 8000;
   private pendingIntents: number[] = [];
   private connected = false;
   private disposed = false;
 
-  constructor(url: string, events: ClientEvents = {}) {
+  constructor(url: string) {
     this.url = url;
-    this.events = events;
     this.connect();
   }
 
@@ -130,7 +120,7 @@ export class GameClient {
       for (const a of queued) {
         this.send({ type: 'intent', action: a });
       }
-      this.events.onOpen?.();
+      this.onOpen?.();
     };
 
     this.ws.onmessage = (ev) => {
@@ -138,14 +128,14 @@ export class GameClient {
         const msg = JSON.parse(String(ev.data)) as ServerMessage;
         switch (msg.type) {
           case 'welcome':
-            this.events.onWelcome?.(msg);
+            this.onWelcome?.(msg);
             break;
           case 'state':
-            this.events.onState?.(msg);
+            this.onState?.(msg);
             break;
           case 'error':
             console.warn('[client] server error:', msg.message);
-            this.events.onError?.(msg);
+            this.onError?.(msg);
             break;
         }
       } catch (err) {
@@ -155,7 +145,7 @@ export class GameClient {
 
     this.ws.onclose = (ev) => {
       this.connected = false;
-      this.events.onClose?.(ev);
+      this.onClose?.(ev);
       if (!this.disposed) {
         this.scheduleReconnect();
       }

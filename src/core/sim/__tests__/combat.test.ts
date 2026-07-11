@@ -61,7 +61,11 @@ describe('resolveCombat', () => {
     // damage 数值相同
     const dmg1 = r1.events.find((e) => e.type === 'damage');
     const dmg2 = r2.events.find((e) => e.type === 'damage');
-    expect(dmg1?.data.amount).toBe(dmg2?.data.amount);
+    if (dmg1 && dmg2 && 'amount' in dmg1.data && 'amount' in dmg2.data) {
+      expect(dmg1.data.amount).toBe(dmg2.data.amount);
+    } else {
+      throw new Error('expected damage events with amount data');
+    }
   });
 
   it('damage is at least 1 (clamped)', () => {
@@ -75,7 +79,7 @@ describe('resolveCombat', () => {
     for (let i = 0; i < 100; i++) {
       const r = resolveCombat(s2, 'e_p', 'e_m', i);
       const dmg = r.events.find((e) => e.type === 'damage');
-      if (dmg && typeof dmg.data.amount === 'number') {
+      if (dmg && 'amount' in dmg.data && typeof dmg.data.amount === 'number') {
         expect(dmg.data.amount).toBeGreaterThanOrEqual(1);
         sawDamage = true;
       }
@@ -106,7 +110,7 @@ describe('resolveCombat', () => {
     for (let i = 0; i < 1000; i++) {
       const r = resolveCombat(s2, 'e_p', 'e_m', i + 100);
       const dmg = r.events.find((e) => e.type === 'damage');
-      if (dmg && dmg.data.crit === true) critCount++;
+      if (dmg && 'crit' in dmg.data && dmg.data.crit === true) critCount++;
       if (r.events.some((e) => e.type === 'damage')) hitCount++;
     }
     // 命中率 ~90% (lv1 * 2% = 2% dodge),crit 在命中里 ~10%

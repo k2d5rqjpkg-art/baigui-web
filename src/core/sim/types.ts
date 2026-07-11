@@ -116,9 +116,73 @@ export interface GameEvent {
   /** 目标 id (可能为空) */
   target: EntityId | null;
   /** 附加数据 —— 攻击伤害、装备 id 等 */
-  data: Record<string, string | number | boolean>;
+  data: GameEventData;
   /** 发生时的 tick */
   tick: number;
+}
+
+/**
+ * GameEvent.data 的具体形态 —— 按 event type 分发
+ * 顶层用 discriminated union 让 renderer/hud 不用 cast
+ */
+export type GameEventData =
+  | DamageData
+  | AttackMissData
+  | DeathData
+  | PickupData
+  | MoveData
+  | EquipData
+  | TickEndData
+  | UnknownActionData;
+
+export interface DamageData {
+  amount: number;
+  crit: boolean;
+  rawDmg?: number;
+}
+
+export interface AttackMissData {
+  reason: 'dodge';
+}
+
+export interface DeathData {
+  entityName?: string;
+  killer?: EntityId;
+}
+
+export interface PickupData {
+  slot?: string;
+  oldItem?: string;
+  newItem?: string;
+  item?: string;
+  itemName?: string;
+  itemId?: EntityId;
+}
+
+export interface MoveData {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
+export interface EquipData {
+  slot: string;
+  oldItem?: string;
+  newItem?: string;
+  item?: string;
+  itemName?: string;
+}
+
+export interface TickEndData {
+  tick: number;
+  dt: number;
+}
+
+export interface UnknownActionData {
+  reason: string;
+  itemId?: string;
+  dt?: number;
 }
 
 // ============ RNG ============

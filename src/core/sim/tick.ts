@@ -83,10 +83,7 @@ export function tick(
       case 'pickup': {
         const result = pickup(working, action.entityId, action.payload.itemId);
         working = result.newState;
-        // pickup 事件 type 是字面量子集,GameEvent 是 union,赋值安全
-        for (const e of result.events) {
-          events.push(e as GameEvent);
-        }
+        events.push(...result.events);
         break;
       }
       case 'use_item': {

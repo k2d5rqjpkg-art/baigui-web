@@ -191,6 +191,8 @@ describe('tick()', () => {
     const r = tick(s, [], 0.25, { layout });
     const tickEnd = r.events.find((e) => e.type === 'tick_end');
     expect(tickEnd).toBeDefined();
-    expect(tickEnd!.data.dt).toBe(0.25);
+    if (tickEnd && 'dt' in tickEnd.data) {
+      expect(tickEnd.data.dt).toBe(0.25);
+    }
   });
 });

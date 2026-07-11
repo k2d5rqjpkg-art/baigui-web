@@ -21,6 +21,7 @@ import type { SimEntity, GameEvent } from '../../core/sim';
 import {
   createPlayerTexture,
   createEnemyTexture,
+  createItemTexture,
 } from '../../entities/sprites';
 import type { EnemyType } from '../../core/components';
 
@@ -220,19 +221,41 @@ export class GameRenderer {
       return sprite;
     }
     if (e.kind === 'monster') {
-      // 怪物: Day0 sprite 工厂
+      // 怪物: Day0 sprite 工厂 + HP 条
+      const group = new THREE.Group();
       const tex = createEnemyTexture(pickEnemySpriteType(e.level));
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
       const sprite = new THREE.Sprite(mat);
       sprite.scale.set(CELL_SIZE * 1.0, CELL_SIZE * 1.0, 1);
-      return sprite;
+      group.add(sprite);
+
+      // HP 条 (背景)
+      const hpBg = new THREE.Mesh(
+        new THREE.PlaneGeometry(CELL_SIZE * 0.9, CELL_SIZE * 0.12),
+        new THREE.MeshBasicMaterial({ color: 0x330000 }),
+      );
+      hpBg.position.set(0, CELL_SIZE * 0.65, 0.1);
+      group.add(hpBg);
+
+      // HP 条 (前景)
+      const ratio = e.hp / Math.max(1, e.maxHp);
+      const hpFg = new THREE.Mesh(
+        new THREE.PlaneGeometry(CELL_SIZE * 0.9 * ratio, CELL_SIZE * 0.12),
+        new THREE.MeshBasicMaterial({ color: ratio > 0.3 ? 0xcc3333 : 0xff6600 }),
+      );
+      hpFg.position.set(-CELL_SIZE * 0.9 * (1 - ratio) / 2, CELL_SIZE * 0.65, 0.2);
+      group.add(hpFg);
+      (group as any).__hpBar = sprite;
+
+      return group;
     }
-    // item: 金色光点 (保留色块 — Day0 没做物品 sprite)
-    const tex = this.makeItemTexture();
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-    const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(CELL_SIZE * 0.7, CELL_SIZE * 0.7, 1);
-    return sprite;
+    // item: 按 template id 决定外观
+      const itemTplId = (e.inventory?.[0] ?? 'generic') as string;
+      const tex = createItemTexture(itemTplId);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(CELL_SIZE * 0.7, CELL_SIZE * 0.7, 1);
+      return sprite;
   }
 
   /** 处理 sim events (伤害飘字/拾取闪光/死亡) */
@@ -333,22 +356,8 @@ export class GameRenderer {
     setTimeout(() => flash.remove(), 400);
   }
 
-  // ============ 物品临时色块 (Day0 没做物品 sprite, 后续替换) ============
-
-  private makeItemTexture(): THREE.CanvasTexture {
-    return makeCanvasTexture(64, (ctx) => {
-      ctx.fillStyle = '#d4a017';
-      ctx.beginPath();
-      ctx.arc(32, 32, 16, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff5b8';
-      ctx.fillRect(28, 14, 8, 36);
-      ctx.fillRect(14, 28, 36, 8);
-    });
-  }
+  // ============ Utility ============
 }
-
-// ============ 工具函数 ============
 
 function makeCanvasTexture(size: number, draw: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');

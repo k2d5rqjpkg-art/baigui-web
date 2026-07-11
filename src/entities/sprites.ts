@@ -318,6 +318,75 @@ export function createProjectileMesh(color: string = '#f39c12'): THREE.Mesh {
   return new THREE.Mesh(geo, mat);
 }
 
+// ============ Day6.4: 物品 sprite (替代金色色块) ============
+
+/**
+ * 创建物品 sprite texture (剑 / 护甲 / 戒指)
+ * 按 item template id 决定外观
+ */
+export function createItemTexture(templateId: string): THREE.CanvasTexture {
+  return buildCanvas((ctx, s) => {
+    // 根据模板选择样式
+    if (templateId.includes('sword')) {
+      // 剑: 银色长条 + 金色柄
+      ctx.fillStyle = '#c0c0c0';
+      ctx.fillRect(28, 8, 8, 40);
+      ctx.fillStyle = '#d4a017';
+      ctx.fillRect(24, 40, 16, 6);
+      ctx.fillStyle = '#8b4513';
+      ctx.fillRect(24, 48, 16, 10);
+    } else if (templateId.includes('armor')) {
+      // 护甲: 菱形棕色 + 金属边
+      ctx.fillStyle = '#8b4513';
+      ctx.beginPath();
+      ctx.moveTo(s/2, 6);
+      ctx.lineTo(52, 32);
+      ctx.lineTo(s/2, 54);
+      ctx.lineTo(12, 32);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#d4a017';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (templateId.includes('ring')) {
+      // 戒指: 圆形金色 + 宝石
+      ctx.strokeStyle = '#d4a017';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(s/2, s/2, 14, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#cc3333';
+      ctx.beginPath();
+      ctx.arc(s/2, s/2, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (templateId.includes('helm')) {
+      // 头盔: 圆弧顶
+      ctx.fillStyle = '#888';
+      ctx.beginPath();
+      ctx.moveTo(12, 44);
+      ctx.lineTo(12, 20);
+      ctx.quadraticCurveTo(s/2, 6, 52, 20);
+      ctx.lineTo(52, 44);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#cc3333';
+      ctx.fillRect(24, 16, 16, 8);
+    } else {
+      // 通用: 金色八角星
+      ctx.fillStyle = '#d4a017';
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI * 2) / 8 - Math.PI / 2;
+        const r = i % 2 === 0 ? 22 : 10;
+        const method = i === 0 ? 'moveTo' : 'lineTo';
+        ctx[method](s / 2 + Math.cos(a) * r, s / 2 + Math.sin(a) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }, 64);
+}
+
 // ============ 通用 Mesh 创建 ============
 
 export function createEntityMesh(texture: THREE.Texture, width = 2, height = 2): THREE.Mesh {

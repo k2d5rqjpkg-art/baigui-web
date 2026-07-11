@@ -37,6 +37,11 @@ import type {
 import { log } from '../../core/log';
 import type { GameClient, StateMessage, WelcomeMessage } from './network';
 
+/**
+ * Day6.1: HUD 显示需要的类型
+ */
+export type { QuestJson, DialogueJson } from '../../core/llm/index.js';
+
 // ============ 类型 ============
 
 export type GameMode = 'local' | 'network';
@@ -87,6 +92,10 @@ export class BrowserGame {
   private client: GameClient | null = null;
   // 上次接收到的 events (从 server 广播)
   private networkEvents: GameEvent[] = [];
+  /** Day6.1: 房间内容 (quest + npcs) */
+  private roomContent: any = null;
+  /** Day6.1: content 回调 */
+  private onContent: ((content: any) => void) | undefined;
 
   // 20Hz tick 调度
   private tickIntervalId: number | null = null;
@@ -169,9 +178,14 @@ export class BrowserGame {
       // 用 server 的 snapshot 替换本地 state (包括 player pos/HP/items/monsters)
       this.state = {
         tick: msg.snapshot.tick,
-        rng: this.state.rng, // 保留 RNG (客户端不参与随机)
+        rng: this.state.rng,
         entities: entitiesArrayToRecord(msg.snapshot.entities),
       };
+      // Day6.1: welcome 可能带 content (bridge /state 带 quest+npcs)
+      if ((msg as any).content) {
+        this.roomContent = (msg as any).content;
+        this.onContent?.(this.roomContent);
+      }
       this.mode = 'network';
       log.info(`[game] switched to network mode, eid=${this.networkEid}`);
     };
@@ -183,6 +197,11 @@ export class BrowserGame {
         rng: this.state.rng,
         entities: entitiesArrayToRecord(msg.entities),
       };
+      // Day6.1: state 也带 content (bridge /state)
+      if ((msg as any).content) {
+        this.roomContent = (msg as any).content;
+        this.onContent?.(this.roomContent);
+      }
       this.networkEvents = msg.events;
       // emit events 给订阅者
       for (const e of msg.events) {
@@ -195,6 +214,12 @@ export class BrowserGame {
       if (player && player.hp <= 0 && this.onPlayerDeath) {
         this.onPlayerDeath();
       }
+    };
+
+    // Day6.1: server 单独广播 content (welcome 后异步生成)
+    client.onContent = (content: any) => {
+      this.roomContent = content;
+      this.onContent?.(content);
     };
 
     client.onClose = () => {
@@ -269,6 +294,16 @@ export class BrowserGame {
   /** 获取最近一次 tick 的 events (HUD 显示) */
   getRecentEvents(): GameEvent[] {
     return this.recentEvents;
+  }
+
+  /** Day6.1: 获取房间内容 (quest + npcs) */
+  getRoomContent(): any | null {
+    return this.roomContent;
+  }
+
+  /** Day6.1: 注册 content 更新回调 */
+  onContentUpdate(fn: (content: any) => void): void {
+    this.onContent = fn;
   }
 
   /** 获取地图宽高 (renderer 计算相机用) */

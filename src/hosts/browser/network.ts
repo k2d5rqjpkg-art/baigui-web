@@ -44,7 +44,12 @@ export interface ErrorMessage {
   message: string;
 }
 
-export type ServerMessage = WelcomeMessage | StateMessage | ErrorMessage;
+export interface ContentMessage {
+  type: 'content';
+  content: any;
+}
+
+export type ServerMessage = WelcomeMessage | StateMessage | ErrorMessage | ContentMessage;
 
 export class GameClient {
   private url: string;
@@ -55,6 +60,8 @@ export class GameClient {
   onError: ((msg: ErrorMessage) => void) | undefined;
   onClose: ((event: CloseEvent) => void) | undefined;
   onOpen: (() => void) | undefined;
+  /** Day6.1: 独立的 content 更新 (quest + npcs, server 单独广播) */
+  onContent: ((content: any) => void) | undefined;
   private reconnectDelay = 1000;
   private readonly MAX_RECONNECT_DELAY = 8000;
   private pendingIntents: number[] = [];
@@ -133,6 +140,9 @@ export class GameClient {
             break;
           case 'state':
             this.onState?.(msg);
+            break;
+          case 'content':
+            this.onContent?.(msg.content);
             break;
           case 'error':
             log.warn('[client] server error:', msg.message);

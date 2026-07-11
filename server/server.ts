@@ -209,6 +209,26 @@ setInterval(() => {
   }
 }, TICK_DT_MS);
 
+/**
+ * Day6.1: 房间内容生成后广播一次
+ * (quest/npc 是静态的, 20Hz state 广播不带, 单独推一次)
+ */
+let lastContentVersion = 0;
+setInterval(() => {
+  try {
+    const v = room.content.generatedAt;
+    if (v > lastContentVersion) {
+      lastContentVersion = v;
+      broadcast({
+        type: 'content',
+        content: room.content,
+      });
+    }
+  } catch (err) {
+    log.error('[content-poll] error:', err);
+  }
+}, 200);
+
 http_server.listen(PORT, () => {
   log.info(`[server] WebSocket + HTTP listening on http://localhost:${PORT}`);
   log.info(`[server] ws://localhost:${PORT}  (WebSocket)`);

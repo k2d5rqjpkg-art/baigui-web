@@ -173,6 +173,7 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, {
         tick: snap.tick,
         entities: snap.entities,
+        content: room.content,  // Day6.1: quest + npcs
       });
     }
 
@@ -214,6 +215,28 @@ const server = http.createServer(async (req, res) => {
         reward: computeRewardFromEvents(result.events, entityId),
         action: actionNum,
       });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/dialogue') {
+      // Day6.1: 玩家与邻接 NPC 对话
+      const body = await readJson(req).catch(() => ({}));
+      const entityId = (typeof body.entityId === 'string' && body.entityId.startsWith('e_'))
+        ? (body.entityId as EntityId)
+        : ROOM_PLAYER_ID;
+      const ctx = typeof body.context === 'string' ? body.context : '';
+      try {
+        const result = await room.talkToNearestNpc(entityId, ctx);
+        if (!result) {
+          return send(res, 200, { ok: true, npc: null, dialogue: null, reason: 'no adjacent NPC' });
+        }
+        return send(res, 200, {
+          ok: true,
+          npc: { id: result.npc.id, name: result.npc.name, pos: result.npc.pos },
+          dialogue: result.dialogue,
+        });
+      } catch (err) {
+        return send(res, 500, { error: `dialogue failed: ${(err as Error).message}` });
+      }
     }
 
     if (req.method === 'GET' && url.pathname === '/reset') {

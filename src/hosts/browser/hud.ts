@@ -27,6 +27,13 @@ export class GameHud {
   private gameOverBox: HTMLDivElement;
 
   private unsubEvent: () => void;
+  // Day6.1: 任务 + NPC 对话
+  private questBox: HTMLDivElement;
+  private questTitle: HTMLDivElement;
+  private questDesc: HTMLDivElement;
+  private questObj: HTMLDivElement;
+  private dialogueOverlay: HTMLDivElement | null = null;
+  private dialogueTextShown = false;
 
   constructor(game: BrowserGame, container: HTMLElement) {
     this.game = game;
@@ -89,6 +96,29 @@ export class GameHud {
     `;
     this.root.appendChild(bottomLeft);
     this.helpBox = bottomLeft;
+
+    // === 右上 当前任务 (Day6.1) ===
+    const q = document.createElement('div');
+    q.style.cssText = `
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,0,0,0.6); padding: 10px 14px; border-radius: 6px;
+      border: 1px solid #444488; min-width: 260px; max-width: 340px;
+      display: none;
+    `;
+    q.innerHTML = `
+      <div style="font-size:13px;color:#d4a017;font-weight:bold;margin-bottom:4px">📜 当前任务</div>
+      <div id="__quest_title" style="font-size:14px;color:#f5e6c8"></div>
+      <div id="__quest_desc" style="font-size:12px;color:#aaa;margin-top:4px"></div>
+      <div id="__quest_obj" style="font-size:12px;color:#88aacc;margin-top:4px"></div>
+    `;
+    this.root.appendChild(q);
+    this.questBox = q;
+    this.questTitle = q.querySelector('#__quest_title') as HTMLDivElement;
+    this.questDesc = q.querySelector('#__quest_desc') as HTMLDivElement;
+    this.questObj = q.querySelector('#__quest_obj') as HTMLDivElement;
+
+    // 注册 content 更新回调
+    game.onContentUpdate((content: any) => this.handleContent(content));
 
     // === Game Over (默认隐藏) ===
     const go = document.createElement('div');
@@ -189,6 +219,54 @@ export class GameHud {
 
   private hideGameOver(): void {
     this.gameOverBox.style.display = 'none';
+  }
+
+  // ============ Day6.1: 任务 + NPC 对话 ============
+
+  /** 收到 content 时显示/隐藏 quest 面板 */
+  private handleContent(content: any): void {
+    if (content?.quest?.title) {
+      this.questTitle.textContent = `「${content.quest.title}」`;
+      this.questDesc.textContent = content.quest.description ?? '';
+      this.questObj.textContent = `目标: ${content.quest.objective}  |  奖励: ${content.quest.reward}`;
+      this.questBox.style.display = 'block';
+    } else {
+      this.questBox.style.display = 'none';
+    }
+  }
+
+  /**
+   * 显示对话框 (NPC 对话)
+   * 调用者 (GameRenderer 或主循环) 在 NPC 邻接时触发
+   */
+  showDialogueOverlay(npcName: string, dialogue: { greeting: string; hint: string; farewell: string }): void {
+    // 移除旧的
+    if (this.dialogueOverlay) this.dialogueOverlay.remove();
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: absolute; inset: 20%; pointer-events: auto; z-index: 20;
+      background: rgba(10,10,30,0.92); border: 2px solid #8888bb; border-radius: 12px;
+      padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    `;
+    overlay.innerHTML = `
+      <div style="color:#d4a017;font-size:18px;font-weight:bold">${npcName}</div>
+      <div style="color:#f5e6c8;font-size:14px;text-align:center;margin:8px 0">${dialogue.greeting}</div>
+      <div style="color:#bbcccc;font-size:13px;text-align:center;font-style:italic">${dialogue.hint}</div>
+      <div style="color:#aaa;font-size:13px;text-align:center;margin-top:8px">${dialogue.farewell}</div>
+      <div style="color:#666;font-size:11px;margin-top:8px">[ 点击或按 ESC 关闭 ]</div>
+    `;
+    overlay.addEventListener('click', () => overlay.remove());
+    const closeHandler = (ev: KeyboardEvent) => {
+      if (ev.code === 'Escape' || ev.code === 'Space') {
+        overlay.remove();
+        window.removeEventListener('keydown', closeHandler);
+      }
+    };
+    window.addEventListener('keydown', closeHandler);
+
+    this.root.appendChild(overlay);
+    this.dialogueOverlay = overlay;
   }
 
   private nameOf(id: EntityId): string {

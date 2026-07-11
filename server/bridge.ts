@@ -263,7 +263,31 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${PORT}`);
-  log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health`);
-});
+/**
+ * Day6.3: 启动 HTTP bridge server (可被测试或主进程调用)
+ * 单独导出, 避免 import 副作用自动 listen
+ */
+export function startBridgeServer(port: number = PORT): Promise<http.Server> {
+  return new Promise((resolve) => {
+    const s = server.listen(port, () => {
+      log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${port}`);
+      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health`);
+      resolve(s);
+    });
+  });
+}
+
+// 兼容旧的 import 风格: 仅当直接 tsx 跑 bridge.ts 时才 listen
+// 被 import 时不触发 — vitest/tsx import 不应该起 server
+// 检测 argv[1] 是否指向 bridge.ts (兼容 npm run / 直接 tsx / node)
+function isDirectRun(): boolean {
+  if (typeof process === 'undefined' || !process.argv[1]) return false;
+  const entry = process.argv[1].toLowerCase();
+  return entry.endsWith('bridge.ts') || entry.endsWith('bridge.js');
+}
+if (isDirectRun()) {
+  startBridgeServer().catch((err) => {
+    log.error('[bridge] failed to start:', err);
+    process.exit(1);
+  });
+}

@@ -31,6 +31,8 @@ import { tick, emptyState, addEntity } from '../src/core/sim/tick.js';
 import { worldGen } from '../src/core/sim/world.js';
 import { generateEncounter } from '../src/core/sim/encounters.js';
 import { ITEM_TABLE } from '../src/core/sim/items.js';
+import { generateRoomContent, talkToNpc, findAdjacentNpc, type NpcData } from './quest.js';
+import { log } from '../src/core/log.js';
 
 const MAX_PLAYERS = 4;
 
@@ -49,6 +51,13 @@ export class GameRoom {
   readonly slotForPlayer = new Map<EntityId, number>();
   /** 上一次 tick 之后累积未读的事件 (供 RL reward shaping) */
   unconsumedEvents: GameEvent[] = [];
+  /**
+   * Day6.1: 房间内容 (quest + npcs)
+   * - quest 来自 LLM/fallback
+   * - npcs 邻接玩家时按 J 触发对话
+   * reset() 时同步重新生成
+   */
+  content: import('./quest.js').RoomContent = { quest: null, npcs: [], generatedAt: 0 };
 
   constructor(id: string) {
     this.id = id;
@@ -154,6 +163,41 @@ export class GameRoom {
     // RL 玩家占用 slot 1
     this.occupiedSlots.add(1);
     this.slotForPlayer.set(ROOM_PLAYER_ID, 1);
+
+    // Day6.1: 同步生成 quest + npcs
+    // 用 LLM/fallback 异步生成,这里 fire-and-forget
+    // Day6.1+ 可改成 await + 显式 init 接口
+    this.initContent(1).catch((err) => {
+      log.error('[state] initContent failed:', err);
+    });
+  }
+
+  /**
+   * Day6.1: 初始化/重新生成房间内容 (quest + npcs)
+   * 收集当前 entities 的 spawn points, 调 generateRoomContent
+   */
+  async initContent(level: number): Promise<void> {
+    const spawnPoints = this.layout.spawnPoints;
+    // 怪物 spawn 是 layout.spawnPoints 的一部分
+    const monsterSpawns = Object.values(this.state.entities)
+      .filter((e) => e.kind === 'monster')
+      .map((e) => e.pos);
+    this.content = await generateRoomContent(level, spawnPoints, monsterSpawns);
+  }
+
+  /**
+   * Day6.1: 玩家与 NPC 对话 (优先缓存, 调 LLM/fallback)
+   */
+  async talkToNearestNpc(
+    playerId: EntityId,
+    playerContext: string = '',
+  ): Promise<{ npc: NpcData; dialogue: { greeting: string; hint: string; farewell: string; source: string } } | null> {
+    const player = this.state.entities[playerId];
+    if (!player) return null;
+    const npc = findAdjacentNpc(this.content.npcs, player.pos);
+    if (!npc) return null;
+    const dialogue = await talkToNpc(npc, playerId, playerContext);
+    return { npc, dialogue };
   }
 
   /** 添加玩家 slot (slotId ∈ [1..MAX_PLAYERS]) - 用于 WebSocket 客户端

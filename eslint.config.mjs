@@ -61,6 +61,8 @@ export default [
         ReadableStream: 'readonly',
         AbortController: 'readonly',
         AbortSignal: 'readonly',
+        MessageEvent: 'readonly',
+        CloseEvent: 'readonly',
         // node
         process: 'readonly',
         global: 'readonly',

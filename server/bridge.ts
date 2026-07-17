@@ -26,12 +26,14 @@ import { GameRoom } from './state.js';
 import { ROOM_PLAYER_ID } from './state.js';
 import type { Action, Intent, EntityId, GameEvent, SimEntity } from '../src/core/sim/types.js';
 import { log } from '../src/core/log.js';
+import { RoomPool } from './room-pool.js';
 
 const PORT = parseInt(process.env.PORT ?? process.env.SERVER_PORT ?? '8787', 10);
 const TICK_DT_MS = 50; // 20Hz
 
-// 全局单房间 (Day1.5 足够;Day2 改成房间池)
-const room = new GameRoom('room-0');
+// Day13: 房间池 (跨服 / 大世界); 默认 room-0 兼容旧 RL / 客户端
+const roomPool = new RoomPool();
+const room = roomPool.getOrCreate('room-0', 1);
 // v2.0: 初始化持久化层 (有 DATABASE_URL 用 PG, 否则 memory)
 import('./persistence.js').then(async (m) => {
   const p = await m.createPersistence();
@@ -259,6 +261,18 @@ const server = http.createServer(async (req, res) => {
         tick: room.tick,
         entityCount: room.entityCount,
         players: room.occupiedSlots.size,
+        // Day13: 房间池统计
+        rooms: roomPool.size(),
+        totalPlayers: roomPool.getTotalPlayers(),
+      });
+    }
+
+    // Day13: 房间列表 (跨服大厅)
+    if (req.method === 'GET' && url.pathname === '/rooms') {
+      return send(res, 200, {
+        rooms: roomPool.list(),
+        total: roomPool.size(),
+        totalPlayers: roomPool.getTotalPlayers(),
       });
     }
 
@@ -277,7 +291,7 @@ export function startBridgeServer(port: number = PORT): Promise<http.Server> {
   return new Promise((resolve) => {
     const s = server.listen(port, () => {
       log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${port}`);
-      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health`);
+      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health, GET /rooms`);
       resolve(s);
     });
   });

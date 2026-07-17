@@ -248,7 +248,7 @@ export class GameHud {
       }
       case 'level_up': {
         const lv = 'newLevel' in e.data ? e.data.newLevel : '?';
-        text = `⬆ 升级! Lv.${lv}`;
+        text = `⬆ 升级! Lv.${lv} · 已自动存档`;
         color = '#66ff99';
         break;
       }

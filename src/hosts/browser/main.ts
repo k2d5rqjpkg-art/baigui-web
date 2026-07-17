@@ -26,7 +26,7 @@ import { AdvisorPanel } from './advisor-panel';
 import { SkillPanel } from './skill-panel';
 import { InventoryPanel } from './inventory-panel';
 import { PvpPanel } from './pvp-panel';
-import { SaveLoadPanel } from './save-load';
+import { SaveLoadPanel, readSave, applySaveToGame } from './save-load';
 import { SettingsPanel } from './settings-panel';
 import { StatusBar } from './status-bar';
 import { GameClient, defaultWsUrl, defaultRoomId } from './network';
@@ -90,6 +90,17 @@ class BrowserHost {
     this.settings = new SettingsPanel(container);
     // Day30: 状态条
     this.statusBar = new StatusBar(this.game, container);
+    // Day31: 启动自动读档 (仅本地模式, 有存档则应用)
+    try {
+      const save = readSave();
+      if (save) {
+        applySaveToGame(this.game, save);
+        log.info('[host] auto-loaded save Lv.', save.level);
+        this.hud.refresh();
+      }
+    } catch (err) {
+      log.warn('[host] auto-load failed:', err);
+    }
     // v1.1: AI 顾问面板 (1Hz 调 LLM/fallback, 无 key 时也跑)
     this.advisor = new AdvisorPanel(container);
     this.advisor.start(

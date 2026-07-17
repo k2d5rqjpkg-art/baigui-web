@@ -106,6 +106,7 @@ export type GameEventType =
   | 'heal'
   | 'buff_apply'
   | 'buff_expire'
+  | 'level_up'
   | 'tick_end'
   | 'unknown_action';
 
@@ -133,6 +134,7 @@ export type GameEventData =
   | MoveData
   | EquipData
   | TickEndData
+  | LevelUpData
   | UnknownActionData;
 
 export interface DamageData {
@@ -177,6 +179,10 @@ export interface EquipData {
 export interface TickEndData {
   tick: number;
   dt: number;
+}
+
+export interface LevelUpData {
+  newLevel: number;
 }
 
 export interface UnknownActionData {

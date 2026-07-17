@@ -63,6 +63,11 @@ export default [
         AbortSignal: 'readonly',
         MessageEvent: 'readonly',
         CloseEvent: 'readonly',
+        // WebAudio (浏览器原生, Node 测时无)
+        AudioContext: 'readonly',
+        GainNode: 'readonly',
+        AudioNode: 'readonly',
+        OscillatorType: 'readonly',
         // node
         process: 'readonly',
         global: 'readonly',

@@ -33,6 +33,7 @@ import { generateEncounter } from '../src/core/sim/encounters.js';
 import { ITEM_TABLE } from '../src/core/sim/items.js';
 import { generateRoomContent, talkToNpc, findAdjacentNpc, type NpcData } from './quest.js';
 import { log } from '../src/core/log.js';
+import type { PersistenceLayer } from './persistence.js';
 
 const MAX_PLAYERS = 4;
 
@@ -58,6 +59,8 @@ export class GameRoom {
    * reset() 时同步重新生成
    */
   content: import('./quest.js').RoomContent = { quest: null, npcs: [], generatedAt: 0 };
+  /** v2.0: 持久化层 (可选, 默认 null 用 memory) */
+  persistence: PersistenceLayer | null = null;
 
   constructor(id: string) {
     this.id = id;
@@ -242,6 +245,27 @@ export class GameRoom {
     this.occupiedSlots.delete(slot);
     this.slotForPlayer.delete(eid);
     // Day1.5: 不真正从 state.entities 移除,留给 GC
+    // v2.0: 移除时自动 save (如果 persistence 配置了)
+    if (this.persistence) {
+      void this.persistence.savePlayer(eid, this.state).catch((err) => {
+        log.warn(`[state] persistence savePlayer failed for ${eid}:`, err);
+      });
+    }
+  }
+
+  /** v2.0: 加载玩家保存 (连接时用) */
+  async loadSavedPlayer(eid: EntityId): Promise<GameState | null> {
+    if (!this.persistence) return null;
+    return this.persistence.loadPlayer(eid);
+  }
+
+  /** v2.0: 主动保存玩家 */
+  async savePlayer(eid: EntityId): Promise<void> {
+    if (!this.persistence) {
+      log.debug(`[state] savePlayer(${eid}) skipped: no persistence`);
+      return;
+    }
+    await this.persistence.savePlayer(eid, this.state);
   }
 
   /**

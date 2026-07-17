@@ -32,6 +32,12 @@ const TICK_DT_MS = 50; // 20Hz
 
 // 全局单房间 (Day1.5 足够;Day2 改成房间池)
 const room = new GameRoom('room-0');
+// v2.0: 初始化持久化层 (有 DATABASE_URL 用 PG, 否则 memory)
+import('./persistence.js').then(async (m) => {
+  const p = await m.createPersistence();
+  room.persistence = p;
+  log.info('[bridge] persistence initialized');
+});
 
 function readJson(req: http.IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {

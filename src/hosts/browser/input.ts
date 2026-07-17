@@ -121,7 +121,10 @@ export class GameInput {
     if (!player) return null;
     let best: EntityId | null = null;
     let bestDist = Infinity;
-    for (const [id, e] of Object.entries(this.game.getState().entities) as [EntityId, SimEntity][]) {
+    for (const [id, e] of Object.entries(this.game.getState().entities) as [
+      EntityId,
+      SimEntity,
+    ][]) {
       if (e.kind !== 'monster' || e.hp <= 0) continue;
       const d = Math.abs(e.pos.x - player.pos.x) + Math.abs(e.pos.y - player.pos.y);
       if (d < bestDist) {

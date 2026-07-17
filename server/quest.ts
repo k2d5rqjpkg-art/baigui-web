@@ -101,10 +101,7 @@ export async function generateRoomContent(
   const npcCount = 2;
   // 玩家 + 怪物的 spawn 都视为已占用
   const playerSpawn = spawnPoints[0];
-  const occupied = [
-    ...(playerSpawn ? [playerSpawn] : []),
-    ...monsterSpawns,
-  ];
+  const occupied = [...(playerSpawn ? [playerSpawn] : []), ...monsterSpawns];
   const npcSpawns = pickNpcSpawns(spawnPoints, occupied, npcCount);
   const npcs: NpcData[] = [];
   for (let i = 0; i < npcCount; i++) {
@@ -156,7 +153,12 @@ export async function talkToNpc(
   npc: NpcData,
   playerId: EntityId,
   playerContext: string,
-): Promise<{ greeting: string; hint: string; farewell: string; source: 'cache' | 'llm' | 'fallback' }> {
+): Promise<{
+  greeting: string;
+  hint: string;
+  farewell: string;
+  source: 'cache' | 'llm' | 'fallback';
+}> {
   const cached = npc.cachedDialogue.get(playerId);
   if (cached) {
     return { ...cached, source: 'cache' };

@@ -16,22 +16,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import {
-  tick,
-  emptyState,
-  addEntity,
-  worldGen,
-  generateEncounter,
-  ITEM_TABLE,
-} from '../index';
-import type {
-  Action,
-  EntityId,
-  GameState,
-  SimEntity,
-  EquipSlot,
-  ItemTemplate,
-} from '../types';
+import { tick, emptyState, addEntity, worldGen, generateEncounter, ITEM_TABLE } from '../index';
+import type { Action, EntityId, GameState, SimEntity, EquipSlot, ItemTemplate } from '../types';
 
 // ============ helpers ============
 
@@ -47,9 +33,15 @@ function buildState(seed = 42, level = 1): GameState {
     id: 'e_player_1' as EntityId,
     kind: 'player',
     pos: playerSpawn,
-    hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
+    hp: 100,
+    maxHp: 100,
+    atk: 30,
+    def: 5,
+    level: 5,
     faction: 'player',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   s = addEntity(s, player);
 
@@ -64,9 +56,15 @@ function buildState(seed = 42, level = 1): GameState {
       id: `e_monster_${i + 1}` as EntityId,
       kind: 'monster',
       pos: sp,
-      hp: m.hp, maxHp: m.hp, atk: m.atk, def: m.def, level: m.level,
+      hp: m.hp,
+      maxHp: m.hp,
+      atk: m.atk,
+      def: m.def,
+      level: m.level,
       faction: 'enemy',
-      inventory: [], equipment: {}, buffs: [],
+      inventory: [],
+      equipment: {},
+      buffs: [],
     });
   }
 
@@ -78,12 +76,15 @@ function buildState(seed = 42, level = 1): GameState {
       id: `e_item_${i + 1}` as EntityId,
       kind: 'item',
       pos: sp,
-      hp: 0, maxHp: 0, atk: tpl.affixes[0]?.key === 'atk' ? tpl.affixes[0].value : 0,
+      hp: 0,
+      maxHp: 0,
+      atk: tpl.affixes[0]?.key === 'atk' ? tpl.affixes[0].value : 0,
       def: tpl.affixes[0]?.key === 'def' ? tpl.affixes[0].value : 0,
       level: 0,
       faction: 'neutral',
       inventory: [tpl.id],
-      equipment: {}, buffs: [],
+      equipment: {},
+      buffs: [],
     });
   }
   return s;
@@ -107,9 +108,19 @@ describe('stateful property: 100 步随机 actions 后状态健康', () => {
         fc.integer({ min: 1, max: 1000 }),
         fc.array(
           fc.oneof(
-            fc.record({ type: fc.constant('move' as const), dx: fc.integer({ min: -1, max: 1 }), dy: fc.integer({ min: -1, max: 1 }) }),
-            fc.record({ type: fc.constant('attack' as const), target: fc.integer({ min: 1, max: 3 }) }),
-            fc.record({ type: fc.constant('pickup' as const), item: fc.integer({ min: 1, max: 5 }) }),
+            fc.record({
+              type: fc.constant('move' as const),
+              dx: fc.integer({ min: -1, max: 1 }),
+              dy: fc.integer({ min: -1, max: 1 }),
+            }),
+            fc.record({
+              type: fc.constant('attack' as const),
+              target: fc.integer({ min: 1, max: 3 }),
+            }),
+            fc.record({
+              type: fc.constant('pickup' as const),
+              item: fc.integer({ min: 1, max: 5 }),
+            }),
           ),
           { minLength: 100, maxLength: 100 },
         ),
@@ -173,31 +184,35 @@ describe('stateful property: 100 步随机 actions 后状态健康', () => {
 
   it('500 步纯 move 不会让玩家越界', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 9999 }),
-        (seed) => {
-          let s = buildState(seed);
-          const layout = worldGen(s.rng, 1);
+      fc.property(fc.integer({ min: 1, max: 9999 }), (seed) => {
+        let s = buildState(seed);
+        const layout = worldGen(s.rng, 1);
 
-          for (let i = 0; i < 500; i++) {
-            const dx = [-1, 0, 1][i % 3];
-            const dy = [0, 1, -1][(i + 1) % 3];
-            const result = tick(s, [{
-              type: 'move',
-              entityId: 'e_player_1' as EntityId,
-              payload: { dx, dy },
-            }], 50, { layout });
-            s = result.state;
+        for (let i = 0; i < 500; i++) {
+          const dx = [-1, 0, 1][i % 3];
+          const dy = [0, 1, -1][(i + 1) % 3];
+          const result = tick(
+            s,
+            [
+              {
+                type: 'move',
+                entityId: 'e_player_1' as EntityId,
+                payload: { dx, dy },
+              },
+            ],
+            50,
+            { layout },
+          );
+          s = result.state;
 
-            const p = findEntity(s, 'e_player_1' as EntityId);
-            if (!p) return true; // 死亡后移除
-            // 玩家位置必须严格在 [0..width-1, 0..height-1] 内
-            if (p.pos.x < 0 || p.pos.x >= layout.width) return false;
-            if (p.pos.y < 0 || p.pos.y >= layout.height) return false;
-          }
-          return true;
-        },
-      ),
+          const p = findEntity(s, 'e_player_1' as EntityId);
+          if (!p) return true; // 死亡后移除
+          // 玩家位置必须严格在 [0..width-1, 0..height-1] 内
+          if (p.pos.x < 0 || p.pos.x >= layout.width) return false;
+          if (p.pos.y < 0 || p.pos.y >= layout.height) return false;
+        }
+        return true;
+      }),
       { numRuns: 10 },
     );
   });
@@ -210,11 +225,18 @@ describe('stateful property: 100 步随机 actions 后状态健康', () => {
 
         // 50 次 attack 同 monster
         for (let i = 0; i < 50; i++) {
-          const r = tick(s, [{
-            type: 'attack',
-            entityId: 'e_player_1' as EntityId,
-            payload: { targetId: 'e_monster_1' as EntityId },
-          }], 50, { layout });
+          const r = tick(
+            s,
+            [
+              {
+                type: 'attack',
+                entityId: 'e_player_1' as EntityId,
+                payload: { targetId: 'e_monster_1' as EntityId },
+              },
+            ],
+            50,
+            { layout },
+          );
           s = r.state;
         }
         // 50 次后 monster_1 必然死 (Lv5 玩家打 Lv1-5 怪, 最多 50 击也够)
@@ -237,11 +259,18 @@ describe('stateful property: 100 步随机 actions 后状态健康', () => {
 
         // 反复 pickup 同一 item 20 次
         for (let i = 0; i < 20; i++) {
-          const r = tick(s, [{
-            type: 'pickup',
-            entityId: 'e_player_1' as EntityId,
-            payload: { itemId: 'e_item_1' as EntityId },
-          }], 50, { layout });
+          const r = tick(
+            s,
+            [
+              {
+                type: 'pickup',
+                entityId: 'e_player_1' as EntityId,
+                payload: { itemId: 'e_item_1' as EntityId },
+              },
+            ],
+            50,
+            { layout },
+          );
           s = r.state;
         }
         const p = findEntity(s, 'e_player_1' as EntityId);

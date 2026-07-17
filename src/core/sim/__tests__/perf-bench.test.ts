@@ -6,19 +6,8 @@
  * 跑 1000 步 sim, 断言耗时 < 阈值 (CI 回归门)
  */
 import { describe, it, expect } from 'vitest';
-import {
-  emptyState,
-  addEntity,
-  worldGen,
-  generateEncounter,
-  tick,
-} from '../index';
-import type {
-  EntityId,
-  GameState,
-  SimEntity,
-  Action,
-} from '../types';
+import { emptyState, addEntity, worldGen, generateEncounter, tick } from '../index';
+import type { EntityId, GameState, SimEntity, Action } from '../types';
 
 function aiStep(p: SimEntity, s: GameState): Action | null {
   if (p.hp <= 0) return null;
@@ -27,7 +16,10 @@ function aiStep(p: SimEntity, s: GameState): Action | null {
   for (const e of Object.values(s.entities)) {
     if (e.kind !== 'monster' || e.hp <= 0) continue;
     const d = Math.abs(e.pos.x - p.pos.x) + Math.abs(e.pos.y - p.pos.y);
-    if (d < bestD) { bestD = d; best = e; }
+    if (d < bestD) {
+      bestD = d;
+      best = e;
+    }
   }
   if (!best) return null;
   if (bestD <= 1) return { type: 'attack', entityId: p.id, payload: { targetId: best.id } };
@@ -43,16 +35,30 @@ function buildWorld(nMonsters: number, seed: number): GameState {
     id: 'e_p1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp: 200, maxHp: 200, atk: 50, def: 10, level: 5,
-    faction: 'player', inventory: [], equipment: {}, buffs: [],
+    hp: 200,
+    maxHp: 200,
+    atk: 50,
+    def: 10,
+    level: 5,
+    faction: 'player',
+    inventory: [],
+    equipment: {},
+    buffs: [],
   });
   for (let i = 0; i < nMonsters; i++) {
     s = addEntity(s, {
       id: `e_m_${i}` as EntityId,
       kind: 'monster',
       pos: { x: (i % 20) + 1, y: ((i / 20) | 0) + 5 },
-      hp: 30, maxHp: 30, atk: 8, def: 1, level: 1,
-      faction: 'enemy', inventory: [], equipment: {}, buffs: [],
+      hp: 30,
+      maxHp: 30,
+      atk: 8,
+      def: 1,
+      level: 1,
+      faction: 'enemy',
+      inventory: [],
+      equipment: {},
+      buffs: [],
     });
   }
   return s;

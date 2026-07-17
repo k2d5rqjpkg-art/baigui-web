@@ -77,9 +77,7 @@ describe('bridge 端到端: reset 流程', () => {
     const aNpc1Pos = a.content.npcs[0].pos;
     const bNpc1Pos = b.content.npcs[0].pos;
     // 至少 NPC 位置不同 (PCG 影响 layout.spawnPoints)
-    expect(
-      aNpc1Pos.x === bNpc1Pos.x && aNpc1Pos.y === bNpc1Pos.y,
-    ).toBe(false);
+    expect(aNpc1Pos.x === bNpc1Pos.x && aNpc1Pos.y === bNpc1Pos.y).toBe(false);
   });
 
   it('reset 100 次不崩 (稳定性)', async () => {
@@ -96,10 +94,19 @@ describe('bridge 端到端: 死亡事件 (通过 helper room)', () => {
     helperRoom.reset(42);
     // 玩家 HP=1, 让 Lv5 怪物一击必杀
     (helperRoom.state as any).entities['e_player_1'].hp = 1;
-    const result = helperRoom.advance([
-      { type: 'attack', entityId: 'e_monster_1' as any, payload: { targetId: 'e_player_1' as any } },
-    ], 50);
-    const deathEvent = result.events.find((e: any) => e.type === 'death' && e.target === 'e_player_1');
+    const result = helperRoom.advance(
+      [
+        {
+          type: 'attack',
+          entityId: 'e_monster_1' as any,
+          payload: { targetId: 'e_player_1' as any },
+        },
+      ],
+      50,
+    );
+    const deathEvent = result.events.find(
+      (e: any) => e.type === 'death' && e.target === 'e_player_1',
+    );
     expect(deathEvent).toBeDefined();
     expect((result.state as any).entities['e_player_1'].hp).toBe(0);
   });
@@ -108,9 +115,16 @@ describe('bridge 端到端: 死亡事件 (通过 helper room)', () => {
     helperRoom.reset(42);
     (helperRoom.state as any).entities['e_player_1'].hp = 0;
     for (let i = 0; i < 10; i++) {
-      helperRoom.advance([{
-        type: 'move', entityId: 'e_player_1' as any, payload: { dx: 1, dy: 0 },
-      }], 50);
+      helperRoom.advance(
+        [
+          {
+            type: 'move',
+            entityId: 'e_player_1' as any,
+            payload: { dx: 1, dy: 0 },
+          },
+        ],
+        50,
+      );
     }
     expect((helperRoom.state as any).entities['e_player_1'].hp).toBe(0);
   });
@@ -150,9 +164,7 @@ describe('bridge 端到端: action 累积', () => {
     let damageEvents: any[] = [];
     for (let i = 0; i < 20; i++) {
       const res = await postAction(4);
-      damageEvents = damageEvents.concat(
-        res.events.filter((e: any) => e.type === 'damage'),
-      );
+      damageEvents = damageEvents.concat(res.events.filter((e: any) => e.type === 'damage'));
       const death = res.events.find((e: any) => e.type === 'death');
       if (death) break;
     }

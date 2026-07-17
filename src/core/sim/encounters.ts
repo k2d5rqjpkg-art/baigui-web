@@ -29,11 +29,56 @@ interface MonsterSpec {
 }
 
 const MONSTER_SPECS: MonsterSpec[] = [
-  { name: '小妖',   baseLevel: 1, baseHp: 12, baseAtk: 3, baseDef: 1, glyph: '#888888', minLevel: 1, maxLevel: 99 },
-  { name: '影狼',   baseLevel: 3, baseHp: 20, baseAtk: 5, baseDef: 2, glyph: '#4466aa', minLevel: 2, maxLevel: 99 },
-  { name: '鬼火',   baseLevel: 5, baseHp: 18, baseAtk: 7, baseDef: 1, glyph: '#aa4444', minLevel: 3, maxLevel: 99 },
-  { name: '怨灵',   baseLevel: 7, baseHp: 35, baseAtk: 9, baseDef: 4, glyph: '#8855aa', minLevel: 5, maxLevel: 99 },
-  { name: '百目鬼', baseLevel: 10, baseHp: 60, baseAtk: 14, baseDef: 8, glyph: '#ddaa00', minLevel: 8, maxLevel: 99 },
+  {
+    name: '小妖',
+    baseLevel: 1,
+    baseHp: 12,
+    baseAtk: 3,
+    baseDef: 1,
+    glyph: '#888888',
+    minLevel: 1,
+    maxLevel: 99,
+  },
+  {
+    name: '影狼',
+    baseLevel: 3,
+    baseHp: 20,
+    baseAtk: 5,
+    baseDef: 2,
+    glyph: '#4466aa',
+    minLevel: 2,
+    maxLevel: 99,
+  },
+  {
+    name: '鬼火',
+    baseLevel: 5,
+    baseHp: 18,
+    baseAtk: 7,
+    baseDef: 1,
+    glyph: '#aa4444',
+    minLevel: 3,
+    maxLevel: 99,
+  },
+  {
+    name: '怨灵',
+    baseLevel: 7,
+    baseHp: 35,
+    baseAtk: 9,
+    baseDef: 4,
+    glyph: '#8855aa',
+    minLevel: 5,
+    maxLevel: 99,
+  },
+  {
+    name: '百目鬼',
+    baseLevel: 10,
+    baseHp: 60,
+    baseAtk: 14,
+    baseDef: 8,
+    glyph: '#ddaa00',
+    minLevel: 8,
+    maxLevel: 99,
+  },
 ];
 
 /**
@@ -82,7 +127,10 @@ export function generateEncounter(
     // 等级浮动 -1..+1
     const lvlJitter = randInt(currentRng, -1, 1);
     currentRng = lvlJitter.next;
-    const monsterLevel = Math.max(1, spec.baseLevel + lvlJitter.value + Math.floor((level - spec.baseLevel) * 0.3));
+    const monsterLevel = Math.max(
+      1,
+      spec.baseLevel + lvlJitter.value + Math.floor((level - spec.baseLevel) * 0.3),
+    );
 
     // 属性按等级缩放
     const lvlBonus = monsterLevel - spec.baseLevel;

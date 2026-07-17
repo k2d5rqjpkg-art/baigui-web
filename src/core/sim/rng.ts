@@ -31,9 +31,9 @@ export function seedFromString(s: string): RNGState {
  * 纯函数,可序列化。
  */
 export function nextRand(state: RNGState): RNGState {
-  let t = (state + 0x6D2B79F5) >>> 0;
+  let t = (state + 0x6d2b79f5) >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1) >>> 0;
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61) >>> 0;
+  t ^= (t + Math.imul(t ^ (t >>> 7), t | 61)) >>> 0;
   return (t ^ (t >>> 14)) >>> 0;
 }
 
@@ -74,10 +74,7 @@ export function chance(state: RNGState, p: number): { hit: boolean; next: RNGSta
 /**
  * 数组里随机挑一个。空数组抛错 (确定性:错误信息固定)。
  */
-export function pickOne<T>(
-  state: RNGState,
-  arr: readonly T[],
-): { value: T; next: RNGState } {
+export function pickOne<T>(state: RNGState, arr: readonly T[]): { value: T; next: RNGState } {
   if (arr.length === 0) {
     throw new Error('pickOne: empty array');
   }

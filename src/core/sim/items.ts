@@ -8,14 +8,7 @@
  *   - 注意:这里只移动"模板 id 字符串",真正的 item entity 在 tick 层处理
  */
 
-import type {
-  EntityId,
-  EquipSlot,
-  GameEvent,
-  GameState,
-  ItemTemplate,
-  SimEntity,
-} from './types';
+import type { EntityId, EquipSlot, GameEvent, GameState, ItemTemplate, SimEntity } from './types';
 
 /**
  * 静态词缀表 —— 至少 8 件,含 1 传说级。
@@ -75,14 +68,20 @@ export const ITEM_TABLE: ItemTemplate[] = [
     id: 'helm_bronze',
     name: '青铜盔',
     slot: 'helm',
-    affixes: [{ key: 'def', value: 3 }, { key: 'hp', value: 10 }],
+    affixes: [
+      { key: 'def', value: 3 },
+      { key: 'hp', value: 10 },
+    ],
     rarity: 'common',
   },
   {
     id: 'ring_focus',
     name: '凝神戒',
     slot: 'accessory',
-    affixes: [{ key: 'atk', value: 2 }, { key: 'def', value: 2 }],
+    affixes: [
+      { key: 'atk', value: 2 },
+      { key: 'def', value: 2 },
+    ],
     rarity: 'rare',
   },
 ];
@@ -96,9 +95,11 @@ export function getItemTemplate(id: string): ItemTemplate | undefined {
  * 计算装备的词缀总和 —— 用于战斗时叠 atk / def / hp。
  * 返回对象是新的 (不可变),便于比较。
  */
-export function sumAffixes(
-  equipment: Partial<Record<EquipSlot, string>>,
-): { atk: number; def: number; hp: number } {
+export function sumAffixes(equipment: Partial<Record<EquipSlot, string>>): {
+  atk: number;
+  def: number;
+  hp: number;
+} {
   let atk = 0;
   let def = 0;
   let hp = 0;
@@ -140,11 +141,7 @@ export interface PickupResult {
  *   - 拾取后物品 entity 从 state.entities 移除
  *   - 返回新 state (immutable)
  */
-export function pickup(
-  state: GameState,
-  entityId: EntityId,
-  itemId: EntityId,
-): PickupResult {
+export function pickup(state: GameState, entityId: EntityId, itemId: EntityId): PickupResult {
   const entity = state.entities[entityId];
   const item = state.entities[itemId];
 
@@ -280,13 +277,15 @@ export function equipFromInventory(
     hp: Math.min(entity.hp, baseMaxHp + newAffix.hp),
   };
 
-  const events: PickupResult['events'] = [{
-    type: 'equip_swap',
-    source: entityId,
-    target: null,
-    data: { slot: tpl.slot, oldItem: oldEquip, newItem: templateId },
-    tick: state.tick,
-  }];
+  const events: PickupResult['events'] = [
+    {
+      type: 'equip_swap',
+      source: entityId,
+      target: null,
+      data: { slot: tpl.slot, oldItem: oldEquip, newItem: templateId },
+      tick: state.tick,
+    },
+  ];
 
   return {
     events,

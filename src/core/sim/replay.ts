@@ -74,7 +74,8 @@ export function replay(seed: number, frames: ReplayFrame[]): ReplayResult {
     const layout = worldGen(seed, 1);
     const r = tick(state, f.actions, 50, { layout });
     state = r.state;
-    if (state.tick !== f.tick + 1) { // frame.tick 是动作前的
+    if (state.tick !== f.tick + 1) {
+      // frame.tick 是动作前的
       diffAt = f.tick;
       break;
     }

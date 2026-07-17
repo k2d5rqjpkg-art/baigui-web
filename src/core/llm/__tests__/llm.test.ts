@@ -410,7 +410,8 @@ describe('generateQuest (resilient wrapper)', () => {
 
   it('strips markdown fences from LLM JSON', async () => {
     process.env.DEEPSEEK_API_KEY = 'sk-test';
-    const fenced = '```json\n{"title":"Fenced","description":"d","objective":"o","reward":"r"}\n```';
+    const fenced =
+      '```json\n{"title":"Fenced","description":"d","objective":"o","reward":"r"}\n```';
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -453,11 +454,18 @@ describe('generateQuest (resilient wrapper)', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [{
-          message: {
-            content: JSON.stringify({ title: 'X', description: 'd', objective: 'o', reward: 'r' }),
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                title: 'X',
+                description: 'd',
+                objective: 'o',
+                reward: 'r',
+              }),
+            },
           },
-        }],
+        ],
       }),
       text: async () => '',
     } as unknown as Response);

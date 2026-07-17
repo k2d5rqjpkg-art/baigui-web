@@ -21,12 +21,7 @@
  *   - dt 只用作步进元数据记录 (Day1 没有连续时间物理)
  */
 
-import type {
-  Action,
-  GameEvent,
-  GameState,
-  MapLayout,
-} from './types';
+import type { Action, GameEvent, GameState, MapLayout } from './types';
 import { resolveCombat } from './combat';
 import { pickup } from './items';
 import { moveEntity } from './movement';
@@ -75,7 +70,12 @@ export function tick(
         break;
       }
       case 'attack': {
-        const result = resolveCombat(working, action.entityId, action.payload.targetId, working.rng);
+        const result = resolveCombat(
+          working,
+          action.entityId,
+          action.payload.targetId,
+          working.rng,
+        );
         working = result.newState;
         events.push(...result.events);
         break;

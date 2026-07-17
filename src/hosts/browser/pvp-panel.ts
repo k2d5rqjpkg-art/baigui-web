@@ -15,8 +15,9 @@ export class PvpPanel {
   constructor(container: HTMLElement, playerId: string = 'browser-p1') {
     this.playerId = playerId;
     // bridge 默认 8787; 开发时可用同源 proxy 或绝对地址
-    this.bridgeBase = (import.meta as any).env?.VITE_BRIDGE_URL
-      ?? `${window.location.protocol}//${window.location.hostname}:8787`;
+    this.bridgeBase =
+      (import.meta as any).env?.VITE_BRIDGE_URL ??
+      `${window.location.protocol}//${window.location.hostname}:8787`;
 
     this.root = document.createElement('div');
     this.root.style.cssText = `

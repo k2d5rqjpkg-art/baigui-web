@@ -6,13 +6,7 @@
  * 借鉴 WoC 的 PARTY_MAX=5 硬编码坑: 用 DungeonConfig 集中化, 避免 magic number
  */
 import { emptyState, addEntity, worldGen, generateEncounter } from './index';
-import type {
-  GameState,
-  SimEntity,
-  EntityId,
-  MapLayout,
-  ItemTemplate,
-} from './types';
+import type { GameState, SimEntity, EntityId, MapLayout, ItemTemplate } from './types';
 
 export interface DungeonConfig {
   id: string;
@@ -59,9 +53,15 @@ export function enterDungeon(
       id: `e_dungeon_${dungeon.id}_m${i + 1}` as EntityId,
       kind: 'monster',
       pos: sp,
-      hp: m.hp, maxHp: m.hp, atk: m.atk, def: m.def, level: m.level,
+      hp: m.hp,
+      maxHp: m.hp,
+      atk: m.atk,
+      def: m.def,
+      level: m.level,
       faction: 'enemy',
-      inventory: [], equipment: {}, buffs: [],
+      inventory: [],
+      equipment: {},
+      buffs: [],
     };
     s = addEntity(s, e);
     monsters.push(e);
@@ -79,7 +79,9 @@ export function enterDungeon(
     def: (firstMonster?.def ?? 1) + 2,
     level: dungeon.bossLevel,
     faction: 'enemy',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   s = addEntity(s, boss);
 
@@ -111,9 +113,10 @@ export function distributeLoot(
     return ra - rb;
   });
 
-  const topDps = participants.length > 0
-    ? participants.reduce((a, b) => (a.damageDealt >= b.damageDealt ? a : b))
-    : null;
+  const topDps =
+    participants.length > 0
+      ? participants.reduce((a, b) => (a.damageDealt >= b.damageDealt ? a : b))
+      : null;
 
   const entries: LootEntry[] = [];
   const unassigned: LootEntry[] = [];

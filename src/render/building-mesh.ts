@@ -4,7 +4,11 @@
  * v3.2: 把 building-gen 输出转成 Three.js Mesh
  */
 import * as THREE from 'three';
-import { generateBuilding, generateSettlement, type BuildingMesh as BuildingData } from './building-gen';
+import {
+  generateBuilding,
+  generateSettlement,
+  type BuildingMesh as BuildingData,
+} from './building-gen';
 
 /** BuildingData → Three.js Mesh */
 export function buildingToMesh(b: BuildingData): THREE.Mesh {

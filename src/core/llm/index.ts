@@ -14,21 +14,21 @@
  * served from memory instead of re-queried.
  */
 
-import { generateText, DeepSeekError, isLlmAvailable } from "./client.js";
-import { llmCache, hashKey } from "./cache.js";
-import { fallbackQuest, fallbackDialogue } from "./fallback.js";
-import { buildQuestPrompt, type QuestJson } from "./prompts/quest.js";
-import { buildDialoguePrompt, type DialogueJson } from "./prompts/dialogue.js";
+import { generateText, DeepSeekError, isLlmAvailable } from './client.js';
+import { llmCache, hashKey } from './cache.js';
+import { fallbackQuest, fallbackDialogue } from './fallback.js';
+import { buildQuestPrompt, type QuestJson } from './prompts/quest.js';
+import { buildDialoguePrompt, type DialogueJson } from './prompts/dialogue.js';
 
-export { generateText, DeepSeekError, isLlmAvailable } from "./client.js";
-export { llmCache, hashKey, LRU } from "./cache.js";
-export { fallbackQuest, fallbackDialogue } from "./fallback.js";
-export { buildQuestPrompt, buildDialoguePrompt } from "./prompts/index.js";
-export type { QuestJson, DialogueJson } from "./prompts/index.js";
+export { generateText, DeepSeekError, isLlmAvailable } from './client.js';
+export { llmCache, hashKey, LRU } from './cache.js';
+export { fallbackQuest, fallbackDialogue } from './fallback.js';
+export { buildQuestPrompt, buildDialoguePrompt } from './prompts/index.js';
+export type { QuestJson, DialogueJson } from './prompts/index.js';
 
 interface GenerateMeta {
   /** Which path produced the result. */
-  source: "llm" | "cache" | "fallback";
+  source: 'llm' | 'cache' | 'fallback';
   /** If fallback, why we fell back. */
   reason?: string;
 }
@@ -40,8 +40,11 @@ interface GenerateMeta {
 function parseJsonField<T>(raw: string, label: string): T {
   let text = raw.trim();
   // Strip leading/trailing ```json ... ``` fences if present.
-  if (text.startsWith("```")) {
-    text = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+  if (text.startsWith('```')) {
+    text = text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/```\s*$/, '')
+      .trim();
   }
   try {
     return JSON.parse(text) as T;
@@ -68,13 +71,13 @@ export async function generateQuest(
 
   const cached = llmCache.get(cacheKey);
   if (cached) {
-    return { quest: parseJsonField<QuestJson>(cached, "quest"), meta: { source: "cache" } };
+    return { quest: parseJsonField<QuestJson>(cached, 'quest'), meta: { source: 'cache' } };
   }
 
   if (!isLlmAvailable()) {
     return {
       quest: fallbackQuest(level),
-      meta: { source: "fallback", reason: "DEEPSEEK_API_KEY not set" },
+      meta: { source: 'fallback', reason: 'DEEPSEEK_API_KEY not set' },
     };
   }
 
@@ -85,15 +88,15 @@ export async function generateQuest(
       maxTokens: 400,
       jsonMode: true,
     });
-    const quest = parseJsonField<QuestJson>(raw, "quest");
+    const quest = parseJsonField<QuestJson>(raw, 'quest');
     // Only cache successful parses.
     llmCache.set(cacheKey, raw);
-    return { quest, meta: { source: "llm" } };
+    return { quest, meta: { source: 'llm' } };
   } catch (err) {
     return {
       quest: fallbackQuest(level),
       meta: {
-        source: "fallback",
+        source: 'fallback',
         reason: err instanceof Error ? err.message : String(err),
       },
     };
@@ -112,20 +115,22 @@ export async function generateDialogue(
   playerContext: string,
 ): Promise<{ dialogue: DialogueJson; meta: GenerateMeta }> {
   const { system, user } = buildDialoguePrompt(npcName, npcPersonality, playerContext);
-  const cacheKey = hashKey(`dialogue::${npcName}::${npcPersonality}::${playerContext}::${system.slice(0, 64)}`);
+  const cacheKey = hashKey(
+    `dialogue::${npcName}::${npcPersonality}::${playerContext}::${system.slice(0, 64)}`,
+  );
 
   const cached = llmCache.get(cacheKey);
   if (cached) {
     return {
-      dialogue: parseJsonField<DialogueJson>(cached, "dialogue"),
-      meta: { source: "cache" },
+      dialogue: parseJsonField<DialogueJson>(cached, 'dialogue'),
+      meta: { source: 'cache' },
     };
   }
 
   if (!isLlmAvailable()) {
     return {
       dialogue: fallbackDialogue(npcName),
-      meta: { source: "fallback", reason: "DEEPSEEK_API_KEY not set" },
+      meta: { source: 'fallback', reason: 'DEEPSEEK_API_KEY not set' },
     };
   }
 
@@ -136,14 +141,14 @@ export async function generateDialogue(
       maxTokens: 300,
       jsonMode: true,
     });
-    const dialogue = parseJsonField<DialogueJson>(raw, "dialogue");
+    const dialogue = parseJsonField<DialogueJson>(raw, 'dialogue');
     llmCache.set(cacheKey, raw);
-    return { dialogue, meta: { source: "llm" } };
+    return { dialogue, meta: { source: 'llm' } };
   } catch (err) {
     return {
       dialogue: fallbackDialogue(npcName),
       meta: {
-        source: "fallback",
+        source: 'fallback',
         reason: err instanceof Error ? err.message : String(err),
       },
     };

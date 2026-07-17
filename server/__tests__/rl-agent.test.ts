@@ -36,7 +36,9 @@ class QAgent {
     row[a] = v;
     this.q.set(k, row);
   }
-  act(obs: ReturnType<QAgent['key']> extends string ? Parameters<QAgent['key']>[0] : never): number {
+  act(
+    obs: ReturnType<QAgent['key']> extends string ? Parameters<QAgent['key']>[0] : never,
+  ): number {
     const k = this.key(obs);
     const q = this.q.get(k) ?? [0, 0, 0, 0, 0, 0];
     let a: number;

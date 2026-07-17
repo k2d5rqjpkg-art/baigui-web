@@ -16,8 +16,14 @@ describe('Day18: learnSkill 路径 (面板后端)', () => {
       id: 'e_p1' as EntityId,
       kind: 'player',
       pos: { x: 1, y: 1 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
-      faction: 'player', inventory: [], equipment: {},
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 5,
+      faction: 'player',
+      inventory: [],
+      equipment: {},
       buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 } as any],
     });
     const r1 = learnSkill(s, 'e_p1' as EntityId, 'w-basic-power-strike');

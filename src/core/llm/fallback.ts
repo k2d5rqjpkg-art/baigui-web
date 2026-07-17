@@ -14,58 +14,66 @@
  *   - 3 NPCs, each with 3 dialogue beats (greeting / hint / farewell)
  */
 
-import type { QuestJson } from "./prompts/quest.js";
-import type { DialogueJson } from "./prompts/dialogue.js";
-import type { SimEntity, GameState } from "../sim/types.js";
-import type { AdvisorSuggestion, AdvisorGoal } from "./advisor-types.js";
+import type { QuestJson } from './prompts/quest.js';
+import type { DialogueJson } from './prompts/dialogue.js';
+import type { SimEntity, GameState } from '../sim/types.js';
+import type { AdvisorSuggestion, AdvisorGoal } from './advisor-types.js';
 
 const QUESTS_BY_LEVEL: Record<number, QuestJson> = {
   1: {
     title: "The Fox's Lost Bell",
-    description: "A paper charm nailed to a cedar tree trembles faintly; the bell it once held is missing.",
-    objective: "Find the small bronze bell hidden somewhere within 200 paces of the marked tree.",
-    reward: "30 spirit jade, 1 fox-tail charm",
+    description:
+      'A paper charm nailed to a cedar tree trembles faintly; the bell it once held is missing.',
+    objective: 'Find the small bronze bell hidden somewhere within 200 paces of the marked tree.',
+    reward: '30 spirit jade, 1 fox-tail charm',
   },
   2: {
-    title: "Lanterns Across the Mire",
-    description: "Five paper lanterns drift across the swamp at dusk; the villagers claim they lead travelers astray on purpose.",
+    title: 'Lanterns Across the Mire',
+    description:
+      'Five paper lanterns drift across the swamp at dusk; the villagers claim they lead travelers astray on purpose.',
     objective: "Light the shrine at the mire's centre before the sixth lantern surfaces.",
-    reward: "120 spirit jade, a watertight talisman",
+    reward: '120 spirit jade, a watertight talisman',
   },
   3: {
-    title: "The Shrine Without a Name",
-    description: "An abandoned wayside shrine has begun whispering to anyone who lingers near it past dusk.",
-    objective: "Investigate the shrine, recover the sealed name-scroll, and bring it to the village elder.",
-    reward: "200 spirit jade, 1 inked name-scroll",
+    title: 'The Shrine Without a Name',
+    description:
+      'An abandoned wayside shrine has begun whispering to anyone who lingers near it past dusk.',
+    objective:
+      'Investigate the shrine, recover the sealed name-scroll, and bring it to the village elder.',
+    reward: '200 spirit jade, 1 inked name-scroll',
   },
   4: {
-    title: "Wisp-Worn Path",
-    description: "A trail of pale wisps has appeared along the mountain pass. They mark the road to something older than the pass itself.",
-    objective: "Follow the wisps to their source and bind what you find there without breaking the seal.",
-    reward: "260 spirit jade, 1 wisp-thread rope",
+    title: 'Wisp-Worn Path',
+    description:
+      'A trail of pale wisps has appeared along the mountain pass. They mark the road to something older than the pass itself.',
+    objective:
+      'Follow the wisps to their source and bind what you find there without breaking the seal.',
+    reward: '260 spirit jade, 1 wisp-thread rope',
   },
   5: {
-    title: "The Frozen Threshold",
-    description: "An old yōkai-ward at the mountain pass has cracked; the ice it held back begins to whisper in a voice like cracking glass.",
-    objective: "Re-seal the threshold with three shards of black ice gathered from the upper ridge.",
-    reward: "300 spirit jade, one sealed yōkai fang",
+    title: 'The Frozen Threshold',
+    description:
+      'An old yōkai-ward at the mountain pass has cracked; the ice it held back begins to whisper in a voice like cracking glass.',
+    objective:
+      'Re-seal the threshold with three shards of black ice gathered from the upper ridge.',
+    reward: '300 spirit jade, one sealed yōkai fang',
   },
 };
 
 const NPCS: Record<string, DialogueJson> = {
-  "Old Hag Kiku": {
+  'Old Hag Kiku': {
     greeting: "Don't touch the belladonna unless you fancy seeing spirits today.",
-    hint: "Where three crows roost, a root worth more than gold hides in plain earth.",
-    farewell: "Off with you. And wash your hands before you touch my kettle.",
+    hint: 'Where three crows roost, a root worth more than gold hides in plain earth.',
+    farewell: 'Off with you. And wash your hands before you touch my kettle.',
   },
-  "Lantern-Bearer Shō": {
-    greeting: "Forgive me — have you seen a flicker of blue along the tree-line?",
-    hint: "The shrine path forks at the mossy stone; the left fork remembers what the right forgets.",
+  'Lantern-Bearer Shō': {
+    greeting: 'Forgive me — have you seen a flicker of blue along the tree-line?',
+    hint: 'The shrine path forks at the mossy stone; the left fork remembers what the right forgets.',
     farewell: "Stay close to the lantern's reach. The dark has a long memory.",
   },
-  "Driftwood Taro": {
-    greeting: "The river brought you, did it? It brings everything, eventually.",
-    hint: "Three stones mark a ford that the map forgets. Look for the one with the chipped eye.",
+  'Driftwood Taro': {
+    greeting: 'The river brought you, did it? It brings everything, eventually.',
+    hint: 'Three stones mark a ford that the map forgets. Look for the one with the chipped eye.',
     farewell: "When the water stills, listen. That's when the river tells the truth.",
   },
 };
@@ -92,9 +100,9 @@ export function fallbackDialogue(npcName: string): DialogueJson {
   const known = NPCS[npcName];
   if (known) return known;
   return {
-    greeting: "You look like someone the road has chewed on for a while.",
-    hint: "Trust the small sounds. The big ones are usually lying.",
-    farewell: "Walk light. The shadows here remember footsteps longer than names.",
+    greeting: 'You look like someone the road has chewed on for a while.',
+    hint: 'Trust the small sounds. The big ones are usually lying.',
+    farewell: 'Walk light. The shadows here remember footsteps longer than names.',
   };
 }
 

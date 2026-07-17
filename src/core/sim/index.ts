@@ -26,14 +26,7 @@ export type {
 } from './types';
 
 // RNG
-export {
-  seedFromString,
-  nextRand,
-  rand,
-  randInt,
-  chance,
-  pickOne,
-} from './rng';
+export { seedFromString, nextRand, rand, randInt, chance, pickOne } from './rng';
 
 // 子模块
 export { resolveCombat } from './combat';

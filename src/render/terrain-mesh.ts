@@ -22,7 +22,7 @@ export function terrainToMesh(data: TerrainData): THREE.Mesh {
   geometry.setIndex(data.indices);
 
   // 顶点颜色 (每个顶点对应一个 biome color)
-  const colors = new Float32Array(data.vertices.length / 3 * 3);
+  const colors = new Float32Array((data.vertices.length / 3) * 3);
   const triCount = data.indices.length / 3;
   for (let t = 0; t < triCount; t++) {
     const i0 = data.indices[t * 3]!;

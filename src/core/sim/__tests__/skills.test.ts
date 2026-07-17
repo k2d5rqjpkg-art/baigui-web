@@ -23,9 +23,14 @@ function makePlayer(level: number = 1, classKind: ClassKind = 'warrior'): SimEnt
     id: 'e_p1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp: 100, maxHp: 100, atk: 30, def: 5, level,
+    hp: 100,
+    maxHp: 100,
+    atk: 30,
+    def: 5,
+    level,
     faction: 'player',
-    inventory: [], equipment: {},
+    inventory: [],
+    equipment: {},
     buffs: [{ type: 'class', classKind, skillPoints: 0 } as any],
   };
   return e;
@@ -175,6 +180,8 @@ describe('getLearnedSkills', () => {
     const s = addEntity(emptyState(42), makePlayer(1, 'warrior'));
     const sWithPoints = gainSkillPointsOnLevelUp(s, 'e_p1' as EntityId, 2);
     const r = learnSkill(sWithPoints, 'e_p1' as EntityId, 'w-basic-power-strike');
-    expect(getLearnedSkills(r.newState.entities['e_p1' as EntityId]!)).toEqual(['w-basic-power-strike']);
+    expect(getLearnedSkills(r.newState.entities['e_p1' as EntityId]!)).toEqual([
+      'w-basic-power-strike',
+    ]);
   });
 });

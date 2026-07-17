@@ -205,7 +205,9 @@ describe('Network mode (Day4)', () => {
 
   it('network 模式下收到 HP=0 触发 onPlayerDeath', () => {
     let deathCalled = false;
-    game.onPlayerDeath = () => { deathCalled = true; };
+    game.onPlayerDeath = () => {
+      deathCalled = true;
+    };
     client.emitWelcome({
       entityId: 'e_player_7',
       snapshot: { tick: 0, entities: [makePlayerEntity('e_player_7', 5, 5)] },

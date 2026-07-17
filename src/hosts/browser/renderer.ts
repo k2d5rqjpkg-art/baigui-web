@@ -18,11 +18,7 @@
 import * as THREE from 'three';
 import type { BrowserGame } from './game';
 import type { SimEntity, GameEvent } from '../../core/sim';
-import {
-  createPlayerTexture,
-  createEnemyTexture,
-  createItemTexture,
-} from '../../entities/sprites';
+import { createPlayerTexture, createEnemyTexture, createItemTexture } from '../../entities/sprites';
 import type { EnemyType } from '../../core/components';
 import { sfx } from '../../render/sfx-gen';
 import { AnimationMixer, ANIMATION_PRESETS } from '../../render/animation-mixer';
@@ -83,9 +79,12 @@ export class GameRenderer {
     const aspect = container.clientWidth / container.clientHeight;
     const viewSize = Math.max(worldW, worldH) * 0.5;
     this.camera = new THREE.OrthographicCamera(
-      -viewSize * aspect, viewSize * aspect,
-      viewSize, -viewSize,
-      0.1, 100,
+      -viewSize * aspect,
+      viewSize * aspect,
+      viewSize,
+      -viewSize,
+      0.1,
+      100,
     );
     this.camera.position.set(0, 0, 10);
     this.camera.lookAt(0, 0, 0);
@@ -195,7 +194,11 @@ export class GameRenderer {
     }
 
     // 3. 墙壁网格线 (lines, 给地图纹理感)
-    const wallMat = new THREE.LineBasicMaterial({ color: 0x444488, transparent: true, opacity: 0.4 });
+    const wallMat = new THREE.LineBasicMaterial({
+      color: 0x444488,
+      transparent: true,
+      opacity: 0.4,
+    });
     const points: THREE.Vector3[] = [];
     for (const room of layout.rooms) {
       const x1 = this.gridX(room.x);
@@ -232,11 +235,7 @@ export class GameRenderer {
     this.buildingMeshes = settlementToMeshes(0, 0, 5, 42, 10);
     for (const b of this.buildingMeshes) {
       // building 的 x/z 是 sim 坐标, 转 world
-      b.position.set(
-        b.position.x * CELL_SIZE,
-        b.position.y * CELL_SIZE,
-        b.position.z * CELL_SIZE,
-      );
+      b.position.set(b.position.x * CELL_SIZE, b.position.y * CELL_SIZE, b.position.z * CELL_SIZE);
       this.scene.add(b);
     }
   }
@@ -303,19 +302,19 @@ export class GameRenderer {
         new THREE.PlaneGeometry(CELL_SIZE * 0.9 * ratio, CELL_SIZE * 0.12),
         new THREE.MeshBasicMaterial({ color: ratio > 0.3 ? 0xcc3333 : 0xff6600 }),
       );
-      hpFg.position.set(-CELL_SIZE * 0.9 * (1 - ratio) / 2, CELL_SIZE * 0.65, 0.2);
+      hpFg.position.set((-CELL_SIZE * 0.9 * (1 - ratio)) / 2, CELL_SIZE * 0.65, 0.2);
       group.add(hpFg);
       (group as any).__hpBar = sprite;
 
       return group;
     }
     // item: 按 template id 决定外观
-      const itemTplId = (e.inventory?.[0] ?? 'generic') as string;
-      const tex = createItemTexture(itemTplId);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-      const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(CELL_SIZE * 0.7, CELL_SIZE * 0.7, 1);
-      return sprite;
+    const itemTplId = (e.inventory?.[0] ?? 'generic') as string;
+    const tex = createItemTexture(itemTplId);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(CELL_SIZE * 0.7, CELL_SIZE * 0.7, 1);
+    return sprite;
   }
 
   /** 处理 sim events (伤害飘字/拾取闪光/死亡) */
@@ -433,7 +432,10 @@ export class GameRenderer {
   // ============ Utility ============
 }
 
-function makeCanvasTexture(size: number, draw: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+function makeCanvasTexture(
+  size: number,
+  draw: (ctx: CanvasRenderingContext2D) => void,
+): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;

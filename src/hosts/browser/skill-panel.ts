@@ -85,8 +85,11 @@ export class SkillPanel {
     for (const s of skills) {
       const row = document.createElement('div');
       const isLearned = learned.has(s.id);
-      const canLearn = !isLearned && pts >= 1 && snap.level >= s.requiredLevel
-        && s.prereq.every((p) => learned.has(p));
+      const canLearn =
+        !isLearned &&
+        pts >= 1 &&
+        snap.level >= s.requiredLevel &&
+        s.prereq.every((p) => learned.has(p));
       row.style.cssText = `
         border: 1px solid ${isLearned ? '#446644' : canLearn ? '#6688cc' : '#333355'};
         background: ${isLearned ? 'rgba(40,80,40,0.4)' : canLearn ? 'rgba(40,50,90,0.5)' : 'rgba(20,20,30,0.5)'};
@@ -99,7 +102,7 @@ export class SkillPanel {
           <span style="color:#888;font-size:11px">${s.tier} · ${s.path} · Lv${s.requiredLevel}</span>
         </div>
         <div style="color:#aaa;font-size:11px;margin-top:3px">${s.description}</div>
-        <div style="color:#66aacc;font-size:10px;margin-top:2px">${isLearned ? '✓ 已学' : canLearn ? '点击学习' : (s.prereq.length ? `需: ${s.prereq.join(', ')}` : '不可学')}</div>
+        <div style="color:#66aacc;font-size:10px;margin-top:2px">${isLearned ? '✓ 已学' : canLearn ? '点击学习' : s.prereq.length ? `需: ${s.prereq.join(', ')}` : '不可学'}</div>
       `;
       if (canLearn) {
         row.addEventListener('click', () => this.tryLearn(entity.id, s));

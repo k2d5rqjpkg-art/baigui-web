@@ -15,9 +15,15 @@ function makeState(seed = 42): GameState {
     id: 'e_test_p1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp: 50, maxHp: 100, atk: 30, def: 5, level: 5,
+    hp: 50,
+    maxHp: 100,
+    atk: 30,
+    def: 5,
+    level: 5,
     faction: 'player',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   s = addEntity(s, player);
   return s;

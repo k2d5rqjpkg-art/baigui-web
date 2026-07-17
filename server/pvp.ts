@@ -72,14 +72,32 @@ export class PvPRoom {
     // 注: PvP 双方用不同 faction (playerA vs playerB), 否则 sim 同派系不互殴
     let s = emptyState(42);
     s = addEntity(s, {
-      id: playerA, kind: 'player', pos: { x: 5, y: 5 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
-      faction: 'team_A', inventory: [], equipment: {}, buffs: [],
+      id: playerA,
+      kind: 'player',
+      pos: { x: 5, y: 5 },
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 5,
+      faction: 'team_A',
+      inventory: [],
+      equipment: {},
+      buffs: [],
     });
     s = addEntity(s, {
-      id: playerB, kind: 'player', pos: { x: 15, y: 5 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
-      faction: 'team_B', inventory: [], equipment: {}, buffs: [],
+      id: playerB,
+      kind: 'player',
+      pos: { x: 15, y: 5 },
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 5,
+      faction: 'team_B',
+      inventory: [],
+      equipment: {},
+      buffs: [],
     });
     this.state = s;
   }

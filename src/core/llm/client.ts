@@ -29,19 +29,19 @@ export class DeepSeekError extends Error {
     public readonly cause?: unknown,
   ) {
     super(message);
-    this.name = "DeepSeekError";
+    this.name = 'DeepSeekError';
   }
 }
 
-const DEFAULT_BASE_URL = "https://api.deepseek.com/v1";
-const DEFAULT_MODEL = "deepseek-chat";
+const DEFAULT_BASE_URL = 'https://api.deepseek.com/v1';
+const DEFAULT_MODEL = 'deepseek-chat';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 500;
 
 function getEnv(name: string, fallback?: string): string | undefined {
   // Node 18+ exposes process.env in both CJS and ESM. Guard for browser/test envs.
-  if (typeof process !== "undefined" && process.env) {
+  if (typeof process !== 'undefined' && process.env) {
     const v = process.env[name];
     if (v && v.length > 0) return v;
   }
@@ -54,17 +54,19 @@ function sleep(ms: number): Promise<void> {
 
 /** Read a fetch Response as text with a hard cap (defends against huge / streaming bodies). */
 async function readResponseText(resp: Response, maxBytes: number = 1_000_000): Promise<string> {
-  if (!resp.body) return "";
+  if (!resp.body) return '';
   const reader = resp.body.getReader();
-  const decoder = new TextDecoder("utf-8");
+  const decoder = new TextDecoder('utf-8');
   let total = 0;
-  let out = "";
+  let out = '';
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
     if (total > maxBytes) {
-      out += decoder.decode(value, { stream: true }).slice(0, maxBytes - (total - value.byteLength));
+      out += decoder
+        .decode(value, { stream: true })
+        .slice(0, maxBytes - (total - value.byteLength));
       break;
     }
     out += decoder.decode(value, { stream: true });
@@ -82,20 +84,23 @@ export async function generateText(
   prompt: string,
   opts: GenerateTextOptions = {},
 ): Promise<string> {
-  const apiKey = getEnv("DEEPSEEK_API_KEY");
+  const apiKey = getEnv('DEEPSEEK_API_KEY');
   if (!apiKey) {
-    throw new DeepSeekError("DEEPSEEK_API_KEY not set — caller should use fallback");
+    throw new DeepSeekError('DEEPSEEK_API_KEY not set — caller should use fallback');
   }
 
-  const baseUrl = (getEnv("DEEPSEEK_BASE_URL", DEFAULT_BASE_URL) || DEFAULT_BASE_URL).replace(/\/+$/, "");
-  const model = opts.model ?? getEnv("DEEPSEEK_MODEL", DEFAULT_MODEL) ?? DEFAULT_MODEL;
+  const baseUrl = (getEnv('DEEPSEEK_BASE_URL', DEFAULT_BASE_URL) || DEFAULT_BASE_URL).replace(
+    /\/+$/,
+    '',
+  );
+  const model = opts.model ?? getEnv('DEEPSEEK_MODEL', DEFAULT_MODEL) ?? DEFAULT_MODEL;
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  const messages: Array<{ role: "system" | "user"; content: string }> = [];
+  const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
   if (opts.systemPrompt) {
-    messages.push({ role: "system", content: opts.systemPrompt });
+    messages.push({ role: 'system', content: opts.systemPrompt });
   }
-  messages.push({ role: "user", content: prompt });
+  messages.push({ role: 'user', content: prompt });
 
   const body: Record<string, unknown> = {
     model,
@@ -104,7 +109,7 @@ export async function generateText(
   };
   if (opts.temperature !== undefined) body.temperature = opts.temperature;
   if (opts.maxTokens !== undefined) body.max_tokens = opts.maxTokens;
-  if (opts.jsonMode) body.response_format = { type: "json_object" };
+  if (opts.jsonMode) body.response_format = { type: 'json_object' };
 
   const url = `${baseUrl}/chat/completions`;
 
@@ -114,11 +119,11 @@ export async function generateText(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const resp = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
-          Accept: "application/json",
+          Accept: 'application/json',
         },
         body: JSON.stringify(body),
         signal: controller.signal,
@@ -129,10 +134,7 @@ export async function generateText(
         const text = await readResponseText(resp);
         // Non-retryable: 4xx other than 408/409/429
         const retryable = status === 408 || status === 409 || status === 429 || status >= 500;
-        const err = new DeepSeekError(
-          `DeepSeek HTTP ${status}: ${text.slice(0, 240)}`,
-          status,
-        );
+        const err = new DeepSeekError(`DeepSeek HTTP ${status}: ${text.slice(0, 240)}`, status);
         if (!retryable || attempt === MAX_ATTEMPTS) throw err;
         lastError = err;
         // fall through to backoff
@@ -141,15 +143,15 @@ export async function generateText(
           choices?: Array<{ message?: { content?: string } }>;
         };
         const content = data.choices?.[0]?.message?.content;
-        if (typeof content !== "string") {
-          throw new DeepSeekError("DeepSeek response missing choices[0].message.content");
+        if (typeof content !== 'string') {
+          throw new DeepSeekError('DeepSeek response missing choices[0].message.content');
         }
         return content;
       }
     } catch (err) {
       lastError = err;
       // AbortError / network / fetch-thrown — retry if attempts remain
-      const isAbort = err instanceof Error && err.name === "AbortError";
+      const isAbort = err instanceof Error && err.name === 'AbortError';
       const isDeepSeek = err instanceof DeepSeekError;
       // DeepSeekError already handled its own retry decision above.
       if (isAbort && attempt === MAX_ATTEMPTS) {
@@ -182,5 +184,5 @@ export async function generateText(
 
 /** Cheap predicate for callers: is the API usable right now (key configured)? */
 export function isLlmAvailable(): boolean {
-  return Boolean(getEnv("DEEPSEEK_API_KEY"));
+  return Boolean(getEnv('DEEPSEEK_API_KEY'));
 }

@@ -16,12 +16,12 @@ export type SfxType = 'attack' | 'hit' | 'death' | 'pickup' | 'footstep';
 
 /** 音效配置 (频率 / 时长 / 包络) */
 export interface SfxConfig {
-  frequency: number;       // Hz, 主音高
-  duration: number;        // ms
-  attack: number;          // ms, 上升到最大
-  decay: number;           // ms, 衰减
-  type: OscillatorType;     // sine/square/sawtooth/triangle
-  volume: number;           // 0-1
+  frequency: number; // Hz, 主音高
+  duration: number; // ms
+  attack: number; // ms, 上升到最大
+  decay: number; // ms, 衰减
+  type: OscillatorType; // sine/square/sawtooth/triangle
+  volume: number; // 0-1
   /** 频率滑音 (Hz 起始 → 结束) */
   frequencyEnd?: number;
   /** 包络: lowpass filter (Hz) */
@@ -137,11 +137,7 @@ export class SfxEngine {
  * 纯函数: 给定 ctx + masterGain + config, 合成一段音效
  * 可独立测试 (mock AudioContext)
  */
-export function playSfx(
-  ctx: AudioContext,
-  masterGain: GainNode,
-  cfg: SfxConfig,
-): void {
+export function playSfx(ctx: AudioContext, masterGain: GainNode, cfg: SfxConfig): void {
   const now = ctx.currentTime;
   const startTime = now;
   const endTime = now + cfg.duration / 1000;
@@ -151,10 +147,7 @@ export function playSfx(
   osc.type = cfg.type;
   osc.frequency.setValueAtTime(cfg.frequency, startTime);
   if (cfg.frequencyEnd !== undefined) {
-    osc.frequency.exponentialRampToValueAtTime(
-      Math.max(1, cfg.frequencyEnd),
-      endTime,
-    );
+    osc.frequency.exponentialRampToValueAtTime(Math.max(1, cfg.frequencyEnd), endTime);
   }
 
   // 2. 包络 (Gain)

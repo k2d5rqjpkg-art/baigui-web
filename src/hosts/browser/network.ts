@@ -206,6 +206,8 @@ export function defaultRoomId(): string {
       const id = hash.slice(5);
       if (/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return id;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return 'room-0';
 }

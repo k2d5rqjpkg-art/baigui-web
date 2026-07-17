@@ -66,8 +66,14 @@ describe('Day44: property-based PvP', () => {
           const a = room.state.entities['p_a' as any];
           const b = room.state.entities['p_b' as any];
           if (!a || !b || a.hp <= 0 || b.hp <= 0) break;
-          room.step({ A: { type: 'attack', entityId: 'p_a' as any, payload: { targetId: 'p_b' as any } }, B: null });
-          room.step({ A: null, B: { type: 'attack', entityId: 'p_b' as any, payload: { targetId: 'p_a' as any } } });
+          room.step({
+            A: { type: 'attack', entityId: 'p_a' as any, payload: { targetId: 'p_b' as any } },
+            B: null,
+          });
+          room.step({
+            A: null,
+            B: { type: 'attack', entityId: 'p_b' as any, payload: { targetId: 'p_a' as any } },
+          });
         }
         expect(room.tickNum).toBeGreaterThanOrEqual(0);
         if (room.winner !== null) {

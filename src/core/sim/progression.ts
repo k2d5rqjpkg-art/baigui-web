@@ -30,7 +30,10 @@ export const DEFAULT_PROGRESSION: ProgressionConfig = {
 };
 
 /** 下一级所需 xp */
-export function xpToNextLevel(currentLevel: number, cfg: ProgressionConfig = DEFAULT_PROGRESSION): number {
+export function xpToNextLevel(
+  currentLevel: number,
+  cfg: ProgressionConfig = DEFAULT_PROGRESSION,
+): number {
   return Math.floor(cfg.baseXp * Math.pow(currentLevel, cfg.exponent));
 }
 
@@ -130,6 +133,9 @@ export function getXp(entity: SimEntity): number {
 }
 
 /** 查 entity 下一级所需 xp */
-export function getXpToNext(entity: SimEntity, cfg: ProgressionConfig = DEFAULT_PROGRESSION): number {
+export function getXpToNext(
+  entity: SimEntity,
+  cfg: ProgressionConfig = DEFAULT_PROGRESSION,
+): number {
   return xpToNextLevel(entity.level, cfg);
 }

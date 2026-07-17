@@ -4,24 +4,29 @@
  * Day8: 经验 + 升级测试
  */
 import { describe, it, expect } from 'vitest';
-import {
-  xpToNextLevel,
-  gainXp,
-  killRewardXp,
-  getXp,
-  DEFAULT_PROGRESSION,
-} from '../progression';
+import { xpToNextLevel, gainXp, killRewardXp, getXp, DEFAULT_PROGRESSION } from '../progression';
 import { emptyState, addEntity } from '../tick';
 import type { SimEntity, EntityId } from '../types';
 
-function makePlayer(level: number = 1, atk: number = 30, def: number = 5, hp: number = 100): SimEntity {
+function makePlayer(
+  level: number = 1,
+  atk: number = 30,
+  def: number = 5,
+  hp: number = 100,
+): SimEntity {
   return {
     id: 'e_p1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp, maxHp: hp, atk, def, level,
+    hp,
+    maxHp: hp,
+    atk,
+    def,
+    level,
     faction: 'player',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
 }
 
@@ -81,7 +86,7 @@ describe('gainXp (经验累积 + 升级)', () => {
     // 属性 +DEFAULT
     expect(r.newState.entities['e_p1' as EntityId]!.hp).toBe(120); // 100 + 20
     expect(r.newState.entities['e_p1' as EntityId]!.atk).toBe(35); // 30 + 5
-    expect(r.newState.entities['e_p1' as EntityId]!.def).toBe(7);  // 5 + 2
+    expect(r.newState.entities['e_p1' as EntityId]!.def).toBe(7); // 5 + 2
   });
 
   it('大额 xp → 可能升多级', () => {

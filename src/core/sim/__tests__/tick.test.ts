@@ -80,7 +80,11 @@ describe('tick()', () => {
     s = addEntity(s, mkMonster('e_m', 6, 5));
 
     const actions = [
-      { type: 'attack' as const, entityId: 'e_p' as EntityId, payload: { targetId: 'e_m' as EntityId } },
+      {
+        type: 'attack' as const,
+        entityId: 'e_p' as EntityId,
+        payload: { targetId: 'e_m' as EntityId },
+      },
     ];
     const r = tick(s, actions, 1.0, { layout });
     expect(r.state.tick).toBe(s.tick + 1);
@@ -96,10 +100,19 @@ describe('tick()', () => {
     const beforeTick = s.tick;
     const beforeRng = s.rng;
 
-    tick(s, [
-      { type: 'move' as const, entityId: 'e_p' as EntityId, payload: { dx: 1, dy: 0 } },
-      { type: 'attack' as const, entityId: 'e_p' as EntityId, payload: { targetId: 'e_m' as EntityId } },
-    ], 1.0, { layout });
+    tick(
+      s,
+      [
+        { type: 'move' as const, entityId: 'e_p' as EntityId, payload: { dx: 1, dy: 0 } },
+        {
+          type: 'attack' as const,
+          entityId: 'e_p' as EntityId,
+          payload: { targetId: 'e_m' as EntityId },
+        },
+      ],
+      1.0,
+      { layout },
+    );
 
     expect(JSON.stringify(s)).toBe(before);
     expect(s.tick).toBe(beforeTick);
@@ -132,7 +145,11 @@ describe('tick()', () => {
     const s1 = build();
     const s2 = build();
     const a1 = [
-      { type: 'attack' as const, entityId: 'e_p' as EntityId, payload: { targetId: 'e_m' as EntityId } },
+      {
+        type: 'attack' as const,
+        entityId: 'e_p' as EntityId,
+        payload: { targetId: 'e_m' as EntityId },
+      },
     ];
     const r1 = tick(s1, a1, 1.0, { layout });
     const r2 = tick(s2, a1, 1.0, { layout });
@@ -145,9 +162,12 @@ describe('tick()', () => {
   it('routes move action to movement sub-module', () => {
     let s: GameState = emptyState(1);
     s = addEntity(s, mkPlayer('e_p', 5, 5));
-    const r = tick(s, [
-      { type: 'move' as const, entityId: 'e_p' as EntityId, payload: { dx: 1, dy: 0 } },
-    ], 1.0, { layout });
+    const r = tick(
+      s,
+      [{ type: 'move' as const, entityId: 'e_p' as EntityId, payload: { dx: 1, dy: 0 } }],
+      1.0,
+      { layout },
+    );
     expect(r.state.entities['e_p']!.pos).toEqual({ x: 6, y: 5 });
     expect(r.events.some((e) => e.type === 'move')).toBe(true);
   });
@@ -156,9 +176,18 @@ describe('tick()', () => {
     let s: GameState = emptyState(1);
     s = addEntity(s, mkPlayer('e_p', 5, 5, { atk: 100 }));
     s = addEntity(s, mkMonster('e_m', 5, 6, { def: 0, level: 1, hp: 50, maxHp: 50 }));
-    const r = tick(s, [
-      { type: 'attack' as const, entityId: 'e_p' as EntityId, payload: { targetId: 'e_m' as EntityId } },
-    ], 1.0, { layout });
+    const r = tick(
+      s,
+      [
+        {
+          type: 'attack' as const,
+          entityId: 'e_p' as EntityId,
+          payload: { targetId: 'e_m' as EntityId },
+        },
+      ],
+      1.0,
+      { layout },
+    );
     expect(r.events.some((e) => e.type === 'damage')).toBe(true);
     expect(r.state.entities['e_m']!.hp).toBeLessThan(50);
   });
@@ -167,9 +196,18 @@ describe('tick()', () => {
     let s: GameState = emptyState(1);
     s = addEntity(s, mkPlayer('e_p', 5, 5));
     s = addEntity(s, mkItem('e_i', 'sword_iron', 5, 5));
-    const r = tick(s, [
-      { type: 'pickup' as const, entityId: 'e_p' as EntityId, payload: { itemId: 'e_i' as EntityId } },
-    ], 1.0, { layout });
+    const r = tick(
+      s,
+      [
+        {
+          type: 'pickup' as const,
+          entityId: 'e_p' as EntityId,
+          payload: { itemId: 'e_i' as EntityId },
+        },
+      ],
+      1.0,
+      { layout },
+    );
     expect(r.state.entities['e_p']!.equipment.weapon).toBe('sword_iron');
     expect(r.events.some((e) => e.type === 'pickup')).toBe(true);
   });
@@ -177,10 +215,15 @@ describe('tick()', () => {
   it('handles unknown action gracefully (no throw)', () => {
     let s: GameState = emptyState(1);
     s = addEntity(s, mkPlayer('e_p', 5, 5));
-    const r = tick(s, [
-      // @ts-expect-error 故意测试非法 action
-      { type: 'teleport', entityId: 'e_p', payload: {} },
-    ], 1.0, { layout });
+    const r = tick(
+      s,
+      [
+        // @ts-expect-error 故意测试非法 action
+        { type: 'teleport', entityId: 'e_p', payload: {} },
+      ],
+      1.0,
+      { layout },
+    );
     expect(r.events.some((e) => e.type === 'unknown_action')).toBe(true);
     expect(r.state.tick).toBe(s.tick + 1);
   });

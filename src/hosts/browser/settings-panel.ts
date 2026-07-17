@@ -67,7 +67,9 @@ export class SettingsPanel {
   }
 
   private syncMuteLabel(): void {
-    this.muteBtn.textContent = sfx.isEnabled() ? '🔊 音效: 开 (点击静音)' : '🔇 音效: 静音 (点击开启)';
+    this.muteBtn.textContent = sfx.isEnabled()
+      ? '🔊 音效: 开 (点击静音)'
+      : '🔇 音效: 静音 (点击开启)';
   }
 
   private refreshStatus(): void {

@@ -12,13 +12,7 @@
  *     因为地图本身不属于 state.entities。
  */
 
-import type {
-  EntityId,
-  GameEvent,
-  GameState,
-  MapLayout,
-  SimEntity,
-} from './types';
+import type { EntityId, GameEvent, GameState, MapLayout, SimEntity } from './types';
 
 export interface MoveResult {
   events: GameEvent[];
@@ -34,12 +28,7 @@ function isWall(layout: MapLayout, x: number, y: number): boolean {
 }
 
 /** 检查 (x,y) 是否有阻挡实体 (player/monster) */
-function blockerAt(
-  state: GameState,
-  x: number,
-  y: number,
-  selfId: EntityId,
-): SimEntity | null {
+function blockerAt(state: GameState, x: number, y: number, selfId: EntityId): SimEntity | null {
   for (const id of Object.keys(state.entities) as EntityId[]) {
     if (id === selfId) continue;
     const e = state.entities[id]!;
@@ -81,9 +70,7 @@ export function moveEntity(
   const adx = Math.abs(dx);
   const ady = Math.abs(dy);
   const isCardinal =
-    (adx === 1 && dy === 0) ||
-    (adx === 0 && ady === 1) ||
-    (adx === 0 && ady === 0);
+    (adx === 1 && dy === 0) || (adx === 0 && ady === 1) || (adx === 0 && ady === 0);
   if (!isCardinal) {
     return { events: [], newState: state };
   }

@@ -10,21 +10,8 @@
  *  - 至少发生某种战斗事件
  */
 import { describe, it, expect } from 'vitest';
-import {
-  emptyState,
-  addEntity,
-  worldGen,
-  generateEncounter,
-  tick,
-  ITEM_TABLE,
-} from '../index';
-import type {
-  EntityId,
-  GameState,
-  SimEntity,
-  GameEvent,
-  Action,
-} from '../types';
+import { emptyState, addEntity, worldGen, generateEncounter, tick, ITEM_TABLE } from '../index';
+import type { EntityId, GameState, SimEntity, GameEvent, Action } from '../types';
 
 /** 简单 AI: 朝最近 monster 走, 邻接时 attack */
 function aiAct(player: SimEntity, state: GameState): Action | null {
@@ -34,7 +21,10 @@ function aiAct(player: SimEntity, state: GameState): Action | null {
   for (const e of Object.values(state.entities)) {
     if (e.kind !== 'monster' || e.hp <= 0 || e.id === player.id) continue;
     const d = Math.abs(e.pos.x - player.pos.x) + Math.abs(e.pos.y - player.pos.y);
-    if (d < bestD) { bestD = d; target = e; }
+    if (d < bestD) {
+      bestD = d;
+      target = e;
+    }
   }
   if (!target) return null;
   if (bestD <= 1) {
@@ -52,7 +42,11 @@ function makeWorld(): GameState {
     id: 'e_p1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp: 200, maxHp: 200, atk: 50, def: 10, level: 5,
+    hp: 200,
+    maxHp: 200,
+    atk: 50,
+    def: 10,
+    level: 5,
     faction: 'player',
     inventory: [],
     equipment: {},
@@ -64,7 +58,11 @@ function makeWorld(): GameState {
       id: `e_t_m_${i}` as EntityId,
       kind: 'monster',
       pos: { x: 5 + i, y: 8 + (i % 3) },
-      hp: 20, maxHp: 20, atk: 10, def: 1, level: i % 5 + 1,
+      hp: 20,
+      maxHp: 20,
+      atk: 10,
+      def: 1,
+      level: (i % 5) + 1,
       faction: 'enemy',
       inventory: [],
       equipment: {},
@@ -129,7 +127,11 @@ describe('AI 测试 #1: 行为覆盖率 / invariant', () => {
       id: 'e_item_1' as EntityId,
       kind: 'item',
       pos: { x: 6, y: 5 },
-      hp: 1, maxHp: 1, atk: 0, def: 0, level: 1,
+      hp: 1,
+      maxHp: 1,
+      atk: 0,
+      def: 0,
+      level: 1,
       faction: 'neutral',
       inventory: [sword!.id],
       equipment: {},
@@ -138,7 +140,13 @@ describe('AI 测试 #1: 行为覆盖率 / invariant', () => {
 
     const r = tick(
       state,
-      [{ type: 'pickup', entityId: 'e_p1' as EntityId, payload: { itemId: 'e_item_1' as EntityId } }],
+      [
+        {
+          type: 'pickup',
+          entityId: 'e_p1' as EntityId,
+          payload: { itemId: 'e_item_1' as EntityId },
+        },
+      ],
       50,
       { layout },
     );

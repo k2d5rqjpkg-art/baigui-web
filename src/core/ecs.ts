@@ -42,7 +42,7 @@ class ECS {
   query(...types: string[]): number[] {
     const results: number[] = [];
     for (const id of this.entities) {
-      if (types.every(t => this.hasComponent(id, t))) {
+      if (types.every((t) => this.hasComponent(id, t))) {
         results.push(id);
       }
     }

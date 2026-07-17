@@ -51,14 +51,22 @@ function readJson(req: http.IncomingMessage): Promise<any> {
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString('utf8');
       if (!raw) return resolve({});
-      try { resolve(JSON.parse(raw)); }
-      catch (err) { reject(err); }
+      try {
+        resolve(JSON.parse(raw));
+      } catch (err) {
+        reject(err);
+      }
     });
     req.on('error', reject);
   });
 }
 
-function send(res: http.ServerResponse, status: number, body: unknown, contentType = 'application/json') {
+function send(
+  res: http.ServerResponse,
+  status: number,
+  body: unknown,
+  contentType = 'application/json',
+) {
   res.writeHead(status, {
     'Content-Type': contentType,
     'Access-Control-Allow-Origin': '*',
@@ -70,7 +78,10 @@ function send(res: http.ServerResponse, status: number, body: unknown, contentTy
 }
 
 /** 找 player 视野内最近的 monster (曼哈顿距离) */
-function findNearestEnemy(player: SimEntity, entities: Record<EntityId, SimEntity>): EntityId | null {
+function findNearestEnemy(
+  player: SimEntity,
+  entities: Record<EntityId, SimEntity>,
+): EntityId | null {
   let bestId: EntityId | null = null;
   let bestDist = Infinity;
   for (const [id, e] of Object.entries(entities) as [EntityId, SimEntity][]) {
@@ -88,7 +99,10 @@ function findNearestEnemy(player: SimEntity, entities: Record<EntityId, SimEntit
 }
 
 /** 找 player 视野内最近的 item (曼哈顿距离) */
-function findNearestItem(player: SimEntity, entities: Record<EntityId, SimEntity>): EntityId | null {
+function findNearestItem(
+  player: SimEntity,
+  entities: Record<EntityId, SimEntity>,
+): EntityId | null {
   let bestId: EntityId | null = null;
   let bestDist = Infinity;
   for (const [id, e] of Object.entries(entities) as [EntityId, SimEntity][]) {
@@ -184,13 +198,17 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, {
         tick: snap.tick,
         entities: snap.entities,
-        content: room.content,  // Day6.1: quest + npcs
+        content: room.content, // Day6.1: quest + npcs
       });
     }
 
     if (req.method === 'POST' && url.pathname === '/action') {
       let body: any = {};
-      try { body = await readJson(req); } catch { body = {}; }
+      try {
+        body = await readJson(req);
+      } catch {
+        body = {};
+      }
 
       const actionNum: number = Number(body.action ?? -1);
       if (!Number.isInteger(actionNum) || actionNum < 0 || actionNum > 5) {
@@ -231,9 +249,10 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/dialogue') {
       // Day6.1: 玩家与邻接 NPC 对话
       const body = await readJson(req).catch(() => ({}));
-      const entityId = (typeof body.entityId === 'string' && body.entityId.startsWith('e_'))
-        ? (body.entityId as EntityId)
-        : ROOM_PLAYER_ID;
+      const entityId =
+        typeof body.entityId === 'string' && body.entityId.startsWith('e_')
+          ? (body.entityId as EntityId)
+          : ROOM_PLAYER_ID;
       const ctx = typeof body.context === 'string' ? body.context : '';
       try {
         const result = await room.talkToNearestNpc(entityId, ctx);
@@ -252,7 +271,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/reset') {
       const seedRaw = url.searchParams.get('seed');
-      const seed = seedRaw !== null ? (Number(seedRaw) >>> 0) : (Date.now() % 1_000_000);
+      const seed = seedRaw !== null ? Number(seedRaw) >>> 0 : Date.now() % 1_000_000;
       room.reset(seed);
       return send(res, 200, { ok: true, seed, snapshot: room.getSnapshot() });
     }
@@ -313,15 +332,21 @@ const server = http.createServer(async (req, res) => {
     // Day33: 学技能 / 装备
     if (req.method === 'POST' && url.pathname === '/skill/learn') {
       const body = await readJson(req);
-      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const entityId = (body.entityId ??
+        ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
       const skillId = String(body.skillId ?? '');
       if (!skillId) return send(res, 400, { error: 'skillId required' });
       const r = room.applyLearnSkill(entityId, skillId);
-      return send(res, r.ok ? 200 : 400, { ok: r.ok, reason: r.reason, snapshot: room.getSnapshot() });
+      return send(res, r.ok ? 200 : 400, {
+        ok: r.ok,
+        reason: r.reason,
+        snapshot: room.getSnapshot(),
+      });
     }
     if (req.method === 'POST' && url.pathname === '/equip') {
       const body = await readJson(req);
-      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const entityId = (body.entityId ??
+        ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
       const templateId = String(body.templateId ?? '');
       if (!templateId) return send(res, 400, { error: 'templateId required' });
       const r = room.applyEquip(entityId, templateId);
@@ -339,7 +364,8 @@ const server = http.createServer(async (req, res) => {
     // Day38: 复活
     if (req.method === 'POST' && url.pathname === '/respawn') {
       const body = await readJson(req);
-      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const entityId = (body.entityId ??
+        ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
       const ok = room.respawnPlayer(entityId);
       return send(res, ok ? 200 : 400, { ok, snapshot: room.getSnapshot() });
     }

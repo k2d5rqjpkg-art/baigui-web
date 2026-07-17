@@ -144,7 +144,9 @@ class PostgresLeaderboard implements LeaderboardStorage {
 }
 
 /** 工厂 */
-export async function createLeaderboard(persistence: PersistenceLayer | null): Promise<LeaderboardStorage> {
+export async function createLeaderboard(
+  persistence: PersistenceLayer | null,
+): Promise<LeaderboardStorage> {
   if (persistence) {
     // 真要 PG 时, 应该让 leaderboard 直接用 pg client
     // 简化: 暂用 memory (接口预留)

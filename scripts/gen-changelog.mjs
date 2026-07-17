@@ -46,4 +46,6 @@ for (const tag of tags) {
 
 const dest = join(root, 'CHANGELOG.md');
 writeFileSync(dest, out);
-console.log(`✅ Changelog written: ${dest} (${groups.size} groups, ${groups && [...groups.values()].reduce((s, v) => s + v.length, 0)} commits)`);
+console.log(
+  `✅ Changelog written: ${dest} (${groups.size} groups, ${groups && [...groups.values()].reduce((s, v) => s + v.length, 0)} commits)`,
+);

@@ -89,7 +89,8 @@ export function parseGLB(buf: ArrayBuffer): ModelData {
   const dv = new DataView(buf);
   // header: magic(4) + version(4) + length(4) = 12 bytes
   const magic = dv.getUint32(0, true);
-  if (magic !== 0x46546c67) { // 'glTF'
+  if (magic !== 0x46546c67) {
+    // 'glTF'
     throw new Error('Not a GLB file');
   }
   const version = dv.getUint32(4, true);
@@ -100,14 +101,18 @@ export function parseGLB(buf: ArrayBuffer): ModelData {
   // length 是 padded 长度, 但 JSON 实际只用前 jsonStr.length 字节
   const jsonChunkLen = dv.getUint32(12, true);
   const jsonType = dv.getUint32(16, true);
-  if (jsonType !== 0x4e4f534a) { // 'JSON'
+  if (jsonType !== 0x4e4f534a) {
+    // 'JSON'
     throw new Error('First chunk not JSON');
   }
   const jsonBytes = new Uint8Array(buf, 20, jsonChunkLen);
   // 找 JSON 末尾 (可能有 padding 空格/0)
   let jsonEnd = jsonChunkLen;
   for (let i = jsonChunkLen - 1; i >= 0; i--) {
-    if (jsonBytes[i]! > 0x20) { jsonEnd = i + 1; break; }
+    if (jsonBytes[i]! > 0x20) {
+      jsonEnd = i + 1;
+      break;
+    }
   }
   const jsonStr = new TextDecoder().decode(jsonBytes.subarray(0, jsonEnd));
   const json = JSON.parse(jsonStr);
@@ -116,7 +121,8 @@ export function parseGLB(buf: ArrayBuffer): ModelData {
   const binOffset = 20 + jsonChunkLen;
   const binLen = dv.getUint32(binOffset, true);
   const binType = dv.getUint32(binOffset + 4, true);
-  if (binType !== 0x004e4942) { // 'BIN\0'
+  if (binType !== 0x004e4942) {
+    // 'BIN\0'
     throw new Error('Second chunk not BIN');
   }
   const binData = new Uint8Array(buf, binOffset + 8, binLen);
@@ -149,9 +155,7 @@ export function parseGLB(buf: ArrayBuffer): ModelData {
     positions: new Float32Array(positions),
     normals: new Float32Array(positions.length),
     indices: new Uint32Array(indices),
-    meshes: [
-      { name: 'mesh_0', color: 0xd4a017, indexOffset: 0, indexCount: indices.length },
-    ],
+    meshes: [{ name: 'mesh_0', color: 0xd4a017, indexOffset: 0, indexCount: indices.length }],
   };
 }
 

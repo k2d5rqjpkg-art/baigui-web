@@ -31,10 +31,7 @@ describe('computeRewardFromEvents', () => {
   });
 
   it('returns -0.1 for events unrelated to self', () => {
-    const events: GameEvent[] = [
-      ev('move', 'e_other' as EntityId, null),
-      ev('tick_end'),
-    ];
+    const events: GameEvent[] = [ev('move', 'e_other' as EntityId, null), ev('tick_end')];
     expect(computeRewardFromEvents(events, PLAYER)).toBe(-0.1);
   });
 
@@ -95,8 +92,8 @@ describe('computeRewardFromEvents', () => {
     it('full fight: deal damage + kill + survive penalty', () => {
       const events: GameEvent[] = [
         ev('damage', PLAYER, ENEMY, { amount: 30 }), // +10
-        ev('damage', ENEMY, PLAYER, { amount: 8 }),  // -5
-        ev('death', PLAYER, ENEMY),                    // +50
+        ev('damage', ENEMY, PLAYER, { amount: 8 }), // -5
+        ev('death', PLAYER, ENEMY), // +50
         ev('pickup', PLAYER, null, { itemId: 'e_item_1' as EntityId }), // +5
       ];
       // 10 - 5 + 50 + 5 - 0.1 = 59.9

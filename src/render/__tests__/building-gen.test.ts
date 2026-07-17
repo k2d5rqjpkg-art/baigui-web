@@ -4,7 +4,13 @@
  * 借鉴 #2: 建筑程序化测试
  */
 import { describe, it, expect } from 'vitest';
-import { generateBuilding, generateSettlement, defaultSpec, isPointInBuilding, BUILDING_PRESETS } from '../building-gen';
+import {
+  generateBuilding,
+  generateSettlement,
+  defaultSpec,
+  isPointInBuilding,
+  BUILDING_PRESETS,
+} from '../building-gen';
 
 describe('defaultSpec', () => {
   it('4 种建筑类型', () => {
@@ -113,7 +119,10 @@ describe('generateSettlement', () => {
     // 至少一个建筑位置不同
     let diff = false;
     for (let i = 0; i < a.length; i++) {
-      if (a[i]!.bounds.minX !== b[i]!.bounds.minX) { diff = true; break; }
+      if (a[i]!.bounds.minX !== b[i]!.bounds.minX) {
+        diff = true;
+        break;
+      }
     }
     expect(diff).toBe(true);
   });

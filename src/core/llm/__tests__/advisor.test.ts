@@ -15,12 +15,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { suggestNextAction, buildAdvisorContext, fallbackAdvisor } from '../advisor';
 import { llmCache } from '../cache';
 import { fallbackQuest } from '../fallback';
-import {
-  tick,
-  emptyState,
-  addEntity,
-  worldGen,
-} from '../../sim';
+import { tick, emptyState, addEntity, worldGen } from '../../sim';
 import type { GameState, SimEntity, EntityId } from '../../sim/types';
 
 function makeState(seed = 42): GameState {
@@ -30,25 +25,43 @@ function makeState(seed = 42): GameState {
     id: 'e_player_1' as EntityId,
     kind: 'player',
     pos: { x: 5, y: 5 },
-    hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
+    hp: 100,
+    maxHp: 100,
+    atk: 30,
+    def: 5,
+    level: 5,
     faction: 'player',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   const monster: SimEntity = {
     id: 'e_monster_1' as EntityId,
     kind: 'monster',
-    pos: { x: 6, y: 5 },  // 邻接
-    hp: 30, maxHp: 30, atk: 5, def: 1, level: 1,
+    pos: { x: 6, y: 5 }, // 邻接
+    hp: 30,
+    maxHp: 30,
+    atk: 5,
+    def: 1,
+    level: 1,
     faction: 'enemy',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   const item: SimEntity = {
     id: 'e_item_1' as EntityId,
     kind: 'item',
     pos: { x: 10, y: 10 },
-    hp: 0, maxHp: 0, atk: 5, def: 0, level: 0,
+    hp: 0,
+    maxHp: 0,
+    atk: 5,
+    def: 0,
+    level: 0,
     faction: 'neutral',
-    inventory: [], equipment: {}, buffs: [],
+    inventory: [],
+    equipment: {},
+    buffs: [],
   };
   s = addEntity(s, player);
   s = addEntity(s, monster);
@@ -93,9 +106,15 @@ describe('fallbackAdvisor (启发式规则)', () => {
       id: 'e_player_1' as EntityId,
       kind: 'player',
       pos: { x: 5, y: 5 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 5,
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 5,
       faction: 'player',
-      inventory: [], equipment: {}, buffs: [],
+      inventory: [],
+      equipment: {},
+      buffs: [],
     };
     s.entities[player.id] = player;
     const r = fallbackAdvisor(player, s);
@@ -129,15 +148,17 @@ describe('suggestNextAction', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              goal: 'attack',
-              reason: '测试',
-              nextAction: { type: 'attack', targetId: 'e_monster_1' },
-            }),
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                goal: 'attack',
+                reason: '测试',
+                nextAction: { type: 'attack', targetId: 'e_monster_1' },
+              }),
+            },
           },
-        }],
+        ],
       }),
       text: async () => '',
     } as unknown as Response);
@@ -181,15 +202,17 @@ describe('suggestNextAction', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              goal: 'attack',
-              reason: 'test',
-              nextAction: { type: 'attack', targetId: 'e_monster_1' },
-            }),
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                goal: 'attack',
+                reason: 'test',
+                nextAction: { type: 'attack', targetId: 'e_monster_1' },
+              }),
+            },
           },
-        }],
+        ],
       }),
       text: async () => '',
     } as unknown as Response);
@@ -214,15 +237,17 @@ describe('suggestNextAction', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              goal: 'attack',
-              reason: 'test',
-              nextAction: { type: 'move', dx: 99, dy: -99 },
-            }),
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                goal: 'attack',
+                reason: 'test',
+                nextAction: { type: 'move', dx: 99, dy: -99 },
+              }),
+            },
           },
-        }],
+        ],
       }),
       text: async () => '',
     } as unknown as Response);

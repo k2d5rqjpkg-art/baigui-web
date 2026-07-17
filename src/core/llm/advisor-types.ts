@@ -5,14 +5,7 @@
  */
 import type { Action, EntityId } from '../sim/index.js';
 
-export type AdvisorGoal =
-  | 'attack'
-  | 'retreat'
-  | 'heal'
-  | 'explore'
-  | 'quest'
-  | 'talk'
-  | 'idle';
+export type AdvisorGoal = 'attack' | 'retreat' | 'heal' | 'explore' | 'quest' | 'talk' | 'idle';
 
 export interface AdvisorSuggestion {
   goal: AdvisorGoal;

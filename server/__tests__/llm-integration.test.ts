@@ -213,7 +213,10 @@ describe('LLM 集成测试 (上线前必跑)', () => {
 
     it('LLM 缓存: 相同 (level, biome) 第二次返 cache', async () => {
       const llmJson = JSON.stringify({
-        title: 'Cached Quest', description: 'd', objective: 'o', reward: 'r',
+        title: 'Cached Quest',
+        description: 'd',
+        objective: 'o',
+        reward: 'r',
       });
       mockFetch.mockResolvedValue({
         ok: true,

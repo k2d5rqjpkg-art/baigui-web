@@ -44,10 +44,7 @@ describe('Day37-40', () => {
       path.resolve(__dirname, '../../src/hosts/browser/hotbar.ts'),
       'utf-8',
     );
-    const hud = fs.readFileSync(
-      path.resolve(__dirname, '../../src/hosts/browser/hud.ts'),
-      'utf-8',
-    );
+    const hud = fs.readFileSync(path.resolve(__dirname, '../../src/hosts/browser/hud.ts'), 'utf-8');
     expect(hot).toMatch(/Digit1/);
     expect(hot).toMatch(/learnPlayerSkill/);
     expect(hud).toMatch(/kill_streak_/);

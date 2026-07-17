@@ -19,11 +19,23 @@ if (cmd === 'dump') {
     const summary = {
       tick: room.state.tick,
       rng: room.state.rng,
-      layout: { width: room.layout.width, height: room.layout.height, rooms: room.layout.rooms.length },
+      layout: {
+        width: room.layout.width,
+        height: room.layout.height,
+        rooms: room.layout.rooms.length,
+      },
       entities: Object.fromEntries(
         Object.entries(room.state.entities).map(([id, e]) => [
           id,
-          { kind: e.kind, pos: e.pos, hp: e.hp, maxHp: e.maxHp, level: e.level, atk: e.atk, def: e.def },
+          {
+            kind: e.kind,
+            pos: e.pos,
+            hp: e.hp,
+            maxHp: e.maxHp,
+            level: e.level,
+            atk: e.atk,
+            def: e.def,
+          },
         ]),
       ),
       content: { quest: room.content?.quest?.title ?? null, npcs: room.content?.npcs.length ?? 0 },
@@ -34,16 +46,33 @@ if (cmd === 'dump') {
   const N = Number(process.argv[3] ?? 1000);
   let s = emptyState(1);
   s = addEntity(s, {
-    id: 'e_p1' as never, kind: 'player', pos: { x: 5, y: 5 },
-    hp: 200, maxHp: 200, atk: 50, def: 10, level: 5,
-    faction: 'player', inventory: [], equipment: {}, buffs: [],
+    id: 'e_p1' as never,
+    kind: 'player',
+    pos: { x: 5, y: 5 },
+    hp: 200,
+    maxHp: 200,
+    atk: 50,
+    def: 10,
+    level: 5,
+    faction: 'player',
+    inventory: [],
+    equipment: {},
+    buffs: [],
   });
   for (let i = 0; i < 100; i++) {
     s = addEntity(s, {
-      id: `e_m_${i}` as never, kind: 'monster',
+      id: `e_m_${i}` as never,
+      kind: 'monster',
       pos: { x: (i % 20) + 1, y: ((i / 20) | 0) + 5 },
-      hp: 30, maxHp: 30, atk: 8, def: 1, level: 1,
-      faction: 'enemy', inventory: [], equipment: {}, buffs: [],
+      hp: 30,
+      maxHp: 30,
+      atk: 8,
+      def: 1,
+      level: 1,
+      faction: 'enemy',
+      inventory: [],
+      equipment: {},
+      buffs: [],
     });
   }
   const layout = worldGen(1, 5);

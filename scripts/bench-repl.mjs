@@ -12,9 +12,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
 const N = process.argv[2] ?? '1000';
-const r = spawnSync(
-  process.execPath,
-  ['--import', 'tsx', 'scripts/state-inspect.ts', 'bench', N],
-  { cwd: root, encoding: 'utf8', stdio: ['inherit', 'inherit', 'inherit'] },
-);
+const r = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/state-inspect.ts', 'bench', N], {
+  cwd: root,
+  encoding: 'utf8',
+  stdio: ['inherit', 'inherit', 'inherit'],
+});
 process.exit(r.status ?? 1);

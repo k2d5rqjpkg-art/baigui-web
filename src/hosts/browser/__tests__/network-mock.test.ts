@@ -36,7 +36,9 @@ describe('GameClient (mock WebSocket)', () => {
     let received: any = null;
     const c = new GameClient('ws://test:8787');
     c.onOpen = () => c.hello(1);
-    c.onWelcome = (msg) => { received = msg; };
+    c.onWelcome = (msg) => {
+      received = msg;
+    };
     await wait(10);
     lastSocket()!._fireServerMessage({
       type: 'welcome',
@@ -82,7 +84,10 @@ describe('GameClient (mock WebSocket)', () => {
     c.onState = (msg) => states.push(msg);
     await wait(10);
     lastSocket()!._fireServerMessage({
-      type: 'state', tick: 1, entities: [], events: [],
+      type: 'state',
+      tick: 1,
+      entities: [],
+      events: [],
     });
     await wait(10);
     expect(states.length).toBe(1);
@@ -112,7 +117,9 @@ describe('GameClient (mock WebSocket)', () => {
   it('onContent 收到 content 帧 (Day6.1)', async () => {
     const c = new GameClient('ws://test:8787');
     let received: any = null;
-    c.onContent = (content) => { received = content; };
+    c.onContent = (content) => {
+      received = content;
+    };
     await wait(10);
     lastSocket()!._fireServerMessage({
       type: 'content',

@@ -30,9 +30,12 @@ export class GameScene {
     const aspect = container.clientWidth / container.clientHeight;
     const viewSize = 4;
     this.camera = new THREE.OrthographicCamera(
-      -viewSize * aspect, viewSize * aspect,
-      viewSize, -viewSize,
-      0.1, 100
+      -viewSize * aspect,
+      viewSize * aspect,
+      viewSize,
+      -viewSize,
+      0.1,
+      100,
     );
     this.camera.position.set(0, 0, 10);
     this.camera.lookAt(0, 0, 0);
@@ -62,12 +65,12 @@ export class GameScene {
     const divisions = 20;
     const step = size / divisions;
     const points: THREE.Vector3[] = [];
-    for (let i = -divisions/2; i <= divisions/2; i++) {
+    for (let i = -divisions / 2; i <= divisions / 2; i++) {
       const p = i * step;
-      points.push(new THREE.Vector3(p, -size/2, 0));
-      points.push(new THREE.Vector3(p, size/2, 0));
-      points.push(new THREE.Vector3(-size/2, p, 0));
-      points.push(new THREE.Vector3(size/2, p, 0));
+      points.push(new THREE.Vector3(p, -size / 2, 0));
+      points.push(new THREE.Vector3(p, size / 2, 0));
+      points.push(new THREE.Vector3(-size / 2, p, 0));
+      points.push(new THREE.Vector3(size / 2, p, 0));
     }
     const geo = new THREE.BufferGeometry().setFromPoints(points);
     const mat = new THREE.LineBasicMaterial({
@@ -92,7 +95,9 @@ export class GameScene {
       background:${color};opacity:0.3;transition:opacity ${duration}ms ease-out;
     `;
     document.body.appendChild(div);
-    requestAnimationFrame(() => { div.style.opacity = '0'; });
+    requestAnimationFrame(() => {
+      div.style.opacity = '0';
+    });
     setTimeout(() => div.remove(), duration);
   }
 

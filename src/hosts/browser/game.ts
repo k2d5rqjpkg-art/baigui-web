@@ -222,7 +222,11 @@ export class BrowserGame {
       // emit events 给订阅者
       for (const e of msg.events) {
         for (const h of this.eventHandlers) {
-          try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
+          try {
+            h(e);
+          } catch (err) {
+            log.error('[game] event handler error:', err);
+          }
         }
       }
       // 死亡检测
@@ -433,7 +437,11 @@ export class BrowserGame {
     this.state = result.newState;
     for (const e of result.events) {
       for (const h of this.eventHandlers) {
-        try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
+        try {
+          h(e);
+        } catch (err) {
+          log.error('[game] event handler error:', err);
+        }
       }
     }
     return true;
@@ -459,7 +467,11 @@ export class BrowserGame {
     this.state = result.newState;
     for (const e of result.events) {
       for (const h of this.eventHandlers) {
-        try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
+        try {
+          h(e);
+        } catch (err) {
+          log.error('[game] event handler error:', err);
+        }
       }
     }
     return true;
@@ -496,8 +508,10 @@ export class BrowserGame {
   }
 
   private bridgeBase(): string {
-    return (import.meta as any).env?.VITE_BRIDGE_URL
-      ?? `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8787`;
+    return (
+      (import.meta as any).env?.VITE_BRIDGE_URL ??
+      `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8787`
+    );
   }
 
   private async bridgePost(path: string, body: object): Promise<void> {
@@ -512,7 +526,11 @@ export class BrowserGame {
         // 轻量合并: 用快照 entities 重建 state.entities
         const entities: Record<string, SimEntity> = {};
         for (const e of data.snapshot.entities as SimEntity[]) entities[e.id] = e;
-        this.state = { ...this.state, entities: entities as any, tick: data.snapshot.tick ?? this.state.tick };
+        this.state = {
+          ...this.state,
+          entities: entities as any,
+          tick: data.snapshot.tick ?? this.state.tick,
+        };
         if (data.snapshot.layout) this.layout = data.snapshot.layout;
       }
       if (!data.ok) log.info('[game] bridge', path, data.reason ?? data);
@@ -537,83 +555,86 @@ export class BrowserGame {
 
     // 重建
     this.state = emptyState(this.options.seed);
-        this.layout = worldGen(this.options.seed, this.options.level);
-        this.seedEntities();
+    this.layout = worldGen(this.options.seed, this.options.level);
+    this.seedEntities();
 
-        this.pendingActions = [];
-        this.recentEvents = oldEvents; // 保留,直到下次 tick 覆盖
-        this.eventHandlers = oldHandlers;
+    this.pendingActions = [];
+    this.recentEvents = oldEvents; // 保留,直到下次 tick 覆盖
+    this.eventHandlers = oldHandlers;
 
-        this.start();
-      }
+    this.start();
+  }
 
-      /** 从当前 seed 重新填充 entities (构造器和 reset 共用) */
-      private seedEntities(): void {
-        const playerSpawn = this.layout.spawnPoints[0] ?? { x: 5, y: 5 };
-        this.state = addEntity(this.state, {
-          id: BrowserGame.PLAYER_ID,
-          kind: 'player',
-          pos: { x: playerSpawn.x, y: playerSpawn.y },
-          hp: 100,
-          maxHp: 100,
-          atk: 30,
-          def: 5,
-          level: 5,
-          faction: 'player',
-          inventory: [],
-          equipment: {},
-          // Day18: 默认 warrior + 2 技能点 (可开技能树 K)
-          buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 } as any],
-        });
+  /** 从当前 seed 重新填充 entities (构造器和 reset 共用) */
+  private seedEntities(): void {
+    const playerSpawn = this.layout.spawnPoints[0] ?? { x: 5, y: 5 };
+    this.state = addEntity(this.state, {
+      id: BrowserGame.PLAYER_ID,
+      kind: 'player',
+      pos: { x: playerSpawn.x, y: playerSpawn.y },
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 5,
+      faction: 'player',
+      inventory: [],
+      equipment: {},
+      // Day18: 默认 warrior + 2 技能点 (可开技能树 K)
+      buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 } as any],
+    });
 
-        // 怪物
-        const encounter = generateEncounter(this.state, this.options.level, this.state.rng);
-        this.state = { ...this.state, rng: encounter.nextRng };
-        for (let i = 0; i < encounter.monsters.length; i++) {
-          const m = encounter.monsters[i];
-          const spawn = this.layout.spawnPoints[(i + 1) % this.layout.spawnPoints.length] ?? { x: 10 + i, y: 10 };
-          const monsterId = `e_monster_${i + 1}` as EntityId;
-          this.state = addEntity(this.state, {
-            id: monsterId,
-            kind: 'monster',
-            pos: { x: spawn.x, y: spawn.y },
-            hp: m.hp,
-            maxHp: m.hp,
-            atk: m.atk,
-            def: m.def,
-            level: m.level,
-            faction: 'enemy',
-            inventory: [],
-            equipment: {},
-            buffs: [],
-          });
-        }
+    // 怪物
+    const encounter = generateEncounter(this.state, this.options.level, this.state.rng);
+    this.state = { ...this.state, rng: encounter.nextRng };
+    for (let i = 0; i < encounter.monsters.length; i++) {
+      const m = encounter.monsters[i];
+      const spawn = this.layout.spawnPoints[(i + 1) % this.layout.spawnPoints.length] ?? {
+        x: 10 + i,
+        y: 10,
+      };
+      const monsterId = `e_monster_${i + 1}` as EntityId;
+      this.state = addEntity(this.state, {
+        id: monsterId,
+        kind: 'monster',
+        pos: { x: spawn.x, y: spawn.y },
+        hp: m.hp,
+        maxHp: m.hp,
+        atk: m.atk,
+        def: m.def,
+        level: m.level,
+        faction: 'enemy',
+        inventory: [],
+        equipment: {},
+        buffs: [],
+      });
+    }
 
-        // 物品
-        const itemSpawnPoints = this.layout.spawnPoints.slice(1);
-        const itemTemplates: ItemTemplate[] = [...ITEM_TABLE];
-        for (let i = 0; i < Math.min(itemSpawnPoints.length, itemTemplates.length); i++) {
-          const template = itemTemplates[i];
-          const spawn = itemSpawnPoints[i];
-          const itemId = `e_item_${i + 1}` as EntityId;
-          const atkAffix = template.affixes.find((a) => a.key === 'atk');
-          const defAffix = template.affixes.find((a) => a.key === 'def');
-          this.state = addEntity(this.state, {
-            id: itemId,
-            kind: 'item',
-            pos: { x: spawn.x, y: spawn.y },
-            hp: 0,
-            maxHp: 0,
-            atk: atkAffix?.value ?? 0,
-            def: defAffix?.value ?? 0,
-            level: 0,
-            faction: 'neutral',
-            inventory: [template.id],
-            equipment: {},
-            buffs: [],
-          });
-        }
-      }
+    // 物品
+    const itemSpawnPoints = this.layout.spawnPoints.slice(1);
+    const itemTemplates: ItemTemplate[] = [...ITEM_TABLE];
+    for (let i = 0; i < Math.min(itemSpawnPoints.length, itemTemplates.length); i++) {
+      const template = itemTemplates[i];
+      const spawn = itemSpawnPoints[i];
+      const itemId = `e_item_${i + 1}` as EntityId;
+      const atkAffix = template.affixes.find((a) => a.key === 'atk');
+      const defAffix = template.affixes.find((a) => a.key === 'def');
+      this.state = addEntity(this.state, {
+        id: itemId,
+        kind: 'item',
+        pos: { x: spawn.x, y: spawn.y },
+        hp: 0,
+        maxHp: 0,
+        atk: atkAffix?.value ?? 0,
+        def: defAffix?.value ?? 0,
+        level: 0,
+        faction: 'neutral',
+        inventory: [template.id],
+        equipment: {},
+        buffs: [],
+      });
+    }
+  }
 
   // ============ 内部 ============
 
@@ -838,9 +859,9 @@ function actionToDiscrete(action: Action): number {
     case 'move': {
       const { dx, dy } = action.payload;
       if (dx === 0 && dy === -1) return 0; // 上
-      if (dx === 0 && dy === 1) return 1;  // 下
+      if (dx === 0 && dy === 1) return 1; // 下
       if (dx === -1 && dy === 0) return 2; // 左
-      if (dx === 1 && dy === 0) return 3;  // 右
+      if (dx === 1 && dy === 0) return 3; // 右
       return -1;
     }
     case 'attack':

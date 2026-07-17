@@ -98,9 +98,10 @@ export class HUD {
   setHP(current: number, max: number) {
     const pct = Math.max(0, Math.min(100, (current / max) * 100));
     this.hpBar.style.width = `${pct}%`;
-    this.hpBar.style.background = pct < 25
-      ? 'linear-gradient(90deg,#e74c3c,#c0392b)'
-      : 'linear-gradient(90deg,#c0392b,#e74c3c)';
+    this.hpBar.style.background =
+      pct < 25
+        ? 'linear-gradient(90deg,#e74c3c,#c0392b)'
+        : 'linear-gradient(90deg,#c0392b,#e74c3c)';
     this.hpText.textContent = `${Math.ceil(current)}/${max}`;
   }
 
@@ -118,21 +119,23 @@ export class HUD {
   }
 
   showSkills(skills: Skill[]) {
-    this.skillsContainer.innerHTML = skills.map((s, i) => {
-      const ready = s.currentCooldown <= 0;
-      const cdText = s.currentCooldown > 0 ? s.currentCooldown.toFixed(1) : '';
-      return `
+    this.skillsContainer.innerHTML = skills
+      .map((s, i) => {
+        const ready = s.currentCooldown <= 0;
+        const cdText = s.currentCooldown > 0 ? s.currentCooldown.toFixed(1) : '';
+        return `
         <div style="
           width:52px;height:52px;background:rgba(0,0,0,0.6);border:2px solid ${ready ? s.color : '#555'};
           border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
           font-size:10px;color:${ready ? '#fff' : '#666'};position:relative;
         ">
-          <div style="font-size:16px;font-weight:bold;color:${s.color}">${i+1}</div>
+          <div style="font-size:16px;font-weight:bold;color:${s.color}">${i + 1}</div>
           <div style="font-size:9px;margin-top:2px">${s.name}</div>
           ${cdText ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#e74c3c">${cdText}</div>` : ''}
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   showMessage(text: string, duration = 3) {
@@ -180,12 +183,12 @@ export class HUD {
 
   update(delta: number) {
     // 消息淡出
-    this.messages = this.messages.filter(m => {
+    this.messages = this.messages.filter((m) => {
       m.timer -= delta;
       return m.timer > 0;
     });
-    this.messageBox.innerHTML = this.messages.map((m, i) =>
-      `<div style="opacity:${Math.min(1, m.timer)}">${m.text}</div>`
-    ).join('');
+    this.messageBox.innerHTML = this.messages
+      .map((m, i) => `<div style="opacity:${Math.min(1, m.timer)}">${m.text}</div>`)
+      .join('');
   }
 }

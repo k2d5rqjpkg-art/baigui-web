@@ -40,7 +40,7 @@ export const GUILD_LEVEL_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 15000];
 
 /** 工会管理: 创建/加入/退出/踢人/贡献 */
 export class GuildManager {
-  private guilds = new Map<string, Guild>();      // by guildId
+  private guilds = new Map<string, Guild>(); // by guildId
   private playerToGuild = new Map<string, string>(); // playerId → guildId
 
   /** 创建工会 */
@@ -55,7 +55,9 @@ export class GuildManager {
       id,
       name,
       leader: leaderId,
-      members: new Map([[leaderId, { playerId: leaderId, role: 'leader', joinedAt: Date.now(), contribution: 0 }]]),
+      members: new Map([
+        [leaderId, { playerId: leaderId, role: 'leader', joinedAt: Date.now(), contribution: 0 }],
+      ]),
       createdAt: Date.now(),
       level: 1,
       xp: 0,
@@ -140,7 +142,10 @@ export class GuildManager {
   }
 
   /** 贡献 xp (全员累计, 推动工会升级) */
-  contribute(playerId: string, amount: number): { guild: Guild; leveledUp: boolean; newLevel: number } {
+  contribute(
+    playerId: string,
+    amount: number,
+  ): { guild: Guild; leveledUp: boolean; newLevel: number } {
     const guildId = this.playerToGuild.get(playerId);
     if (!guildId) throw new Error(`${playerId} not in any guild`);
     const guild = this.guilds.get(guildId);
@@ -151,7 +156,10 @@ export class GuildManager {
     member.contribution += amount;
     guild.xp += amount;
     let leveledUp = false;
-    while (guild.level < GUILD_LEVEL_THRESHOLDS.length && guild.xp >= GUILD_LEVEL_THRESHOLDS[guild.level]!) {
+    while (
+      guild.level < GUILD_LEVEL_THRESHOLDS.length &&
+      guild.xp >= GUILD_LEVEL_THRESHOLDS[guild.level]!
+    ) {
       guild.level++;
       leveledUp = true;
     }

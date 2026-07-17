@@ -11,10 +11,15 @@ function mockAudioContext() {
   const makeNode = (useType: string, ctxType: string) => {
     const n: any = {
       type: ctxType, // ctx 接口字段 (e.g. 'oscillator', 'gain')
-      useType,        // 'oscillator' 或 'gain' 或 'filter'
+      useType, // 'oscillator' 或 'gain' 或 'filter'
       frequency: { value: 0, setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
-      gain: { value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
-      connect: vi.fn((target: any) => n.next = target),
+      gain: {
+        value: 0,
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      connect: vi.fn((target: any) => (n.next = target)),
       start: vi.fn(),
       stop: vi.fn(),
     };
@@ -91,7 +96,9 @@ describe('playSfx (纯函数)', () => {
     const { ctx, nodes } = mockAudioContext();
     const masterGain = ctx.createGain();
     playSfx(ctx, masterGain, SFX_PRESETS.attack);
-    const gainNodes = nodes.filter((n) => n.type === 'gain' && n.gain.setValueAtTime.mock.calls.length > 0);
+    const gainNodes = nodes.filter(
+      (n) => n.type === 'gain' && n.gain.setValueAtTime.mock.calls.length > 0,
+    );
     expect(gainNodes.length).toBeGreaterThan(0);
     // 至少 3 个 setValueAtTime: 0 起点 → volume 峰值 → 0.001 终点
     const setCalls = gainNodes[0]!.gain.setValueAtTime.mock.calls;

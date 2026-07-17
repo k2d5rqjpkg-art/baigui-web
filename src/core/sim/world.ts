@@ -36,11 +36,7 @@ interface Leaf {
   room: Room | null;
 }
 
-function splitLeaf(
-  leaf: Leaf,
-  depth: number,
-  rng: RNGState,
-): { leaf: Leaf; nextRng: RNGState } {
+function splitLeaf(leaf: Leaf, depth: number, rng: RNGState): { leaf: Leaf; nextRng: RNGState } {
   let currentRng = rng;
   // 已经够深或够小 → 不再切
   const canSplitH = leaf.h >= MIN_LEAF_SIZE * 2;
@@ -70,8 +66,24 @@ function splitLeaf(
     const r = randInt(currentRng, minSplit, maxSplit);
     currentRng = r.next;
     const split = r.value;
-    const left: Leaf = { x: leaf.x, y: leaf.y, w: split, h: leaf.h, left: null, right: null, room: null };
-    const right: Leaf = { x: leaf.x + split, y: leaf.y, w: leaf.w - split, h: leaf.h, left: null, right: null, room: null };
+    const left: Leaf = {
+      x: leaf.x,
+      y: leaf.y,
+      w: split,
+      h: leaf.h,
+      left: null,
+      right: null,
+      room: null,
+    };
+    const right: Leaf = {
+      x: leaf.x + split,
+      y: leaf.y,
+      w: leaf.w - split,
+      h: leaf.h,
+      left: null,
+      right: null,
+      room: null,
+    };
     leaf.left = left;
     leaf.right = right;
   } else {
@@ -80,8 +92,24 @@ function splitLeaf(
     const r = randInt(currentRng, minSplit, maxSplit);
     currentRng = r.next;
     const split = r.value;
-    const left: Leaf = { x: leaf.x, y: leaf.y, w: leaf.w, h: split, left: null, right: null, room: null };
-    const right: Leaf = { x: leaf.x, y: leaf.y + split, w: leaf.w, h: leaf.h - split, left: null, right: null, room: null };
+    const left: Leaf = {
+      x: leaf.x,
+      y: leaf.y,
+      w: leaf.w,
+      h: split,
+      left: null,
+      right: null,
+      room: null,
+    };
+    const right: Leaf = {
+      x: leaf.x,
+      y: leaf.y + split,
+      w: leaf.w,
+      h: leaf.h - split,
+      left: null,
+      right: null,
+      room: null,
+    };
     leaf.left = left;
     leaf.right = right;
   }
@@ -122,10 +150,7 @@ function createRoom(leaf: Leaf, rng: RNGState): { room: Room; nextRng: RNGState 
 }
 
 /** 收集所有 leaf,每个建一个房间 */
-function buildRooms(
-  leaf: Leaf,
-  rng: RNGState,
-): { rooms: Room[]; nextRng: RNGState } {
+function buildRooms(leaf: Leaf, rng: RNGState): { rooms: Room[]; nextRng: RNGState } {
   let currentRng = rng;
   const rooms: Room[] = [];
   function walk(l: Leaf) {
@@ -175,12 +200,7 @@ function carveCorridor(
 }
 
 /** 给定两个矩形求它们之间的"中心点连线" */
-function connectRooms(
-  leaf: Leaf,
-  rooms: Room[],
-  floors: Set<string>,
-  walls: Set<string>,
-): void {
+function connectRooms(leaf: Leaf, rooms: Room[], floors: Set<string>, walls: Set<string>): void {
   if (leaf.left === null && leaf.right === null) return;
 
   // 找每个子树最近的房间

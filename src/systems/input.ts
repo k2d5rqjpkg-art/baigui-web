@@ -12,7 +12,7 @@ export class InputManager {
       }
       this.keys.add(e.code);
       // 阻止方向键滚动页面
-      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
         e.preventDefault();
       }
     });
@@ -36,14 +36,18 @@ export class InputManager {
 
   /** 方向向量 for 移动 */
   getDirection(): { x: number; y: number } {
-    let x = 0, y = 0;
+    let x = 0,
+      y = 0;
     if (this.isDown('ArrowLeft') || this.isDown('KeyA')) x -= 1;
     if (this.isDown('ArrowRight') || this.isDown('KeyD')) x += 1;
     if (this.isDown('ArrowUp') || this.isDown('KeyW')) y -= 1;
     if (this.isDown('ArrowDown') || this.isDown('KeyS')) y += 1;
     // 归一化
     const len = Math.sqrt(x * x + y * y);
-    if (len > 0) { x /= len; y /= len; }
+    if (len > 0) {
+      x /= len;
+      y /= len;
+    }
     return { x, y };
   }
 }

@@ -54,14 +54,30 @@ export class SimpleWebSocketMock {
     setTimeout(() => this._fireOpen(), 0);
   }
 
-  set onopen(h: any) { this._onopen = h; }
-  get onopen() { return this._onopen; }
-  set onmessage(h: any) { this._onmessage = h; }
-  get onmessage() { return this._onmessage; }
-  set onclose(h: any) { this._onclose = h; }
-  get onclose() { return this._onclose; }
-  set onerror(h: any) { this._onerror = h; }
-  get onerror() { return this._onerror; }
+  set onopen(h: any) {
+    this._onopen = h;
+  }
+  get onopen() {
+    return this._onopen;
+  }
+  set onmessage(h: any) {
+    this._onmessage = h;
+  }
+  get onmessage() {
+    return this._onmessage;
+  }
+  set onclose(h: any) {
+    this._onclose = h;
+  }
+  get onclose() {
+    return this._onclose;
+  }
+  set onerror(h: any) {
+    this._onerror = h;
+  }
+  get onerror() {
+    return this._onerror;
+  }
 
   send(data: string): void {
     this.sentMessages.push(data);
@@ -110,7 +126,11 @@ export class SimpleWebSocketMock {
   lastSentJson<T = any>(): T | null {
     const last = this.sentMessages[this.sentMessages.length - 1];
     if (!last) return null;
-    try { return JSON.parse(last); } catch { return null; }
+    try {
+      return JSON.parse(last);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -142,7 +162,9 @@ if (typeof MessageEvent === 'undefined') {
   (globalThis as any).MessageEvent = class MessageEvent {
     type = 'message';
     data: any;
-    constructor(_type: string, init: any = {}) { this.data = init.data; }
+    constructor(_type: string, init: any = {}) {
+      this.data = init.data;
+    }
   };
 }
 if (typeof CloseEvent === 'undefined') {

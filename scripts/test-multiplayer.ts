@@ -84,7 +84,9 @@ async function main() {
     console.error(`FAIL: state 推送不够 (a=${a.receivedStates}, b=${b.receivedStates})`);
     process.exit(1);
   }
-  console.log(`PASS: 两个客户端都收到 state 推送 (a=${a.receivedStates}, b=${b.receivedStates} 轮)`);
+  console.log(
+    `PASS: 两个客户端都收到 state 推送 (a=${a.receivedStates}, b=${b.receivedStates} 轮)`,
+  );
 
   // A 走一步 (move right), B 也走一步 (move left)
   a.sendIntent(3); // 右
@@ -99,7 +101,9 @@ async function main() {
   console.log(`PASS: tick 推进 (a=${a.lastTick}, b=${b.lastTick})`);
 
   // 验证 entity 数变化 (同房间, 数应该稳定)
-  console.log(`FINAL: a.eid=${a.eid} b.eid=${b.eid} entities=${a.lastEntityCount} tick=${a.lastTick}`);
+  console.log(
+    `FINAL: a.eid=${a.eid} b.eid=${b.eid} entities=${a.lastEntityCount} tick=${a.lastTick}`,
+  );
 
   if (a.eid === b.eid) {
     console.error(`FAIL: a 和 b 的 eid 相同 (${a.eid}), server 没分配不同 slot`);

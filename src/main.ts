@@ -5,9 +5,22 @@ import { MovementSystem, SpriteRenderSystem, CollisionSystem } from './systems/g
 import { GameScene } from './scenes/game-scene';
 import { HUD } from './ui/hud';
 import {
-  JobType, EnemyType, JOBS, getXpForLevel, getEnemyXp, getEnemyGold,
-  Skill, SkillSet, Experience, BuffList, Buff, Projectile,
-  Health, Combat, Position, MeshComponent,
+  JobType,
+  EnemyType,
+  JOBS,
+  getXpForLevel,
+  getEnemyXp,
+  getEnemyGold,
+  Skill,
+  SkillSet,
+  Experience,
+  BuffList,
+  Buff,
+  Projectile,
+  Health,
+  Combat,
+  Position,
+  MeshComponent,
 } from './core/components';
 import {
   createPlayerTexture,
@@ -50,7 +63,7 @@ class Game {
     this.hud = new HUD(container.parentElement!);
 
     this.scene.addGrid();
-    
+
     // 选职业界面
     this.showJobSelection();
   }
@@ -60,9 +73,10 @@ class Game {
       <div style="text-align:center;padding:20px;color:#f5e6c8;font-family:'Microsoft YaHei',sans-serif">
         <h2 style="margin-bottom:20px;color:#d4a017">选择你的职业</h2>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          ${(['书生','剑客','术士','医者'] as JobType[]).map(j => {
-            const cfg = JOBS[j];
-            return `<div onclick="window.__selectJob('${j}')" 
+          ${(['书生', '剑客', '术士', '医者'] as JobType[])
+            .map((j) => {
+              const cfg = JOBS[j];
+              return `<div onclick="window.__selectJob('${j}')" 
               style="cursor:pointer;background:#1a1a2e;border:2px solid ${cfg.color};border-radius:8px;padding:12px;width:140px;
               transition:transform 0.2s" 
               onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -70,7 +84,8 @@ class Game {
               <div style="font-size:12px;margin:8px 0;color:#aaa">${cfg.description}</div>
               <div style="font-size:11px;color:#888">HP:${cfg.baseHp} ATK:${cfg.baseAttack} DEF:${cfg.baseDefense}</div>
             </div>`;
-          }).join('')}
+            })
+            .join('')}
         </div>
       </div>
     `);
@@ -103,17 +118,24 @@ class Game {
     ecs.addComponent<Position>(this.playerId, 'position', { x: 0, y: 0 });
     ecs.addComponent<Velocity>(this.playerId, 'velocity', { x: 0, y: 0 });
     ecs.addComponent<Health>(this.playerId, 'health', { current: cfg.baseHp, max: cfg.baseHp });
-    ecs.addComponent<Combat>(this.playerId, 'combat', { attack: cfg.baseAttack, defense: cfg.baseDefense, speed: cfg.baseSpeed });
+    ecs.addComponent<Combat>(this.playerId, 'combat', {
+      attack: cfg.baseAttack,
+      defense: cfg.baseDefense,
+      speed: cfg.baseSpeed,
+    });
     ecs.addComponent<PlayerTag>(this.playerId, 'player', { job });
 
     // 经验 & 等级
     ecs.addComponent<Experience>(this.playerId, 'experience', {
-      level: 1, currentXp: 0, nextLevelXp: getXpForLevel(1), totalXp: 0,
+      level: 1,
+      currentXp: 0,
+      nextLevelXp: getXpForLevel(1),
+      totalXp: 0,
     });
 
     // 技能
     ecs.addComponent<SkillSet>(this.playerId, 'skills', {
-      skills: cfg.skills.map(s => ({ ...s, currentCooldown: 0 })),
+      skills: cfg.skills.map((s) => ({ ...s, currentCooldown: 0 })),
     });
 
     // 金币
@@ -140,7 +162,8 @@ class Game {
 
     let x: number, y: number;
     if (pos) {
-      x = pos.x; y = pos.y;
+      x = pos.x;
+      y = pos.y;
     } else {
       const angle = Math.random() * Math.PI * 2;
       const dist = 4 + Math.random() * 5;
@@ -148,9 +171,9 @@ class Game {
       y = Math.sin(angle) * dist;
     }
 
-    const hpMap: Record<EnemyType, number> = { '游魂': 40, '兵煞': 80, '妖狐': 60, '夜叉': 150 };
-    const atkMap: Record<EnemyType, number> = { '游魂': 8, '兵煞': 15, '妖狐': 12, '夜叉': 25 };
-    const defMap: Record<EnemyType, number> = { '游魂': 2, '兵煞': 5, '妖狐': 3, '夜叉': 8 };
+    const hpMap: Record<EnemyType, number> = { 游魂: 40, 兵煞: 80, 妖狐: 60, 夜叉: 150 };
+    const atkMap: Record<EnemyType, number> = { 游魂: 8, 兵煞: 15, 妖狐: 12, 夜叉: 25 };
+    const defMap: Record<EnemyType, number> = { 游魂: 2, 兵煞: 5, 妖狐: 3, 夜叉: 8 };
     const playerLevel = ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1;
 
     // 难度随等级提升
@@ -158,8 +181,15 @@ class Game {
 
     ecs.addComponent<Position>(id, 'position', { x, y });
     ecs.addComponent<Velocity>(id, 'velocity', { x: 0, y: 0 });
-    ecs.addComponent<Health>(id, 'health', { current: Math.floor(hpMap[type] * levelScale), max: Math.floor(hpMap[type] * levelScale) });
-    ecs.addComponent<Combat>(id, 'combat', { attack: Math.floor(atkMap[type] * levelScale), defense: Math.floor(defMap[type] * levelScale), speed: 5 });
+    ecs.addComponent<Health>(id, 'health', {
+      current: Math.floor(hpMap[type] * levelScale),
+      max: Math.floor(hpMap[type] * levelScale),
+    });
+    ecs.addComponent<Combat>(id, 'combat', {
+      attack: Math.floor(atkMap[type] * levelScale),
+      defense: Math.floor(defMap[type] * levelScale),
+      speed: 5,
+    });
     ecs.addComponent<EnemyTag>(id, 'enemy', { type });
 
     const mesh = createEntityMesh(tex, 1.5, 1.5);
@@ -172,11 +202,12 @@ class Game {
   private spawnInitialEnemies() {
     // 按等级生成不同类型的敌人
     const level = ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1;
-    const types: EnemyType[] = level < 3
-      ? ['游魂', '游魂', '兵煞']
-      : level < 5
-        ? ['游魂', '兵煞', '妖狐']
-        : ['兵煞', '妖狐', '夜叉'];
+    const types: EnemyType[] =
+      level < 3
+        ? ['游魂', '游魂', '兵煞']
+        : level < 5
+          ? ['游魂', '兵煞', '妖狐']
+          : ['兵煞', '妖狐', '夜叉'];
     for (const t of types) this.spawnEnemy(t);
   }
 
@@ -228,25 +259,37 @@ class Game {
     switch (skill.type) {
       case 'melee': {
         const nearest = this.collisionSystem.findNearest(this.playerId, 'enemy');
-        if (nearest === null) { this.hud.showMessage('没有敌人在攻击范围内', 1); return; }
+        if (nearest === null) {
+          this.hud.showMessage('没有敌人在攻击范围内', 1);
+          return;
+        }
         const enemyPos = ecs.getComponent<Position>(nearest);
         if (!enemyPos) return;
         const dx = enemyPos.x - playerPos.x;
         const dy = enemyPos.y - playerPos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > skill.range) { this.hud.showMessage('敌人太远了', 1); return; }
+        if (dist > skill.range) {
+          this.hud.showMessage('敌人太远了', 1);
+          return;
+        }
         this.dealDamage(nearest, Math.floor(combat.attack * skill.damageMultiplier), skill);
         break;
       }
       case 'ranged': {
         const nearest = this.collisionSystem.findNearest(this.playerId, 'enemy');
-        if (nearest === null) { this.hud.showMessage('没有目标', 1); return; }
+        if (nearest === null) {
+          this.hud.showMessage('没有目标', 1);
+          return;
+        }
         const enemyPos = ecs.getComponent<Position>(nearest);
         if (!enemyPos) return;
         const dx = enemyPos.x - playerPos.x;
         const dy = enemyPos.y - playerPos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > skill.range) { this.hud.showMessage('超出射程', 1); return; }
+        if (dist > skill.range) {
+          this.hud.showMessage('超出射程', 1);
+          return;
+        }
         this.fireProjectile(nearest, combat.attack * skill.damageMultiplier, skill.color);
         break;
       }
@@ -288,7 +331,14 @@ class Game {
             buff = { id: skill.id, name: skill.name, duration: 6, remaining: 6, attackBonus: 5 };
             break;
           case 'revitalize':
-            buff = { id: skill.id, name: skill.name, duration: 8, remaining: 8, attackBonus: 3, defenseBonus: 3 };
+            buff = {
+              id: skill.id,
+              name: skill.name,
+              duration: 8,
+              remaining: 8,
+              attackBonus: 3,
+              defenseBonus: 3,
+            };
             break;
           default:
             buff = { id: skill.id, name: skill.name, duration: 4, remaining: 4, defenseBonus: 3 };
@@ -296,7 +346,7 @@ class Game {
         if (!buffs) {
           ecs.addComponent<BuffList>(this.playerId, 'buffs', { buffs: [buff] });
         } else {
-          const existing = buffs.buffs.findIndex(b => b.id === buff.id);
+          const existing = buffs.buffs.findIndex((b) => b.id === buff.id);
           if (existing >= 0) buffs.buffs[existing].remaining = buff.duration;
           else buffs.buffs.push(buff);
         }
@@ -321,9 +371,14 @@ class Game {
     this.scene.scene.add(mesh);
 
     const proj: Projectile = {
-      mesh, targetX: targetPos.x, targetY: targetPos.y,
-      speed: 8, damage, fromEntity: this.playerId,
-      lifetime: 2, alive: true,
+      mesh,
+      targetX: targetPos.x,
+      targetY: targetPos.y,
+      speed: 8,
+      damage,
+      fromEntity: this.playerId,
+      lifetime: 2,
+      alive: true,
     };
     const projId = ecs.createEntity();
     ecs.addComponent<Projectile>(projId, 'projectile', proj);
@@ -340,8 +395,8 @@ class Game {
 
       const pos = ecs.getComponent<Position>(this.playerId);
       // 移动投射物向目标
-      const dx = p.targetX - (p.mesh.position.x);
-      const dy = -p.targetY - (p.mesh.position.y); // 注意 y 翻转
+      const dx = p.targetX - p.mesh.position.x;
+      const dy = -p.targetY - p.mesh.position.y; // 注意 y 翻转
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < 0.3) {
@@ -480,7 +535,8 @@ class Game {
 
     // Buff影响
     const buffs = ecs.getComponent<BuffList>(this.playerId, 'buffs');
-    let defBonus = 0, atkBonus = 0;
+    let defBonus = 0,
+      atkBonus = 0;
     if (buffs) {
       for (const b of buffs.buffs) {
         b.remaining -= delta;
@@ -489,15 +545,19 @@ class Game {
           atkBonus += b.attackBonus || 0;
         }
       }
-      buffs.buffs = buffs.buffs.filter(b => b.remaining > 0);
+      buffs.buffs = buffs.buffs.filter((b) => b.remaining > 0);
     }
 
     const combat = ecs.getComponent<Combat>(this.playerId, 'combat');
     if (combat) {
-      combat.attack = (JOBS[ecs.getComponent<PlayerTag>(this.playerId, 'player')?.job || '书生'].baseAttack +
-        (ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1) * 3) + atkBonus;
-      combat.defense = (JOBS[ecs.getComponent<PlayerTag>(this.playerId, 'player')?.job || '书生'].baseDefense +
-        (ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1)) + defBonus;
+      combat.attack =
+        JOBS[ecs.getComponent<PlayerTag>(this.playerId, 'player')?.job || '书生'].baseAttack +
+        (ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1) * 3 +
+        atkBonus;
+      combat.defense =
+        JOBS[ecs.getComponent<PlayerTag>(this.playerId, 'player')?.job || '书生'].baseDefense +
+        (ecs.getComponent<Experience>(this.playerId, 'experience')?.level || 1) +
+        defBonus;
     }
 
     // 敌人生成（根据等级）
@@ -506,11 +566,12 @@ class Game {
     const maxEnemies = Math.min(12, 6 + level);
     if (this.spawnTimer >= this.ENEMY_SPAWN_INTERVAL && this.enemies.length < maxEnemies) {
       this.spawnTimer = 0;
-      const pool: EnemyType[] = level < 3
-        ? ['游魂', '游魂', '兵煞']
-        : level < 5
-          ? ['游魂', '兵煞', '妖狐']
-          : ['兵煞', '妖狐', '妖狐', '夜叉'];
+      const pool: EnemyType[] =
+        level < 3
+          ? ['游魂', '游魂', '兵煞']
+          : level < 5
+            ? ['游魂', '兵煞', '妖狐']
+            : ['兵煞', '妖狐', '妖狐', '夜叉'];
       this.spawnEnemy(pool[Math.floor(Math.random() * pool.length)]);
     }
 
@@ -559,7 +620,7 @@ class Game {
       }
     }
     // 冷却好了才刷新显示
-    if (needRefresh && skills.skills.some(s => s.currentCooldown <= 0.03)) {
+    if (needRefresh && skills.skills.some((s) => s.currentCooldown <= 0.03)) {
       this.hud.showSkills(skills.skills);
     }
   }
@@ -585,7 +646,7 @@ class Game {
       if (meshData.mesh.geometry) meshData.mesh.geometry.dispose();
     }
     ecs.destroyEntity(id);
-    this.enemies = this.enemies.filter(e => e !== id);
+    this.enemies = this.enemies.filter((e) => e !== id);
   }
 
   // ============ 游戏循环 ============
@@ -635,9 +696,17 @@ class Game {
       hp.max = JOBS[job].baseHp;
     }
     const pos = ecs.getComponent<Position>(this.playerId, 'position');
-    if (pos) { pos.x = 0; pos.y = 0; }
+    if (pos) {
+      pos.x = 0;
+      pos.y = 0;
+    }
     const exp = ecs.getComponent<Experience>(this.playerId, 'experience');
-    if (exp) { exp.level = 1; exp.currentXp = 0; exp.nextLevelXp = getXpForLevel(1); exp.totalXp = 0; }
+    if (exp) {
+      exp.level = 1;
+      exp.currentXp = 0;
+      exp.nextLevelXp = getXpForLevel(1);
+      exp.totalXp = 0;
+    }
     this.spawnInitialEnemies();
     this.spawnTimer = 0;
     this.hud.showMessage('卷土重来！', 2);
@@ -655,10 +724,15 @@ const INSTANCE_KEY = '__baigui_game';
 
 function startGame() {
   const container = document.getElementById(CONTAINER_ID);
-  if (!container) { console.error('[百鬼] 找不到容器 #' + CONTAINER_ID); return; }
+  if (!container) {
+    console.error('[百鬼] 找不到容器 #' + CONTAINER_ID);
+    return;
+  }
 
   const oldGame = (window as any)[INSTANCE_KEY];
-  if (oldGame) { oldGame.stop(); }
+  if (oldGame) {
+    oldGame.stop();
+  }
 
   try {
     const game = new Game(container);
@@ -668,14 +742,15 @@ function startGame() {
     // 调试覆盖层
     const debugDiv = document.createElement('div');
     debugDiv.id = 'debug-overlay';
-    debugDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;z-index:9999;color:#0f0;font:12px monospace;background:rgba(0,0,0,0.7);padding:8px;border-radius:4px;pointer-events:none;';
+    debugDiv.style.cssText =
+      'position:fixed;bottom:10px;left:10px;z-index:9999;color:#0f0;font:12px monospace;background:rgba(0,0,0,0.7);padding:8px;border-radius:4px;pointer-events:none;';
     document.body.appendChild(debugDiv);
     const updateDebug = () => {
       const p = new Uint8Array(4);
       const gl = game.scene.renderer.domElement.getContext('webgl2');
       if (gl) gl.readPixels(400, 300, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, p);
       debugDiv.innerHTML =
-        `raf:${game.rafId>0?'OK':'X'} obj:${game.scene.scene.children.length} enemy:${game.enemies.length}<br>` +
+        `raf:${game.rafId > 0 ? 'OK' : 'X'} obj:${game.scene.scene.children.length} enemy:${game.enemies.length}<br>` +
         `px:(${p[0]},${p[1]},${p[2]})`;
       requestAnimationFrame(updateDebug);
     };

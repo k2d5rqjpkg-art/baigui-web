@@ -47,25 +47,33 @@ export interface BuildingMesh {
 /** 标准建筑尺寸 */
 export const BUILDING_PRESETS: Record<BuildingType, Partial<BuildingSpec>> = {
   house: {
-    width: 4, depth: 4, height: 3,
+    width: 4,
+    depth: 4,
+    height: 3,
     roof: 'pitched',
     wallColor: 0xd4a017,
     roofColor: 0x8b4513,
   },
   tower: {
-    width: 3, depth: 3, height: 8,
+    width: 3,
+    depth: 3,
+    height: 8,
     roof: 'pyramid',
     wallColor: 0x7f8c8d,
     roofColor: 0x2c3e50,
   },
   shop: {
-    width: 5, depth: 3, height: 3,
+    width: 5,
+    depth: 3,
+    height: 3,
     roof: 'flat',
     wallColor: 0xc0392b,
     roofColor: 0x34495e,
   },
   shrine: {
-    width: 3, depth: 3, height: 4,
+    width: 3,
+    depth: 3,
+    height: 4,
     roof: 'pitched',
     wallColor: 0x8e44ad,
     roofColor: 0x2c3e50,
@@ -84,30 +92,59 @@ export function defaultSpec(type: BuildingType): BuildingSpec {
     wallColor: preset.wallColor ?? 0xd4a017,
     roofColor: preset.roofColor ?? 0x8b4513,
     doorPos: { u: 0.5, v: 0.05 }, // 默认前方居中
-    windows: type === 'tower' ? [] : [{ u: 0.25, y: 0.5, size: 0.4 }, { u: 0.75, y: 0.5, size: 0.4 }],
+    windows:
+      type === 'tower'
+        ? []
+        : [
+            { u: 0.25, y: 0.5, size: 0.4 },
+            { u: 0.75, y: 0.5, size: 0.4 },
+          ],
   };
 }
 
 /** 生成 1 个 box 的 8 顶点 + 12 三角形 */
 function boxMesh(
-  cx: number, cy: number, cz: number,
-  w: number, h: number, d: number,
+  cx: number,
+  cy: number,
+  cz: number,
+  w: number,
+  h: number,
+  d: number,
 ): { vertices: number[]; indices: number[] } {
-  const x0 = cx - w / 2, x1 = cx + w / 2;
-  const y0 = cy, y1 = cy + h;
-  const z0 = cz - d / 2, z1 = cz + d / 2;
+  const x0 = cx - w / 2,
+    x1 = cx + w / 2;
+  const y0 = cy,
+    y1 = cy + h;
+  const z0 = cz - d / 2,
+    z1 = cz + d / 2;
 
   const vertices: number[] = [
     // 4 底面顶点 (y=y0)
-    x0, y0, z0,
-    x1, y0, z0,
-    x1, y0, z1,
-    x0, y0, z1,
+    x0,
+    y0,
+    z0,
+    x1,
+    y0,
+    z0,
+    x1,
+    y0,
+    z1,
+    x0,
+    y0,
+    z1,
     // 4 顶面顶点 (y=y1)
-    x0, y1, z0,
-    x1, y1, z0,
-    x1, y1, z1,
-    x0, y1, z1,
+    x0,
+    y1,
+    z0,
+    x1,
+    y1,
+    z0,
+    x1,
+    y1,
+    z1,
+    x0,
+    y1,
+    z1,
   ];
 
   const indices = [
@@ -149,52 +186,60 @@ export function generateBuilding(
 
   if (spec.roof === 'pitched') {
     // 三角顶: 5 顶点 (4 顶角 + 1 中央)
-    const x0 = cx - spec.width / 2, x1 = cx + spec.width / 2;
-    const z0 = cz - spec.depth / 2, z1 = cz + spec.depth / 2;
+    const x0 = cx - spec.width / 2,
+      x1 = cx + spec.width / 2;
+    const z0 = cz - spec.depth / 2,
+      z1 = cz + spec.depth / 2;
     const peakY = roofY + spec.height * 0.5;
     roofVertices = [
-      x0, roofY, z0,
-      x1, roofY, z0,
-      x1, roofY, z1,
-      x0, roofY, z1,
-      cx, peakY, cz, // 顶点
+      x0,
+      roofY,
+      z0,
+      x1,
+      roofY,
+      z0,
+      x1,
+      roofY,
+      z1,
+      x0,
+      roofY,
+      z1,
+      cx,
+      peakY,
+      cz, // 顶点
     ];
     // 4 三角形 (4 面)
     roofIndices = [
-      0, 4, 1, // front
-      1, 4, 2, // right
-      2, 4, 3, // back
-      3, 4, 0, // left
+      0,
+      4,
+      1, // front
+      1,
+      4,
+      2, // right
+      2,
+      4,
+      3, // back
+      3,
+      4,
+      0, // left
     ];
     roofVertOffset = body.vertices.length / 3;
   } else if (spec.roof === 'pyramid') {
     // 金字塔顶: 同上 5 顶点
-    const x0 = cx - spec.width / 2, x1 = cx + spec.width / 2;
-    const z0 = cz - spec.depth / 2, z1 = cz + spec.depth / 2;
+    const x0 = cx - spec.width / 2,
+      x1 = cx + spec.width / 2;
+    const z0 = cz - spec.depth / 2,
+      z1 = cz + spec.depth / 2;
     const peakY = roofY + spec.height * 0.7;
-    roofVertices = [
-      x0, roofY, z0,
-      x1, roofY, z0,
-      x1, roofY, z1,
-      x0, roofY, z1,
-      cx, peakY, cz,
-    ];
-    roofIndices = [
-      0, 4, 1,
-      1, 4, 2,
-      2, 4, 3,
-      3, 4, 0,
-    ];
+    roofVertices = [x0, roofY, z0, x1, roofY, z0, x1, roofY, z1, x0, roofY, z1, cx, peakY, cz];
+    roofIndices = [0, 4, 1, 1, 4, 2, 2, 4, 3, 3, 4, 0];
     roofVertOffset = body.vertices.length / 3;
   }
   // 'flat' 屋顶不增加额外顶点
 
   // 3. 合并
   const allVertices = [...body.vertices, ...roofVertices];
-  const allIndices = [
-    ...body.indices,
-    ...roofIndices.map((i) => i + roofVertOffset),
-  ];
+  const allIndices = [...body.indices, ...roofIndices.map((i) => i + roofVertOffset)];
 
   // 4. 边界框
   let roofExtra = 0;
@@ -248,11 +293,16 @@ export function generateSettlement(
 /** 检测 AABB 碰撞 (点 vs building bounds) */
 export function isPointInBuilding(
   building: BuildingMesh,
-  px: number, py: number, pz: number,
+  px: number,
+  py: number,
+  pz: number,
 ): boolean {
   return (
-    px >= building.bounds.minX && px <= building.bounds.maxX &&
-    py >= building.bounds.minY && py <= building.bounds.maxY &&
-    pz >= building.bounds.minZ && pz <= building.bounds.maxZ
+    px >= building.bounds.minX &&
+    px <= building.bounds.maxX &&
+    py >= building.bounds.minY &&
+    py <= building.bounds.maxY &&
+    pz >= building.bounds.minZ &&
+    pz <= building.bounds.maxZ
   );
 }

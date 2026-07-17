@@ -46,7 +46,7 @@ declare global {
 
 class BrowserHost {
   game: BrowserGame;
-  renderer: GameRenderer | null = null;  // 异步加载, 加载完才有
+  renderer: GameRenderer | null = null; // 异步加载, 加载完才有
   input: GameInput;
   hud: GameHud;
   advisor: AdvisorPanel;
@@ -187,14 +187,17 @@ function startHost(): void {
   log.info('[host/browser] sim started. Loading renderer...');
 
   // 异步加载 Three.js 渲染层 + 启动渲染
-  host.loadRenderer(container).then(() => {
-    loading.remove();
-    log.info('[host/browser] started. WASD 移动 · J/空格 攻击 · 自动拾取 · R 重置');
-  }).catch((err) => {
-    log.error('[host/browser] renderer load failed:', err);
-    const status = document.getElementById('__loading_status');
-    if (status) status.textContent = `加载失败: ${err.message}`;
-  });
+  host
+    .loadRenderer(container)
+    .then(() => {
+      loading.remove();
+      log.info('[host/browser] started. WASD 移动 · J/空格 攻击 · 自动拾取 · R 重置');
+    })
+    .catch((err) => {
+      log.error('[host/browser] renderer load failed:', err);
+      const status = document.getElementById('__loading_status');
+      if (status) status.textContent = `加载失败: ${err.message}`;
+    });
 }
 
 if (document.readyState === 'loading') {

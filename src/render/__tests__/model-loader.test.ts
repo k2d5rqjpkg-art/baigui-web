@@ -148,7 +148,11 @@ describe('loadModelCached', () => {
         status: 200,
         arrayBuffer: async () => {
           // 最小 GLB
-          const json = JSON.stringify({ asset: { version: '2.0' }, accessors: [], bufferViews: [] });
+          const json = JSON.stringify({
+            asset: { version: '2.0' },
+            accessors: [],
+            bufferViews: [],
+          });
           const jsonBytes = new TextEncoder().encode(json);
           const bin = new Uint8Array(0);
           const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
@@ -177,28 +181,35 @@ describe('loadModelCached', () => {
 
   it('不同 URL → 不同缓存', async () => {
     clearModelCache();
-    const mockFetch = vi.fn(async (url: string) => ({
-      ok: true,
-      status: 200,
-      arrayBuffer: async () => {
-        const json = JSON.stringify({ asset: { version: '2.0' }, accessors: [], bufferViews: [] });
-        const jsonBytes = new TextEncoder().encode(json);
-        const bin = new Uint8Array(0);
-        const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
-        const buf = new ArrayBuffer(total);
-        const dv = new DataView(buf);
-        const u8 = new Uint8Array(buf);
-        dv.setUint32(0, 0x46546c67, true);
-        dv.setUint32(4, 2, true);
-        dv.setUint32(8, total, true);
-        dv.setUint32(12, jsonBytes.length, true);
-        dv.setUint32(16, 0x4e4f534a, true);
-        u8.set(jsonBytes, 20);
-        dv.setUint32(20 + jsonBytes.length, 0, true);
-        dv.setUint32(20 + jsonBytes.length + 4, 0x004e4942, true);
-        return buf;
-      },
-    } as any));
+    const mockFetch = vi.fn(
+      async (url: string) =>
+        ({
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => {
+            const json = JSON.stringify({
+              asset: { version: '2.0' },
+              accessors: [],
+              bufferViews: [],
+            });
+            const jsonBytes = new TextEncoder().encode(json);
+            const bin = new Uint8Array(0);
+            const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
+            const buf = new ArrayBuffer(total);
+            const dv = new DataView(buf);
+            const u8 = new Uint8Array(buf);
+            dv.setUint32(0, 0x46546c67, true);
+            dv.setUint32(4, 2, true);
+            dv.setUint32(8, total, true);
+            dv.setUint32(12, jsonBytes.length, true);
+            dv.setUint32(16, 0x4e4f534a, true);
+            u8.set(jsonBytes, 20);
+            dv.setUint32(20 + jsonBytes.length, 0, true);
+            dv.setUint32(20 + jsonBytes.length + 4, 0x004e4942, true);
+            return buf;
+          },
+        }) as any,
+    );
     vi.stubGlobal('fetch', mockFetch);
 
     await loadModelCached('https://test/a.glb');
@@ -207,10 +218,16 @@ describe('loadModelCached', () => {
   });
 
   it('fetch 失败抛错', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => ({
-      ok: false,
-      status: 404,
-    } as any)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          ({
+            ok: false,
+            status: 404,
+          }) as any,
+      ),
+    );
     await expect(loadModelCached('https://test/missing.glb')).rejects.toThrow();
   });
 });

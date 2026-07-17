@@ -66,9 +66,7 @@ describe('generateRoomContent', () => {
 
   it('NPC names are from the fixed pool', async () => {
     const content = await generateRoomContent(1, [{ x: 1, y: 1 }], []);
-    const validNames = [
-      'Lantern Bearer', 'Driftwood Taro', 'Wandering Sage', 'Moss-Covered Elder',
-    ];
+    const validNames = ['Lantern Bearer', 'Driftwood Taro', 'Wandering Sage', 'Moss-Covered Elder'];
     for (const npc of content.npcs) {
       expect(validNames).toContain(npc.name);
       expect(npc.personality).toBeTruthy();
@@ -170,11 +168,7 @@ describe('talkToNpc', () => {
   });
 
   it('uses fallback dialogue for known NPC', async () => {
-    const result = await talkToNpc(
-      { ...npc, name: 'Lantern Bearer' },
-      'e_p1' as EntityId,
-      'ctx',
-    );
+    const result = await talkToNpc({ ...npc, name: 'Lantern Bearer' }, 'e_p1' as EntityId, 'ctx');
     // fallback 模式下,known NPC 应该有特定的 dialogue
     const fb = fallbackDialogue('Lantern Bearer');
     expect(result.greeting).toBe(fb.greeting);

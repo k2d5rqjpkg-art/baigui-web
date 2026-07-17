@@ -55,7 +55,11 @@ describe('PvPRoom (1v1 房间)', () => {
   it('双方 attack 推 tick', () => {
     const room = new PvPRoom('pvp-1', 'e_p1' as EntityId, 'e_p2' as EntityId, 1200, 1200);
     const r = room.step({
-      A: { type: 'attack', entityId: 'e_p1' as EntityId, payload: { targetId: 'e_p2' as EntityId } },
+      A: {
+        type: 'attack',
+        entityId: 'e_p1' as EntityId,
+        payload: { targetId: 'e_p2' as EntityId },
+      },
       B: null,
     });
     expect(r.events.length).toBeGreaterThan(0);
@@ -69,7 +73,11 @@ describe('PvPRoom (1v1 房间)', () => {
     let winner: 'A' | 'B' | null = null;
     for (let i = 0; i < 50 && winner === null; i++) {
       const r = room.step({
-        A: { type: 'attack', entityId: 'e_p1' as EntityId, payload: { targetId: 'e_p2' as EntityId } },
+        A: {
+          type: 'attack',
+          entityId: 'e_p1' as EntityId,
+          payload: { targetId: 'e_p2' as EntityId },
+        },
         B: null,
       });
       winner = r.winner;
@@ -83,7 +91,11 @@ describe('PvPRoom (1v1 房间)', () => {
     let winner: 'A' | 'B' | null = null;
     for (let i = 0; i < 50 && winner === null; i++) {
       const r = room.step({
-        A: { type: 'attack', entityId: 'e_p1' as EntityId, payload: { targetId: 'e_p2' as EntityId } },
+        A: {
+          type: 'attack',
+          entityId: 'e_p1' as EntityId,
+          payload: { targetId: 'e_p2' as EntityId },
+        },
         B: null,
       });
       winner = r.winner;
@@ -105,7 +117,11 @@ describe('PvPRoom (1v1 房间)', () => {
     const room = new PvPRoom('pvp-1', 'e_p1' as EntityId, 'e_p2' as EntityId, 1200, 1200);
     // B 不动, A 攻击 B
     const r = room.step({
-      A: { type: 'attack', entityId: 'e_p1' as EntityId, payload: { targetId: 'e_p2' as EntityId } },
+      A: {
+        type: 'attack',
+        entityId: 'e_p1' as EntityId,
+        payload: { targetId: 'e_p2' as EntityId },
+      },
       B: null,
     });
     expect(r.events.length).toBeGreaterThan(0);

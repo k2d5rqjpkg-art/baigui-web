@@ -31,7 +31,7 @@ export function hashKey(s: string): string {
     h = Math.imul(h, 0x01000193);
   }
   // Convert to unsigned hex
-  return (h >>> 0).toString(16).padStart(8, "0");
+  return (h >>> 0).toString(16).padStart(8, '0');
 }
 
 export class LRU<V> implements LRUCache<V> {
@@ -39,7 +39,7 @@ export class LRU<V> implements LRUCache<V> {
   private readonly map: Map<string, Entry<V>>;
 
   constructor(maxEntries: number = 100) {
-    if (maxEntries <= 0) throw new Error("LRU maxEntries must be > 0");
+    if (maxEntries <= 0) throw new Error('LRU maxEntries must be > 0');
     this.max = maxEntries;
     this.map = new Map();
   }

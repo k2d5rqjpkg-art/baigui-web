@@ -14,7 +14,10 @@ const PALETTE = {
   yecha: 0x7f8c8d,
 };
 
-function buildCanvas(draw: (ctx: CanvasRenderingContext2D, size: number) => void, size = 64): THREE.CanvasTexture {
+function buildCanvas(
+  draw: (ctx: CanvasRenderingContext2D, size: number) => void,
+  size = 64,
+): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -33,10 +36,14 @@ function buildCanvas(draw: (ctx: CanvasRenderingContext2D, size: number) => void
 /** 书生（默认） */
 export function createPlayerTexture(job: JobType = '书生'): THREE.CanvasTexture {
   switch (job) {
-    case '书生': return createScholarTexture();
-    case '剑客': return createSwordsmanTexture();
-    case '术士': return createSorcererTexture();
-    case '医者': return createDoctorTexture();
+    case '书生':
+      return createScholarTexture();
+    case '剑客':
+      return createSwordsmanTexture();
+    case '术士':
+      return createSorcererTexture();
+    case '医者':
+      return createDoctorTexture();
   }
 }
 
@@ -68,7 +75,7 @@ function createScholarTexture(): THREE.CanvasTexture {
     // 白色边框
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -98,7 +105,7 @@ function createSwordsmanTexture(): THREE.CanvasTexture {
     // 色边框
     ctx.strokeStyle = '#e74c3c';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -130,7 +137,7 @@ function createSorcererTexture(): THREE.CanvasTexture {
     // 边框
     ctx.strokeStyle = '#af7ac5';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -160,7 +167,7 @@ function createDoctorTexture(): THREE.CanvasTexture {
     // 边框
     ctx.strokeStyle = '#2ecc71';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -168,10 +175,14 @@ function createDoctorTexture(): THREE.CanvasTexture {
 
 export function createEnemyTexture(type: EnemyType): THREE.CanvasTexture {
   switch (type) {
-    case '游魂': return createGhostTexture();
-    case '兵煞': return createSoldierTexture();
-    case '妖狐': return createFoxTexture();
-    case '夜叉': return createYechaTexture();
+    case '游魂':
+      return createGhostTexture();
+    case '兵煞':
+      return createSoldierTexture();
+    case '妖狐':
+      return createFoxTexture();
+    case '夜叉':
+      return createYechaTexture();
   }
 }
 
@@ -193,7 +204,7 @@ function createGhostTexture(): THREE.CanvasTexture {
     ctx.fillRect(38, 24, 4, 4);
     ctx.strokeStyle = '#ff00ff';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -214,7 +225,7 @@ function createSoldierTexture(): THREE.CanvasTexture {
     ctx.fillRect(2, 16, 2, 24);
     ctx.strokeStyle = '#00ffff';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -257,7 +268,7 @@ function createFoxTexture(): THREE.CanvasTexture {
     // 边框
     ctx.strokeStyle = '#f39c12';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -291,7 +302,7 @@ function createYechaTexture(): THREE.CanvasTexture {
     // 边框
     ctx.strokeStyle = '#e74c3c';
     ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, s-3, s-3);
+    ctx.strokeRect(1, 1, s - 3, s - 3);
   });
 }
 
@@ -339,9 +350,9 @@ export function createItemTexture(templateId: string): THREE.CanvasTexture {
       // 护甲: 菱形棕色 + 金属边
       ctx.fillStyle = '#8b4513';
       ctx.beginPath();
-      ctx.moveTo(s/2, 6);
+      ctx.moveTo(s / 2, 6);
       ctx.lineTo(52, 32);
-      ctx.lineTo(s/2, 54);
+      ctx.lineTo(s / 2, 54);
       ctx.lineTo(12, 32);
       ctx.closePath();
       ctx.fill();
@@ -353,11 +364,11 @@ export function createItemTexture(templateId: string): THREE.CanvasTexture {
       ctx.strokeStyle = '#d4a017';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(s/2, s/2, 14, 0, Math.PI * 2);
+      ctx.arc(s / 2, s / 2, 14, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillStyle = '#cc3333';
       ctx.beginPath();
-      ctx.arc(s/2, s/2, 6, 0, Math.PI * 2);
+      ctx.arc(s / 2, s / 2, 6, 0, Math.PI * 2);
       ctx.fill();
     } else if (templateId.includes('helm')) {
       // 头盔: 圆弧顶
@@ -365,7 +376,7 @@ export function createItemTexture(templateId: string): THREE.CanvasTexture {
       ctx.beginPath();
       ctx.moveTo(12, 44);
       ctx.lineTo(12, 20);
-      ctx.quadraticCurveTo(s/2, 6, 52, 20);
+      ctx.quadraticCurveTo(s / 2, 6, 52, 20);
       ctx.lineTo(52, 44);
       ctx.closePath();
       ctx.fill();

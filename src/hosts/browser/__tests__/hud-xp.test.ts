@@ -17,8 +17,15 @@ describe('Day15: progression 快照字段 (HUD 数据源)', () => {
       id: 'e_p1' as EntityId,
       kind: 'player',
       pos: { x: 1, y: 1 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 1,
-      faction: 'player', inventory: [], equipment: {}, buffs: [],
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 1,
+      faction: 'player',
+      inventory: [],
+      equipment: {},
+      buffs: [],
     };
     expect(getXp(p)).toBe(0);
     expect(getXpToNext(p)).toBe(100);
@@ -30,8 +37,14 @@ describe('Day15: progression 快照字段 (HUD 数据源)', () => {
       id: 'e_p1' as EntityId,
       kind: 'player',
       pos: { x: 1, y: 1 },
-      hp: 100, maxHp: 100, atk: 30, def: 5, level: 1,
-      faction: 'player', inventory: [], equipment: {},
+      hp: 100,
+      maxHp: 100,
+      atk: 30,
+      def: 5,
+      level: 1,
+      faction: 'player',
+      inventory: [],
+      equipment: {},
       buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 0 } as any],
     });
     const r = gainXp(s, 'e_p1' as EntityId, 100);

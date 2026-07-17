@@ -21,7 +21,9 @@
     "ai:all": "npm run ai:test && npm run ai:bench && npm run ai:fuzz",
     "changelog": "node scripts/gen-changelog.mjs",
     "dump": "node scripts/state-dump.mjs",
-    "bench:repl": "node scripts/bench-repl.mjs"
+    "bench:repl": "node scripts/bench-repl.mjs",
+    "format": "prettier --write \"src/**/*.{ts,js,json,md}\" \"server/**/*.ts\" \"scripts/**/*.{ts,mjs}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\" \"server/**/*.ts\" \"scripts/**/*.{ts,mjs}\""
   },
   "keywords": [],
   "author": "",
@@ -44,6 +46,7 @@
     "jsdom": "^24.1.3",
     "msw": "^2.15.0",
     "pg": "^8.22.0",
+    "prettier": "^3.9.5",
     "tsx": "^4.20.6",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^2.1.9",

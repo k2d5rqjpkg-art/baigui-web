@@ -147,10 +147,7 @@ export interface BoneTransform {
  * 在 clip 中给定 time, 采样所有 tracks
  * (linear interpolation between keyframes)
  */
-export function sampleAnimation(
-  clip: AnimationClip,
-  time: number,
-): BoneTransform[] {
+export function sampleAnimation(clip: AnimationClip, time: number): BoneTransform[] {
   const loopedTime = time % clip.duration; // 自动循环
   const result: BoneTransform[] = [];
   for (const track of clip.tracks) {

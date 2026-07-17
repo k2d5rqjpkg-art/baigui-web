@@ -19,7 +19,13 @@ describe('MemoryLeaderboard 基础', () => {
   });
 
   it('saveEntry + loadEntry 往返', async () => {
-    const entry: LeaderboardEntry = { playerId: 'p1', rating: 1200, wins: 0, losses: 0, lastMatchAt: Date.now() };
+    const entry: LeaderboardEntry = {
+      playerId: 'p1',
+      rating: 1200,
+      wins: 0,
+      losses: 0,
+      lastMatchAt: Date.now(),
+    };
     await lb.saveEntry(entry);
     const loaded = await lb.loadEntry('p1');
     expect(loaded?.rating).toBe(1200);
@@ -38,8 +44,26 @@ describe('MemoryLeaderboard 基础', () => {
   });
 
   it('saveMatchResult + loadRecentMatches', async () => {
-    await lb.saveMatchResult({ matchId: 'm1', playerA: 'p1', playerB: 'p2', winnerA: true, newRatingA: 1216, newRatingB: 1184, deltaA: 16, playedAt: 1 });
-    await lb.saveMatchResult({ matchId: 'm2', playerA: 'p3', playerB: 'p4', winnerA: false, newRatingA: 1100, newRatingB: 1300, deltaA: -16, playedAt: 2 });
+    await lb.saveMatchResult({
+      matchId: 'm1',
+      playerA: 'p1',
+      playerB: 'p2',
+      winnerA: true,
+      newRatingA: 1216,
+      newRatingB: 1184,
+      deltaA: 16,
+      playedAt: 1,
+    });
+    await lb.saveMatchResult({
+      matchId: 'm2',
+      playerA: 'p3',
+      playerB: 'p4',
+      winnerA: false,
+      newRatingA: 1100,
+      newRatingB: 1300,
+      deltaA: -16,
+      playedAt: 2,
+    });
     const recent = await lb.loadRecentMatches(10);
     expect(recent.length).toBe(2);
     // 最新在前
@@ -48,7 +72,16 @@ describe('MemoryLeaderboard 基础', () => {
 
   it('loadRecentMatches limit 截断', async () => {
     for (let i = 0; i < 5; i++) {
-      await lb.saveMatchResult({ matchId: `m${i}`, playerA: 'a', playerB: 'b', winnerA: null, newRatingA: 1200, newRatingB: 1200, deltaA: 0, playedAt: i });
+      await lb.saveMatchResult({
+        matchId: `m${i}`,
+        playerA: 'a',
+        playerB: 'b',
+        winnerA: null,
+        newRatingA: 1200,
+        newRatingB: 1200,
+        deltaA: 0,
+        playedAt: i,
+      });
     }
     const recent = await lb.loadRecentMatches(3);
     expect(recent.length).toBe(3);
@@ -56,7 +89,16 @@ describe('MemoryLeaderboard 基础', () => {
 
   it('保留最近 1000 场 (LRU)', async () => {
     for (let i = 0; i < 1005; i++) {
-      await lb.saveMatchResult({ matchId: `m${i}`, playerA: 'a', playerB: 'b', winnerA: null, newRatingA: 1200, newRatingB: 1200, deltaA: 0, playedAt: i });
+      await lb.saveMatchResult({
+        matchId: `m${i}`,
+        playerA: 'a',
+        playerB: 'b',
+        winnerA: null,
+        newRatingA: 1200,
+        newRatingB: 1200,
+        deltaA: 0,
+        playedAt: i,
+      });
     }
     const recent = await lb.loadRecentMatches(2000);
     expect(recent.length).toBe(1000);

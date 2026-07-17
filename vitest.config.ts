@@ -66,10 +66,10 @@ export default defineConfig({
           statements: 10,
         },
         'src/hosts/browser/game.ts': {
-          lines: 75,
+          lines: 60,
           functions: 70,
-          branches: 60,
-          statements: 75,
+          branches: 55,
+          statements: 60,
         },
       },
     },

@@ -24,9 +24,9 @@ const args_ = ['dump', seed];
 if (entityId) args_.push(entityId);
 
 // 直接调用 ts 入口 (避免 npx 中间层)
-const r = spawnSync(
-  process.execPath,
-  ['--import', 'tsx', 'scripts/state-inspect.ts', ...args_],
-  { cwd: root, encoding: 'utf8', stdio: ['inherit', 'inherit', 'inherit'] },
-);
+const r = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/state-inspect.ts', ...args_], {
+  cwd: root,
+  encoding: 'utf8',
+  stdio: ['inherit', 'inherit', 'inherit'],
+});
 process.exit(r.status ?? 1);

@@ -140,9 +140,10 @@ export class GameRoom {
     }
 
     // 5. 加 2-3 件物品 (从 ITEM_TABLE 选,借用 inventory[0] 存模板 id)
-    const itemSpawns = monsterSpawns.length > encounter.monsters.length
-      ? monsterSpawns.slice(encounter.monsters.length)
-      : this.layout.spawnPoints; // 兜底
+    const itemSpawns =
+      monsterSpawns.length > encounter.monsters.length
+        ? monsterSpawns.slice(encounter.monsters.length)
+        : this.layout.spawnPoints; // 兜底
     const itemTemplateIds = ['sword_iron', 'armor_leather', 'ring_focus'];
     for (let i = 0; i < itemTemplateIds.length; i++) {
       const templateId = itemTemplateIds[i]!;
@@ -193,7 +194,12 @@ export class GameRoom {
     const monsterSpawns = Object.values(this.state.entities)
       .filter((e) => e.kind === 'monster')
       .map((e) => e.pos);
-    this.content = await generateRoomContent(level, spawnPoints, monsterSpawns, this.id ? Number(this.id.replace(/\D/g, '')) || 1 : 1);
+    this.content = await generateRoomContent(
+      level,
+      spawnPoints,
+      monsterSpawns,
+      this.id ? Number(this.id.replace(/\D/g, '')) || 1 : 1,
+    );
   }
 
   /**
@@ -202,7 +208,10 @@ export class GameRoom {
   async talkToNearestNpc(
     playerId: EntityId,
     playerContext: string = '',
-  ): Promise<{ npc: NpcData; dialogue: { greeting: string; hint: string; farewell: string; source: string } } | null> {
+  ): Promise<{
+    npc: NpcData;
+    dialogue: { greeting: string; hint: string; farewell: string; source: string };
+  } | null> {
     const player = this.state.entities[playerId];
     if (!player) return null;
     const npc = findAdjacentNpc(this.content.npcs, player.pos);
@@ -282,7 +291,10 @@ export class GameRoom {
    * @param intents 真实 Action 数组 (move/attack/pickup/use_item)
    * @param dt 时间步长 (毫秒) —— 默认 50ms (20Hz)
    */
-  advance(intents: Action[] = [], dt: number = 50): {
+  advance(
+    intents: Action[] = [],
+    dt: number = 50,
+  ): {
     state: GameState;
     events: GameEvent[];
     tick: number;
@@ -412,7 +424,10 @@ export class GameRoom {
   }
 
   /** Day33: 学技能 */
-  applyLearnSkill(entityId: EntityId, skillId: string): { ok: boolean; reason: string; events: GameEvent[] } {
+  applyLearnSkill(
+    entityId: EntityId,
+    skillId: string,
+  ): { ok: boolean; reason: string; events: GameEvent[] } {
     const r = learnSkill(this.state, entityId, skillId);
     if (r.success) {
       this.state = r.newState;

@@ -69,14 +69,42 @@ const baseLayout: MapLayout = {
   height: 10,
   rooms: [{ x: 0, y: 0, w: 10, h: 10 }],
   walls: [
-    { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 },
-    { x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 0 }, { x: 9, y: 0 },
-    { x: 0, y: 9 }, { x: 1, y: 9 }, { x: 2, y: 9 }, { x: 3, y: 9 }, { x: 4, y: 9 },
-    { x: 5, y: 9 }, { x: 6, y: 9 }, { x: 7, y: 9 }, { x: 8, y: 9 }, { x: 9, y: 9 },
-    { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
-    { x: 0, y: 5 }, { x: 0, y: 6 }, { x: 0, y: 7 }, { x: 0, y: 8 },
-    { x: 9, y: 1 }, { x: 9, y: 2 }, { x: 9, y: 3 }, { x: 9, y: 4 },
-    { x: 9, y: 5 }, { x: 9, y: 6 }, { x: 9, y: 7 }, { x: 9, y: 8 },
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 0 },
+    { x: 4, y: 0 },
+    { x: 5, y: 0 },
+    { x: 6, y: 0 },
+    { x: 7, y: 0 },
+    { x: 8, y: 0 },
+    { x: 9, y: 0 },
+    { x: 0, y: 9 },
+    { x: 1, y: 9 },
+    { x: 2, y: 9 },
+    { x: 3, y: 9 },
+    { x: 4, y: 9 },
+    { x: 5, y: 9 },
+    { x: 6, y: 9 },
+    { x: 7, y: 9 },
+    { x: 8, y: 9 },
+    { x: 9, y: 9 },
+    { x: 0, y: 1 },
+    { x: 0, y: 2 },
+    { x: 0, y: 3 },
+    { x: 0, y: 4 },
+    { x: 0, y: 5 },
+    { x: 0, y: 6 },
+    { x: 0, y: 7 },
+    { x: 0, y: 8 },
+    { x: 9, y: 1 },
+    { x: 9, y: 2 },
+    { x: 9, y: 3 },
+    { x: 9, y: 4 },
+    { x: 9, y: 5 },
+    { x: 9, y: 6 },
+    { x: 9, y: 7 },
+    { x: 9, y: 8 },
   ],
   spawnPoints: [{ x: 5, y: 5 }],
 };
@@ -103,7 +131,10 @@ describe('moveEntity', () => {
 
   it('does not move out of bounds', () => {
     const s = addEntity(emptyState(1), mkPlayer('e_p', 0, 5));
-    const r = moveEntity(s, 'e_p', -1, 0, { layout: baseLayout, bounds: { width: 10, height: 10 } });
+    const r = moveEntity(s, 'e_p', -1, 0, {
+      layout: baseLayout,
+      bounds: { width: 10, height: 10 },
+    });
     expect(r.newState.entities['e_p']!.pos).toEqual({ x: 0, y: 5 });
     expect(r.events.length).toBe(0);
   });
@@ -111,7 +142,10 @@ describe('moveEntity', () => {
   it('does not move into a blocking entity (monster)', () => {
     const s0 = addEntity(emptyState(1), mkPlayer('e_p', 5, 5));
     const s1 = addEntity(s0, mkMonster('e_m', 6, 5));
-    const r = moveEntity(s1, 'e_p', 1, 0, { layout: baseLayout, bounds: { width: 10, height: 10 } });
+    const r = moveEntity(s1, 'e_p', 1, 0, {
+      layout: baseLayout,
+      bounds: { width: 10, height: 10 },
+    });
     expect(r.newState.entities['e_p']!.pos).toEqual({ x: 5, y: 5 });
     expect(r.events.length).toBe(0);
   });
@@ -119,7 +153,10 @@ describe('moveEntity', () => {
   it('item does NOT block movement (can walk over)', () => {
     const s0 = addEntity(emptyState(1), mkPlayer('e_p', 5, 5));
     const s1 = addEntity(s0, mkItem('e_i', 6, 5));
-    const r = moveEntity(s1, 'e_p', 1, 0, { layout: baseLayout, bounds: { width: 10, height: 10 } });
+    const r = moveEntity(s1, 'e_p', 1, 0, {
+      layout: baseLayout,
+      bounds: { width: 10, height: 10 },
+    });
     expect(r.newState.entities['e_p']!.pos).toEqual({ x: 6, y: 5 });
     expect(r.events.some((e) => e.type === 'move')).toBe(true);
   });

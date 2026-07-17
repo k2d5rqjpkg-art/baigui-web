@@ -63,7 +63,11 @@ export class PvPMatchService {
   }
 
   /** Elo 结算 helper (供 PvPRoom.finish 后调用) */
-  settleElo(ratingA: number, ratingB: number, winnerA: boolean | null): {
+  settleElo(
+    ratingA: number,
+    ratingB: number,
+    winnerA: boolean | null,
+  ): {
     newA: number;
     newB: number;
     deltaA: number;

@@ -1,0 +1,17 @@
+# CODEOWNERS — 模块所有者 (默认 review 规则)
+
+# 注意: 当前项目单人开发, 留 placeholder
+# 团队扩展时取消注释
+
+# /src/core/sim/   @team-sim
+# /src/hosts/browser/  @team-host
+# /server/   @team-server
+# /src/core/llm/   @team-llm
+# /scripts/   @team-tooling
+
+# CI / 部署
+# /.github/   @maintainers
+# /docs/   @maintainers
+
+# 默认 fallback
+# *   @maintainers

@@ -28,11 +28,7 @@ export class SpriteRenderSystem {
       if (!pos) return;
       const sprite = spriteData as { mesh: THREE.Sprite; scale: number };
       // 直接使用世界坐标（Y轴翻转，因为浏览器坐标 Y 向下）
-      sprite.mesh.position.set(
-        pos.x,
-        -pos.y,
-        0
-      );
+      sprite.mesh.position.set(pos.x, -pos.y, 0);
     });
   }
 }

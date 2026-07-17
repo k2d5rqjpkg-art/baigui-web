@@ -38,7 +38,10 @@ import type {
 const eidArb = fc.string({ minLength: 1, maxLength: 10 }).map((s) => `e_${s}` as EntityId);
 
 /** 实体位置 */
-const posArb = fc.record({ x: fc.integer({ min: 0, max: 40 }), y: fc.integer({ min: 0, max: 30 }) });
+const posArb = fc.record({
+  x: fc.integer({ min: 0, max: 40 }),
+  y: fc.integer({ min: 0, max: 30 }),
+});
 
 /** HP 范围 (避免负数) */
 const hpArb = fc.integer({ min: 1, max: 200 });
@@ -72,7 +75,10 @@ const actionArb = fc.oneof(
   fc.record({
     type: fc.constant('move' as const),
     entityId: eidArb,
-    payload: fc.record({ dx: fc.integer({ min: -1, max: 1 }), dy: fc.integer({ min: -1, max: 1 }) }),
+    payload: fc.record({
+      dx: fc.integer({ min: -1, max: 1 }),
+      dy: fc.integer({ min: -1, max: 1 }),
+    }),
   }),
   fc.record({
     type: fc.constant('attack' as const),
@@ -135,66 +141,52 @@ describe('property: 同 seed 同结果', () => {
 describe('property: HP 不变式', () => {
   it('damage 后 victim.hp ≤ 原始 hp', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        monsterArb,
-        fc.integer({ min: 0, max: 1000 }),
-        (p, m, seed) => {
-          const s = seedState(p, m);
-          const hpBefore = m.hp;
-          const result = resolveCombat(s, p.id, m.id, seed);
-          const victimAfter = result.newState.entities[m.id];
-          if (!victimAfter) return true; // 死亡后从 state 移除 (no, 实际是 hp=0)
-          return victimAfter.hp <= hpBefore;
-        },
-      ),
+      fc.property(playerArb, monsterArb, fc.integer({ min: 0, max: 1000 }), (p, m, seed) => {
+        const s = seedState(p, m);
+        const hpBefore = m.hp;
+        const result = resolveCombat(s, p.id, m.id, seed);
+        const victimAfter = result.newState.entities[m.id];
+        if (!victimAfter) return true; // 死亡后从 state 移除 (no, 实际是 hp=0)
+        return victimAfter.hp <= hpBefore;
+      }),
       { numRuns: 100 },
     );
   });
 
   it('HP 永远 ≥ 0 (不会负数)', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        monsterArb,
-        fc.integer({ min: 0, max: 1000 }),
-        (p, m, seed) => {
-          const s = seedState(p, m);
-          const result = resolveCombat(s, p.id, m.id, seed);
-          const victim = result.newState.entities[m.id];
-          return victim ? victim.hp >= 0 : true;
-        },
-      ),
+      fc.property(playerArb, monsterArb, fc.integer({ min: 0, max: 1000 }), (p, m, seed) => {
+        const s = seedState(p, m);
+        const result = resolveCombat(s, p.id, m.id, seed);
+        const victim = result.newState.entities[m.id];
+        return victim ? victim.hp >= 0 : true;
+      }),
       { numRuns: 100 },
     );
   });
 
   it('hp=0 后再 attack, hp 仍然 0 (不会负数)', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        fc.integer({ min: 0, max: 1000 }),
-        (p, seed) => {
-          const deadMonster: SimEntity = {
-            ...p,
-            id: 'e_m' as EntityId,
-            kind: 'monster',
-            hp: 0,
-            maxHp: 100,
-            atk: 5,
-            def: 0,
-            level: 1,
-            faction: 'enemy',
-            inventory: [],
-            equipment: {},
-            buffs: [],
-          };
-          const s = seedState(p, deadMonster);
-          const result = resolveCombat(s, p.id, deadMonster.id, seed);
-          const m = result.newState.entities[deadMonster.id];
-          return m ? m.hp === 0 : true;
-        },
-      ),
+      fc.property(playerArb, fc.integer({ min: 0, max: 1000 }), (p, seed) => {
+        const deadMonster: SimEntity = {
+          ...p,
+          id: 'e_m' as EntityId,
+          kind: 'monster',
+          hp: 0,
+          maxHp: 100,
+          atk: 5,
+          def: 0,
+          level: 1,
+          faction: 'enemy',
+          inventory: [],
+          equipment: {},
+          buffs: [],
+        };
+        const s = seedState(p, deadMonster);
+        const result = resolveCombat(s, p.id, deadMonster.id, seed);
+        const m = result.newState.entities[deadMonster.id];
+        return m ? m.hp === 0 : true;
+      }),
       { numRuns: 30 },
     );
   });
@@ -205,31 +197,23 @@ describe('property: HP 不变式', () => {
 describe('property: tick tick 单调递增', () => {
   it('每次 tick 后 state.tick + 1', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        fc.array(actionArb, { maxLength: 3 }),
-        (p, actions) => {
-          const s = seedState(p);
-          const before = s.tick;
-          const r = tick(s, actions, 50);
-          return r.state.tick === before + 1;
-        },
-      ),
+      fc.property(playerArb, fc.array(actionArb, { maxLength: 3 }), (p, actions) => {
+        const s = seedState(p);
+        const before = s.tick;
+        const r = tick(s, actions, 50);
+        return r.state.tick === before + 1;
+      }),
       { numRuns: 50 },
     );
   });
 
   it('tick 永远 ≥ 0', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        fc.array(actionArb, { maxLength: 3 }),
-        (p, actions) => {
-          const s = seedState(p);
-          const r = tick(s, actions, 50);
-          return r.state.tick >= 0;
-        },
-      ),
+      fc.property(playerArb, fc.array(actionArb, { maxLength: 3 }), (p, actions) => {
+        const s = seedState(p);
+        const r = tick(s, actions, 50);
+        return r.state.tick >= 0;
+      }),
       { numRuns: 30 },
     );
   });
@@ -250,18 +234,28 @@ describe('property: move 后位置在 bounds 内', () => {
             id: 'e_p' as EntityId,
             kind: 'player',
             pos,
-            hp: 100, maxHp: 100,
-            atk: 30, def: 5, level: 5,
+            hp: 100,
+            maxHp: 100,
+            atk: 30,
+            def: 5,
+            level: 5,
             faction: 'player',
-            inventory: [], equipment: {}, buffs: [],
+            inventory: [],
+            equipment: {},
+            buffs: [],
           };
           const s = seedState(player);
-          const result = moveEntity(s, player.id, dx, dy, { bounds: { width: layout.width, height: layout.height }, layout });
+          const result = moveEntity(s, player.id, dx, dy, {
+            bounds: { width: layout.width, height: layout.height },
+            layout,
+          });
           const moved = result.newState.entities[player.id];
           if (!moved) return true;
           return (
-            moved.pos.x >= 0 && moved.pos.x < layout.width &&
-            moved.pos.y >= 0 && moved.pos.y < layout.height
+            moved.pos.x >= 0 &&
+            moved.pos.x < layout.width &&
+            moved.pos.y >= 0 &&
+            moved.pos.y < layout.height
           );
         },
       ),
@@ -327,22 +321,17 @@ describe('property: ITEM_TABLE 不变量', () => {
 describe('property: 战斗总伤害守恒', () => {
   it('单次 combat 后双方 HP 之和 ≤ 之前之和 (伤害守恒)', () => {
     fc.assert(
-      fc.property(
-        playerArb,
-        monsterArb,
-        fc.integer({ min: 0, max: 1000 }),
-        (p, m, seed) => {
-          const s = seedState(p, m);
-          const totalBefore = p.hp + m.hp;
-          const result = resolveCombat(s, p.id, m.id, seed);
-          const pAfter = result.newState.entities[p.id];
-          const mAfter = result.newState.entities[m.id];
-          if (!pAfter || !mAfter) return true;
-          const totalAfter = pAfter.hp + mAfter.hp;
-          // 总 HP 不增 (最多持平, 因为死亡不复活)
-          return totalAfter <= totalBefore;
-        },
-      ),
+      fc.property(playerArb, monsterArb, fc.integer({ min: 0, max: 1000 }), (p, m, seed) => {
+        const s = seedState(p, m);
+        const totalBefore = p.hp + m.hp;
+        const result = resolveCombat(s, p.id, m.id, seed);
+        const pAfter = result.newState.entities[p.id];
+        const mAfter = result.newState.entities[m.id];
+        if (!pAfter || !mAfter) return true;
+        const totalAfter = pAfter.hp + mAfter.hp;
+        // 总 HP 不增 (最多持平, 因为死亡不复活)
+        return totalAfter <= totalBefore;
+      }),
       { numRuns: 100 },
     );
   });

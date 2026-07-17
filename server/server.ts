@@ -45,24 +45,28 @@ const http_server = http.createServer((req, res) => {
     const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
     if (url.pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        ok: true,
-        port: PORT,
-        tick: defaultRoom.tick,
-        players: defaultRoom.occupiedSlots.size,
-        entityCount: defaultRoom.entityCount,
-        rooms: roomPool.size(),
-        totalPlayers: roomPool.getTotalPlayers(),
-      }));
+      res.end(
+        JSON.stringify({
+          ok: true,
+          port: PORT,
+          tick: defaultRoom.tick,
+          players: defaultRoom.occupiedSlots.size,
+          entityCount: defaultRoom.entityCount,
+          rooms: roomPool.size(),
+          totalPlayers: roomPool.getTotalPlayers(),
+        }),
+      );
       return;
     }
     if (url.pathname === '/rooms') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        rooms: roomPool.list(),
-        total: roomPool.size(),
-        totalPlayers: roomPool.getTotalPlayers(),
-      }));
+      res.end(
+        JSON.stringify({
+          rooms: roomPool.list(),
+          total: roomPool.size(),
+          totalPlayers: roomPool.getTotalPlayers(),
+        }),
+      );
       return;
     }
     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -72,7 +76,9 @@ const http_server = http.createServer((req, res) => {
     try {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('internal error');
-    } catch { /* socket already closed */ }
+    } catch {
+      /* socket already closed */
+    }
   }
 });
 
@@ -86,34 +92,40 @@ function broadcastToRoom(roomId: string, msg: object) {
     // 无 meta 的旧连接: 只收 room-0
     if (!meta && roomId !== 'room-0') continue;
     if (meta && meta.roomId !== roomId) continue;
-    try { ws.send(data); }
-    catch (err) { log.error('[ws] broadcast error:', err); }
+    try {
+      ws.send(data);
+    } catch (err) {
+      log.error('[ws] broadcast error:', err);
+    }
   }
 }
 
 /**
  * 把 Discrete action (0..5) 翻译成真实 Action 数组。
  */
-function translateDiscrete(
-  discrete: number,
-  entityId: EntityId,
-  room: GameRoom,
-): Action[] {
+function translateDiscrete(discrete: number, entityId: EntityId, room: GameRoom): Action[] {
   const self = room.getEntity(entityId);
   if (!self || self.hp <= 0) return [];
 
   switch (discrete) {
-    case 0: return [{ type: 'move', entityId, payload: { dx: 0, dy: -1 } }];
-    case 1: return [{ type: 'move', entityId, payload: { dx: 0, dy: 1 } }];
-    case 2: return [{ type: 'move', entityId, payload: { dx: -1, dy: 0 } }];
-    case 3: return [{ type: 'move', entityId, payload: { dx: 1, dy: 0 } }];
+    case 0:
+      return [{ type: 'move', entityId, payload: { dx: 0, dy: -1 } }];
+    case 1:
+      return [{ type: 'move', entityId, payload: { dx: 0, dy: 1 } }];
+    case 2:
+      return [{ type: 'move', entityId, payload: { dx: -1, dy: 0 } }];
+    case 3:
+      return [{ type: 'move', entityId, payload: { dx: 1, dy: 0 } }];
     case 4: {
       let bestId: EntityId | null = null;
       let bestDist = Infinity;
       for (const [id, e] of Object.entries(room.state.entities) as [EntityId, typeof self][]) {
         if (e.kind !== 'monster' || e.hp <= 0) continue;
         const d = Math.abs(e.pos.x - self.pos.x) + Math.abs(e.pos.y - self.pos.y);
-        if (d < bestDist) { bestDist = d; bestId = id; }
+        if (d < bestDist) {
+          bestDist = d;
+          bestId = id;
+        }
       }
       if (!bestId) return [];
       return [{ type: 'attack', entityId, payload: { targetId: bestId } }];
@@ -124,12 +136,16 @@ function translateDiscrete(
       for (const [id, e] of Object.entries(room.state.entities) as [EntityId, typeof self][]) {
         if (e.kind !== 'item') continue;
         const d = Math.abs(e.pos.x - self.pos.x) + Math.abs(e.pos.y - self.pos.y);
-        if (d < bestDist) { bestDist = d; bestId = id; }
+        if (d < bestDist) {
+          bestDist = d;
+          bestId = id;
+        }
       }
       if (!bestId) return [];
       return [{ type: 'pickup', entityId, payload: { itemId: bestId } }];
     }
-    default: return [];
+    default:
+      return [];
   }
 }
 
@@ -155,13 +171,15 @@ wss.on('connection', (ws: WebSocket) => {
           }
           assignedRoomId = roomId;
           clientMeta.set(ws, { roomId, entityId: assignedEid });
-          ws.send(JSON.stringify({
-            type: 'welcome',
-            entityId: assignedEid,
-            room: room.id,
-            tick: room.tick,
-            snapshot: room.getSnapshot(),
-          }));
+          ws.send(
+            JSON.stringify({
+              type: 'welcome',
+              entityId: assignedEid,
+              room: room.id,
+              tick: room.tick,
+              snapshot: room.getSnapshot(),
+            }),
+          );
           // 立刻推 content (任务/NPC)
           if (room.content?.generatedAt) {
             ws.send(JSON.stringify({ type: 'content', content: room.content }));
@@ -177,9 +195,10 @@ wss.on('connection', (ws: WebSocket) => {
           }
           const meta = clientMeta.get(ws);
           const roomId = meta?.roomId ?? assignedRoomId;
-          const eid = (typeof msg.entityId === 'string' && msg.entityId.startsWith('e_'))
-            ? (msg.entityId as EntityId)
-            : (meta?.entityId ?? assignedEid);
+          const eid =
+            typeof msg.entityId === 'string' && msg.entityId.startsWith('e_')
+              ? (msg.entityId as EntityId)
+              : (meta?.entityId ?? assignedEid);
           pendingDiscrete.push({ roomId, action, entityId: eid });
           break;
         }
@@ -190,7 +209,9 @@ wss.on('connection', (ws: WebSocket) => {
       log.error('[ws] message error:', err);
       try {
         ws.send(JSON.stringify({ type: 'error', message: 'bad message' }));
-      } catch { /* socket closed */ }
+      } catch {
+        /* socket closed */
+      }
     }
   });
 
@@ -201,7 +222,9 @@ wss.on('connection', (ws: WebSocket) => {
       const eid = meta?.entityId ?? assignedEid;
       const room = roomPool.getOrCreate(roomId, 1);
       room.removePlayer(eid);
-    } catch (err) { log.error('[ws] removePlayer error:', err); }
+    } catch (err) {
+      log.error('[ws] removePlayer error:', err);
+    }
     log.info(`[ws] closed, total=${wss.clients.size}`);
   });
 

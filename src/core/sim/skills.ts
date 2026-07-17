@@ -37,169 +37,343 @@ export interface Skill {
 export const SKILL_LIBRARY: Record<string, Skill> = {
   // === Warrior (3x3) ===
   'w-basic-power-strike': {
-    id: 'w-basic-power-strike', name: '重击', classKind: 'warrior', tier: 'basic', path: 'offense',
-    requiredLevel: 1, prereq: [],
+    id: 'w-basic-power-strike',
+    name: '重击',
+    classKind: 'warrior',
+    tier: 'basic',
+    path: 'offense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'atk', value: 5 }],
     description: '永久 +5 ATK',
   },
   'w-basic-shield-up': {
-    id: 'w-basic-shield-up', name: '盾墙', classKind: 'warrior', tier: 'basic', path: 'defense',
-    requiredLevel: 1, prereq: [],
+    id: 'w-basic-shield-up',
+    name: '盾墙',
+    classKind: 'warrior',
+    tier: 'basic',
+    path: 'defense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'def', value: 5 }],
     description: '永久 +5 DEF',
   },
   'w-basic-battle-cry': {
-    id: 'w-basic-battle-cry', name: '战吼', classKind: 'warrior', tier: 'basic', path: 'utility',
-    requiredLevel: 1, prereq: [],
+    id: 'w-basic-battle-cry',
+    name: '战吼',
+    classKind: 'warrior',
+    tier: 'basic',
+    path: 'utility',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'critPct', value: 5 }],
     description: '永久 +5% crit',
   },
   'w-adv-whirlwind': {
-    id: 'w-adv-whirlwind', name: '旋风斩', classKind: 'warrior', tier: 'advanced', path: 'offense',
-    requiredLevel: 5, prereq: ['w-basic-power-strike'],
+    id: 'w-adv-whirlwind',
+    name: '旋风斩',
+    classKind: 'warrior',
+    tier: 'advanced',
+    path: 'offense',
+    requiredLevel: 5,
+    prereq: ['w-basic-power-strike'],
     bonuses: [{ stat: 'atk', value: 15 }],
     description: '永久 +15 ATK',
   },
   'w-adv-iron-skin': {
-    id: 'w-adv-iron-skin', name: '铁皮', classKind: 'warrior', tier: 'advanced', path: 'defense',
-    requiredLevel: 5, prereq: ['w-basic-shield-up'],
-    bonuses: [{ stat: 'def', value: 15 }, { stat: 'hp', value: 30 }],
+    id: 'w-adv-iron-skin',
+    name: '铁皮',
+    classKind: 'warrior',
+    tier: 'advanced',
+    path: 'defense',
+    requiredLevel: 5,
+    prereq: ['w-basic-shield-up'],
+    bonuses: [
+      { stat: 'def', value: 15 },
+      { stat: 'hp', value: 30 },
+    ],
     description: '+15 DEF +30 HP',
   },
   'w-adv-SecondWind': {
-    id: 'w-adv-SecondWind', name: '回春', classKind: 'warrior', tier: 'advanced', path: 'utility',
-    requiredLevel: 5, prereq: ['w-basic-battle-cry'],
+    id: 'w-adv-SecondWind',
+    name: '回春',
+    classKind: 'warrior',
+    tier: 'advanced',
+    path: 'utility',
+    requiredLevel: 5,
+    prereq: ['w-basic-battle-cry'],
     bonuses: [{ stat: 'dodgePct', value: 5 }],
     description: '永久 +5% dodge',
   },
   'w-master-berserker': {
-    id: 'w-master-berserker', name: '狂战士', classKind: 'warrior', tier: 'master', path: 'offense',
-    requiredLevel: 10, prereq: ['w-adv-whirlwind'],
-    bonuses: [{ stat: 'atk', value: 30 }, { stat: 'critPct', value: 10 }],
+    id: 'w-master-berserker',
+    name: '狂战士',
+    classKind: 'warrior',
+    tier: 'master',
+    path: 'offense',
+    requiredLevel: 10,
+    prereq: ['w-adv-whirlwind'],
+    bonuses: [
+      { stat: 'atk', value: 30 },
+      { stat: 'critPct', value: 10 },
+    ],
     description: '+30 ATK +10% crit',
   },
   'w-master-fortress': {
-    id: 'w-master-fortress', name: '堡垒', classKind: 'warrior', tier: 'master', path: 'defense',
-    requiredLevel: 10, prereq: ['w-adv-iron-skin'],
-    bonuses: [{ stat: 'def', value: 30 }, { stat: 'hp', value: 100 }],
+    id: 'w-master-fortress',
+    name: '堡垒',
+    classKind: 'warrior',
+    tier: 'master',
+    path: 'defense',
+    requiredLevel: 10,
+    prereq: ['w-adv-iron-skin'],
+    bonuses: [
+      { stat: 'def', value: 30 },
+      { stat: 'hp', value: 100 },
+    ],
     description: '+30 DEF +100 HP',
   },
   'w-master-immortal': {
-    id: 'w-master-immortal', name: '不死', classKind: 'warrior', tier: 'master', path: 'utility',
-    requiredLevel: 10, prereq: ['w-adv-SecondWind'],
-    bonuses: [{ stat: 'hp', value: 200 }, { stat: 'dodgePct', value: 10 }],
+    id: 'w-master-immortal',
+    name: '不死',
+    classKind: 'warrior',
+    tier: 'master',
+    path: 'utility',
+    requiredLevel: 10,
+    prereq: ['w-adv-SecondWind'],
+    bonuses: [
+      { stat: 'hp', value: 200 },
+      { stat: 'dodgePct', value: 10 },
+    ],
     description: '+200 HP +10% dodge',
   },
 
   // === Mage (3x3) ===
   'm-basic-fireball': {
-    id: 'm-basic-fireball', name: '火球', classKind: 'mage', tier: 'basic', path: 'offense',
-    requiredLevel: 1, prereq: [],
+    id: 'm-basic-fireball',
+    name: '火球',
+    classKind: 'mage',
+    tier: 'basic',
+    path: 'offense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'atk', value: 5 }],
     description: '永久 +5 ATK',
   },
   'm-basic-shield': {
-    id: 'm-basic-shield', name: '魔法盾', classKind: 'mage', tier: 'basic', path: 'defense',
-    requiredLevel: 1, prereq: [],
+    id: 'm-basic-shield',
+    name: '魔法盾',
+    classKind: 'mage',
+    tier: 'basic',
+    path: 'defense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'def', value: 5 }],
     description: '永久 +5 DEF',
   },
   'm-basic-mana-pool': {
-    id: 'm-basic-mana-pool', name: '法力池', classKind: 'mage', tier: 'basic', path: 'utility',
-    requiredLevel: 1, prereq: [],
+    id: 'm-basic-mana-pool',
+    name: '法力池',
+    classKind: 'mage',
+    tier: 'basic',
+    path: 'utility',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'hp', value: 20 }],
     description: '永久 +20 HP',
   },
   'm-adv-meteor': {
-    id: 'm-adv-meteor', name: '陨石', classKind: 'mage', tier: 'advanced', path: 'offense',
-    requiredLevel: 5, prereq: ['m-basic-fireball'],
+    id: 'm-adv-meteor',
+    name: '陨石',
+    classKind: 'mage',
+    tier: 'advanced',
+    path: 'offense',
+    requiredLevel: 5,
+    prereq: ['m-basic-fireball'],
     bonuses: [{ stat: 'atk', value: 15 }],
     description: '永久 +15 ATK',
   },
   'm-adv-arcane-barrier': {
-    id: 'm-adv-arcane-barrier', name: '奥术屏障', classKind: 'mage', tier: 'advanced', path: 'defense',
-    requiredLevel: 5, prereq: ['m-basic-shield'],
-    bonuses: [{ stat: 'def', value: 15 }, { stat: 'hp', value: 30 }],
+    id: 'm-adv-arcane-barrier',
+    name: '奥术屏障',
+    classKind: 'mage',
+    tier: 'advanced',
+    path: 'defense',
+    requiredLevel: 5,
+    prereq: ['m-basic-shield'],
+    bonuses: [
+      { stat: 'def', value: 15 },
+      { stat: 'hp', value: 30 },
+    ],
     description: '+15 DEF +30 HP',
   },
   'm-adv-teleport': {
-    id: 'm-adv-teleport', name: '传送', classKind: 'mage', tier: 'advanced', path: 'utility',
-    requiredLevel: 5, prereq: ['m-basic-mana-pool'],
+    id: 'm-adv-teleport',
+    name: '传送',
+    classKind: 'mage',
+    tier: 'advanced',
+    path: 'utility',
+    requiredLevel: 5,
+    prereq: ['m-basic-mana-pool'],
     bonuses: [{ stat: 'dodgePct', value: 5 }],
     description: '永久 +5% dodge',
   },
   'm-master-arcane-blast': {
-    id: 'm-master-arcane-blast', name: '奥术冲击', classKind: 'mage', tier: 'master', path: 'offense',
-    requiredLevel: 10, prereq: ['m-adv-meteor'],
-    bonuses: [{ stat: 'atk', value: 30 }, { stat: 'critPct', value: 10 }],
+    id: 'm-master-arcane-blast',
+    name: '奥术冲击',
+    classKind: 'mage',
+    tier: 'master',
+    path: 'offense',
+    requiredLevel: 10,
+    prereq: ['m-adv-meteor'],
+    bonuses: [
+      { stat: 'atk', value: 30 },
+      { stat: 'critPct', value: 10 },
+    ],
     description: '+30 ATK +10% crit',
   },
   'm-master-mana-shield': {
-    id: 'm-master-mana-shield', name: '法力护盾', classKind: 'mage', tier: 'master', path: 'defense',
-    requiredLevel: 10, prereq: ['m-adv-arcane-barrier'],
-    bonuses: [{ stat: 'def', value: 30 }, { stat: 'hp', value: 100 }],
+    id: 'm-master-mana-shield',
+    name: '法力护盾',
+    classKind: 'mage',
+    tier: 'master',
+    path: 'defense',
+    requiredLevel: 10,
+    prereq: ['m-adv-arcane-barrier'],
+    bonuses: [
+      { stat: 'def', value: 30 },
+      { stat: 'hp', value: 100 },
+    ],
     description: '+30 DEF +100 HP',
   },
   'm-master-arcane-blast-x': {
-    id: 'm-master-arcane-blast-x', name: '法术洪流', classKind: 'mage', tier: 'master', path: 'utility',
-    requiredLevel: 10, prereq: ['m-adv-teleport'],
-    bonuses: [{ stat: 'hp', value: 200 }, { stat: 'dodgePct', value: 10 }],
+    id: 'm-master-arcane-blast-x',
+    name: '法术洪流',
+    classKind: 'mage',
+    tier: 'master',
+    path: 'utility',
+    requiredLevel: 10,
+    prereq: ['m-adv-teleport'],
+    bonuses: [
+      { stat: 'hp', value: 200 },
+      { stat: 'dodgePct', value: 10 },
+    ],
     description: '+200 HP +10% dodge',
   },
 
   // === Rogue (3x3) ===
   'r-basic-stab': {
-    id: 'r-basic-stab', name: '刺击', classKind: 'rogue', tier: 'basic', path: 'offense',
-    requiredLevel: 1, prereq: [],
+    id: 'r-basic-stab',
+    name: '刺击',
+    classKind: 'rogue',
+    tier: 'basic',
+    path: 'offense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'atk', value: 5 }],
     description: '永久 +5 ATK',
   },
   'r-basic-dodge': {
-    id: 'r-basic-dodge', name: '闪避', classKind: 'rogue', tier: 'basic', path: 'defense',
-    requiredLevel: 1, prereq: [],
+    id: 'r-basic-dodge',
+    name: '闪避',
+    classKind: 'rogue',
+    tier: 'basic',
+    path: 'defense',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'def', value: 5 }],
     description: '永久 +5 DEF',
   },
   'r-basic-stealth': {
-    id: 'r-basic-stealth', name: '潜行', classKind: 'rogue', tier: 'basic', path: 'utility',
-    requiredLevel: 1, prereq: [],
+    id: 'r-basic-stealth',
+    name: '潜行',
+    classKind: 'rogue',
+    tier: 'basic',
+    path: 'utility',
+    requiredLevel: 1,
+    prereq: [],
     bonuses: [{ stat: 'critPct', value: 5 }],
     description: '永久 +5% crit',
   },
   'r-adv-backstab': {
-    id: 'r-adv-backstab', name: '背刺', classKind: 'rogue', tier: 'advanced', path: 'offense',
-    requiredLevel: 5, prereq: ['r-basic-stab'],
-    bonuses: [{ stat: 'atk', value: 15 }, { stat: 'critPct', value: 5 }],
+    id: 'r-adv-backstab',
+    name: '背刺',
+    classKind: 'rogue',
+    tier: 'advanced',
+    path: 'offense',
+    requiredLevel: 5,
+    prereq: ['r-basic-stab'],
+    bonuses: [
+      { stat: 'atk', value: 15 },
+      { stat: 'critPct', value: 5 },
+    ],
     description: '+15 ATK +5% crit',
   },
   'r-adv-evasion': {
-    id: 'r-adv-evasion', name: '高级闪避', classKind: 'rogue', tier: 'advanced', path: 'defense',
-    requiredLevel: 5, prereq: ['r-basic-dodge'],
-    bonuses: [{ stat: 'def', value: 15 }, { stat: 'dodgePct', value: 5 }],
+    id: 'r-adv-evasion',
+    name: '高级闪避',
+    classKind: 'rogue',
+    tier: 'advanced',
+    path: 'defense',
+    requiredLevel: 5,
+    prereq: ['r-basic-dodge'],
+    bonuses: [
+      { stat: 'def', value: 15 },
+      { stat: 'dodgePct', value: 5 },
+    ],
     description: '+15 DEF +5% dodge',
   },
   'r-adv-lockpick': {
-    id: 'r-adv-lockpick', name: '开锁', classKind: 'rogue', tier: 'advanced', path: 'utility',
-    requiredLevel: 5, prereq: ['r-basic-stealth'],
+    id: 'r-adv-lockpick',
+    name: '开锁',
+    classKind: 'rogue',
+    tier: 'advanced',
+    path: 'utility',
+    requiredLevel: 5,
+    prereq: ['r-basic-stealth'],
     bonuses: [{ stat: 'hp', value: 30 }],
     description: '永久 +30 HP',
   },
   'r-master-assassinate': {
-    id: 'r-master-assassinate', name: '暗杀', classKind: 'rogue', tier: 'master', path: 'offense',
-    requiredLevel: 10, prereq: ['r-adv-backstab'],
-    bonuses: [{ stat: 'atk', value: 30 }, { stat: 'critPct', value: 15 }],
+    id: 'r-master-assassinate',
+    name: '暗杀',
+    classKind: 'rogue',
+    tier: 'master',
+    path: 'offense',
+    requiredLevel: 10,
+    prereq: ['r-adv-backstab'],
+    bonuses: [
+      { stat: 'atk', value: 30 },
+      { stat: 'critPct', value: 15 },
+    ],
     description: '+30 ATK +15% crit',
   },
   'r-master-shadow': {
-    id: 'r-master-shadow', name: '暗影之躯', classKind: 'rogue', tier: 'master', path: 'defense',
-    requiredLevel: 10, prereq: ['r-adv-evasion'],
-    bonuses: [{ stat: 'def', value: 30 }, { stat: 'dodgePct', value: 15 }],
+    id: 'r-master-shadow',
+    name: '暗影之躯',
+    classKind: 'rogue',
+    tier: 'master',
+    path: 'defense',
+    requiredLevel: 10,
+    prereq: ['r-adv-evasion'],
+    bonuses: [
+      { stat: 'def', value: 30 },
+      { stat: 'dodgePct', value: 15 },
+    ],
     description: '+30 DEF +15% dodge',
   },
   'r-master-ghost': {
-    id: 'r-master-ghost', name: '鬼魅', classKind: 'rogue', tier: 'master', path: 'utility',
-    requiredLevel: 10, prereq: ['r-adv-lockpick'],
-    bonuses: [{ stat: 'hp', value: 200 }, { stat: 'critPct', value: 10 }],
+    id: 'r-master-ghost',
+    name: '鬼魅',
+    classKind: 'rogue',
+    tier: 'master',
+    path: 'utility',
+    requiredLevel: 10,
+    prereq: ['r-adv-lockpick'],
+    bonuses: [
+      { stat: 'hp', value: 200 },
+      { stat: 'critPct', value: 10 },
+    ],
     description: '+200 HP +10% crit',
   },
 };
@@ -250,7 +424,11 @@ export function getSkillPoints(entity: SimEntity): number {
 }
 
 /** 升级给技能点 (1/级) */
-export function gainSkillPointsOnLevelUp(state: GameState, entityId: EntityId, newLevel: number): GameState {
+export function gainSkillPointsOnLevelUp(
+  state: GameState,
+  entityId: EntityId,
+  newLevel: number,
+): GameState {
   const entity = state.entities[entityId];
   if (!entity) return state;
   const points = getSkillPoints(entity) + 1;
@@ -286,11 +464,21 @@ export function learnSkill(
 
   const entityClass = getClass(entity);
   if (skill.classKind !== entityClass) {
-    return { newState: state, success: false, reason: `wrong class (${entityClass} != ${skill.classKind})`, events: [] };
+    return {
+      newState: state,
+      success: false,
+      reason: `wrong class (${entityClass} != ${skill.classKind})`,
+      events: [],
+    };
   }
 
   if (entity.level < skill.requiredLevel) {
-    return { newState: state, success: false, reason: `level too low (${entity.level} < ${skill.requiredLevel})`, events: [] };
+    return {
+      newState: state,
+      success: false,
+      reason: `level too low (${entity.level} < ${skill.requiredLevel})`,
+      events: [],
+    };
   }
 
   const learned = getLearnedSkills(entity);
@@ -312,18 +500,26 @@ export function learnSkill(
   }
 
   // 应用: 扣 1 点 + 保留已学技能 + 加新 skill_learned + 更新 class
-  const newClassInfo: ClassInfoBuff = { type: 'class', classKind: entityClass, skillPoints: points - 1 };
-  const kept = entity.buffs.filter(
-    (b) => (b as any).type !== 'class',
-  );
+  const newClassInfo: ClassInfoBuff = {
+    type: 'class',
+    classKind: entityClass,
+    skillPoints: points - 1,
+  };
+  const kept = entity.buffs.filter((b) => (b as any).type !== 'class');
   const newBuffs = [...kept, newClassInfo as any, { type: 'skill_learned', skillId } as any];
 
   // 加 bonuses 到 entity stats
-  let atk = entity.atk, def = entity.def, hp = entity.hp, maxHp = entity.maxHp;
+  let atk = entity.atk,
+    def = entity.def,
+    hp = entity.hp,
+    maxHp = entity.maxHp;
   for (const b of skill.bonuses) {
     if (b.stat === 'atk') atk += b.value;
     else if (b.stat === 'def') def += b.value;
-    else if (b.stat === 'hp') { hp += b.value; maxHp += b.value; }
+    else if (b.stat === 'hp') {
+      hp += b.value;
+      maxHp += b.value;
+    }
     // critPct / dodgePct 暂不接 combat.ts, 只存 bonuses (未来可扩展)
   }
 
@@ -337,10 +533,10 @@ export function learnSkill(
   };
 
   const event: GameEvent = {
-    type: 'level_up',  // 复用 level_up event, data 含 skillId
+    type: 'level_up', // 复用 level_up event, data 含 skillId
     source: entityId,
     target: entityId,
-    data: { newLevel: 0 } as any,  // TODO: 加 SkillLearnedData
+    data: { newLevel: 0 } as any, // TODO: 加 SkillLearnedData
     tick: state.tick,
   };
 

@@ -19,7 +19,10 @@ function aiStep(player: SimEntity, state: GameState): Action | null {
   for (const e of Object.values(state.entities)) {
     if (e.kind !== 'monster' || e.hp <= 0 || e.id === player.id) continue;
     const d = Math.abs(e.pos.x - player.pos.x) + Math.abs(e.pos.y - player.pos.y);
-    if (d < bestD) { bestD = d; best = e; }
+    if (d < bestD) {
+      bestD = d;
+      best = e;
+    }
   }
   if (!best) return null;
   if (bestD <= 1) return { type: 'attack', entityId: player.id, payload: { targetId: best.id } };
@@ -64,7 +67,10 @@ describe('AI 测试 #2: GameRoom 端到端 30 步', () => {
     let deaths = 0;
     for (let i = 0; i < 60; i++) {
       const p = Object.values(room.state.entities).find((e) => e.kind === 'player');
-      if (!p || p.hp <= 0) { deaths++; break; }
+      if (!p || p.hp <= 0) {
+        deaths++;
+        break;
+      }
       const a = aiStep(p, room.state);
       const r = room.advance(a ? [a] : [], 50);
       for (const e of r.events) {

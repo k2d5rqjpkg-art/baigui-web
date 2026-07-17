@@ -1,0 +1,12 @@
+dist/
+node_modules/
+coverage/
+.vite/
+*.log
+*.lock
+package-lock.json
+.gitmessage
+.github/
+CHANGELOG.md
+public/
+src/entities/sprites/  # generated

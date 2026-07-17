@@ -26,7 +26,12 @@ export function mulberry32(seed: number): () => number {
 }
 
 /** 2D value noise (可双线性插值) */
-function valueNoise(rng: () => number, gridSize: number, width: number, height: number): number[][] {
+function valueNoise(
+  rng: () => number,
+  gridSize: number,
+  width: number,
+  height: number,
+): number[][] {
   const grid: number[][] = [];
   for (let y = 0; y <= gridSize; y++) {
     const row: number[] = [];
@@ -224,7 +229,11 @@ export function summarizeTerrain(data: TerrainData): {
   let maxH = 0;
   let minH = 1;
   const counts: Record<Biome, number> = {
-    water: 0, sand: 0, grass: 0, forest: 0, mountain: 0,
+    water: 0,
+    sand: 0,
+    grass: 0,
+    forest: 0,
+    mountain: 0,
   };
   for (let y = 0; y < data.height; y++) {
     for (let x = 0; x < data.width; x++) {

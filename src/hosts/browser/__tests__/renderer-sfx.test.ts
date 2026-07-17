@@ -17,7 +17,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const sfxCalls: string[] = [];
 vi.mock('../../../render/sfx-gen', () => ({
   sfx: {
-    play: (type: string) => { sfxCalls.push(type); },
+    play: (type: string) => {
+      sfxCalls.push(type);
+    },
     setEnabled: vi.fn(),
     isEnabled: () => true,
   },
@@ -27,7 +29,9 @@ import { sfx } from '../../../render/sfx-gen';
 import { ANIMATION_PRESETS } from '../../../render/animation-mixer';
 
 describe('v3.5: sfx 模块可被 renderer 集成 (编译期 + 单元)', () => {
-  beforeEach(() => { sfxCalls.length = 0; });
+  beforeEach(() => {
+    sfxCalls.length = 0;
+  });
 
   it('sfx 模块导出正确接口', () => {
     expect(sfx).toBeDefined();

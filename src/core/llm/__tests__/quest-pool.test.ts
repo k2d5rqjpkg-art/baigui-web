@@ -4,12 +4,7 @@
  * v1.3: PCG 任务池单元测试
  */
 import { describe, it, expect } from 'vitest';
-import {
-  QUEST_POOL,
-  pickQuestTemplates,
-  expandQuest,
-  generateQuests,
-} from '../quest-pool';
+import { QUEST_POOL, pickQuestTemplates, expandQuest, generateQuests } from '../quest-pool';
 
 describe('QUEST_POOL (模板池)', () => {
   it('包含至少 25 个模板', () => {

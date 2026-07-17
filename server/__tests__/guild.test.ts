@@ -62,7 +62,7 @@ describe('踢人 / 任命 (借鉴 WoC 工会管理)', () => {
   let m: GuildManager;
   beforeEach(() => {
     m = new GuildManager();
-    m.createGuild('g1', 'A', 'p1');  // leader
+    m.createGuild('g1', 'A', 'p1'); // leader
     m.joinGuild('g1', 'p2');
     m.joinGuild('g1', 'p3');
   });

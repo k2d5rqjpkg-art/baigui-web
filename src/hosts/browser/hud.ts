@@ -316,7 +316,10 @@ export class GameHud {
    * 显示对话框 (NPC 对话)
    * 调用者 (GameRenderer 或主循环) 在 NPC 邻接时触发
    */
-  showDialogueOverlay(npcName: string, dialogue: { greeting: string; hint: string; farewell: string }): void {
+  showDialogueOverlay(
+    npcName: string,
+    dialogue: { greeting: string; hint: string; farewell: string },
+  ): void {
     // 移除旧的
     if (this.dialogueOverlay) this.dialogueOverlay.remove();
 

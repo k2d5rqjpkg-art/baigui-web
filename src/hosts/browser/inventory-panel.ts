@@ -93,7 +93,8 @@ export class InventoryPanel {
     const eq = Object.entries(p.equipment);
     if (eq.length) {
       const box = document.createElement('div');
-      box.style.cssText = 'margin-top:10px;padding-top:8px;border-top:1px solid #334422;font-size:11px;color:#99aa88';
+      box.style.cssText =
+        'margin-top:10px;padding-top:8px;border-top:1px solid #334422;font-size:11px;color:#99aa88';
       box.textContent = '已装备: ' + eq.map(([s, n]) => `${s}=${n}`).join(' · ');
       this.listEl.appendChild(box);
     }

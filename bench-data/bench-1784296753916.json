@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-07-17T13:59:13.915Z",
+  "commit": "local",
+  "scenarios": [
+    {
+      "name": "20_monsters_100_steps",
+      "N": 100,
+      "monsters": 20,
+      "ms": 0.06,
+      "ticksPerSec": 1798561,
+      "perTickUs": 0.56
+    },
+    {
+      "name": "100_monsters_500_steps",
+      "N": 500,
+      "monsters": 20,
+      "ms": 0.56,
+      "ticksPerSec": 886682,
+      "perTickUs": 1.13
+    },
+    {
+      "name": "20_monsters_1000_steps",
+      "N": 1000,
+      "monsters": 20,
+      "ms": 0.69,
+      "ticksPerSec": 1443001,
+      "perTickUs": 0.69
+    },
+    {
+      "name": "20_monsters_5000_steps",
+      "N": 5000,
+      "monsters": 20,
+      "ms": 2.29,
+      "ticksPerSec": 2179789,
+      "perTickUs": 0.46
+    }
+  ],
+  "meta": {
+    "node": "v22.23.1",
+    "platform": "win32"
+  }
+}

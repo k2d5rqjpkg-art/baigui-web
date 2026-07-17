@@ -23,7 +23,9 @@
     "dump": "node scripts/state-dump.mjs",
     "bench:repl": "node scripts/bench-repl.mjs",
     "format": "prettier --write \"src/**/*.{ts,js,json,md}\" \"server/**/*.ts\" \"scripts/**/*.{ts,mjs}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\" \"server/**/*.ts\" \"scripts/**/*.{ts,mjs}\""
+    "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\" \"server/**/*.ts\" \"scripts/**/*.{ts,mjs}\"",
+    "bench:collect": "node scripts/bench-collect.mjs",
+    "metrics": "node scripts/metrics-dashboard.mjs"
   },
   "keywords": [],
   "author": "",

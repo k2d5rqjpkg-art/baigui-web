@@ -25,6 +25,7 @@ export class GameHud {
   private xpBar: HTMLDivElement;
   private xpText: HTMLDivElement;
   private skillText: HTMLDivElement;
+  private invText: HTMLDivElement;
   private logBox: HTMLDivElement;
   private helpBox: HTMLDivElement;
   private gameOverBox: HTMLDivElement;
@@ -70,6 +71,7 @@ export class GameHud {
       <div id="__xptext" style="font-size:11px;margin-top:2px;color:#88aacc">0 / 100</div>
       <div id="__atkdef" style="font-size:11px;margin-top:4px;color:#aaa">ATK 30 · DEF 5</div>
       <div id="__skillpts" style="font-size:11px;margin-top:2px;color:#88cc88">技能点 0</div>
+      <div id="__inv" style="font-size:11px;margin-top:6px;color:#bbb;line-height:1.35;max-width:220px">背包 0</div>
     `;
     this.root.appendChild(topLeft);
 
@@ -80,6 +82,7 @@ export class GameHud {
     this.xpBar = topLeft.querySelector('#__xpfill') as HTMLDivElement;
     this.xpText = topLeft.querySelector('#__xptext') as HTMLDivElement;
     this.skillText = topLeft.querySelector('#__skillpts') as HTMLDivElement;
+    this.invText = topLeft.querySelector('#__inv') as HTMLDivElement;
 
     // === 右下 战斗日志 ===
     const bottomRight = document.createElement('div');
@@ -177,6 +180,12 @@ export class GameHud {
     this.xpText.textContent = `${p.xp} / ${p.xpToNext}`;
     this.skillText.textContent = `技能点 ${p.skillPoints}`;
     this.skillText.style.color = p.skillPoints > 0 ? '#aaff88' : '#88cc88';
+    // Day21: 背包/装备
+    const eq = Object.entries(p.equipment ?? {});
+    const eqStr = eq.length ? eq.map(([s, n]) => `${s}:${n}`).join(' · ') : '无';
+    const invStr = p.inventoryNames?.length ? p.inventoryNames.join(', ') : '空';
+    this.invText.textContent = `背包装备 ${p.inventoryCount} | ${eqStr}\n${invStr}`;
+    this.invText.style.whiteSpace = 'pre-wrap';
   }
 
   /** 处理战斗事件, 写日志 */

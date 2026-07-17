@@ -78,6 +78,10 @@ export interface PlayerSnapshot {
   xp: number;
   xpToNext: number;
   skillPoints: number;
+  /** Day21: 背包与装备 */
+  inventoryCount: number;
+  inventoryNames: string[];
+  equipment: Record<string, string>;
 }
 
 // ============ BrowserGame 主类 ============
@@ -292,6 +296,16 @@ export class BrowserGame {
       xp: getXp(p),
       xpToNext: getXpToNext(p),
       skillPoints: getSkillPoints(p),
+      inventoryCount: p.inventory?.length ?? 0,
+      inventoryNames: (p.inventory ?? [])
+        .map((id) => ITEM_TABLE.find((it) => it.id === id)?.name ?? id)
+        .slice(0, 8),
+      equipment: Object.fromEntries(
+        Object.entries(p.equipment ?? {}).map(([slot, itemId]) => [
+          slot,
+          (itemId && ITEM_TABLE.find((it) => it.id === itemId)?.name) || String(itemId),
+        ]),
+      ),
     };
   }
 

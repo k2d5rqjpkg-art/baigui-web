@@ -24,6 +24,11 @@ import {
   createItemTexture,
 } from '../../entities/sprites';
 import type { EnemyType } from '../../core/components';
+import { sfx } from '../../render/sfx-gen';
+import { AnimationMixer, ANIMATION_PRESETS } from '../../render/animation-mixer';
+
+// v3.5: 玩家 entity id 常量 (与 server/state.ts ROOM_PLAYER_ID 一致)
+const ROOM_PLAYER_ID = 'e_player_1' as const;
 
 const CELL_SIZE = 0.18; // sim 1 格 = 0.18 世界单位 (40x30 地图 → 7.2 x 5.4 世界单位)
 
@@ -37,6 +42,10 @@ function pickEnemySpriteType(level: number): EnemyType {
 
 export class GameRenderer {
   private scene: THREE.Scene;
+  /** v3.5: 动画 mixer (借鉴 WoC 12 族生物骨骼动画) */
+  private mixer = new AnimationMixer();
+  private currentAnimation = 'idle';
+  private animationTime = 0;
   private camera: THREE.OrthographicCamera;
   private renderer: THREE.WebGLRenderer;
   private container: HTMLElement;
@@ -97,7 +106,26 @@ export class GameRenderer {
   start(): void {
     if (this.running) return;
     this.running = true;
+    // v3.5: 初始化 AnimationMixer, 预加载 5 个动画 clip
+    for (const clip of Object.values(ANIMATION_PRESETS)) {
+      this.mixer.register(clip);
+    }
+    this.playAnimation('idle');
     this.tick();
+  }
+
+  /** v3.5: 切换动画 (借鉴 WoC 多族生物动画切换) */
+  private playAnimation(name: string, loop: boolean = true): void {
+    if (this.currentAnimation === name) return;
+    this.mixer.play(name, loop);
+    this.currentAnimation = name;
+    this.animationTime = 0;
+  }
+
+  /** v3.5: 在 tick 里 update mixer (数据准备好给 Three.js 用) */
+  private updateAnimation(dt: number): void {
+    this.animationTime += dt;
+    this.mixer.update(dt);
   }
 
   stop(): void {
@@ -129,6 +157,9 @@ export class GameRenderer {
   private tick = (): void => {
     if (!this.running) return;
     this.rafId = requestAnimationFrame(this.tick);
+
+    // v3.5: 推进动画 mixer (~60fps)
+    this.updateAnimation(1 / 60);
 
     // 60Hz 渲染: 不重读 game state (20Hz sim 给的数据, 渲染层补间)
     this.renderer.render(this.scene, this.camera);
@@ -269,6 +300,13 @@ export class GameRenderer {
       const amount = 'amount' in e.data ? e.data.amount : 0;
       const crit = 'crit' in e.data ? e.data.crit : false;
       this.showDamageText(mesh.position.x, mesh.position.y, amount, crit);
+      // v3.5: SFX 触发 (借鉴 WoC 11Labs 合成音效)
+      // source 是攻击者, 是玩家才播 hit 音
+      if (e.source === ROOM_PLAYER_ID) {
+        sfx.play('attack');
+      } else {
+        sfx.play('hit');
+      }
     } else if (e.type === 'death') {
       // 目标实体立即从 mesh 移除
       const targetId = e.target;
@@ -281,6 +319,11 @@ export class GameRenderer {
         // 死亡闪烁
         const pos = this.getEntityWorldPos(targetId);
         if (pos) this.flashAt(pos.x, pos.y, 'rgba(255,80,80,0.4)');
+        // v3.5: 死亡 SFX + 动画
+        sfx.play('death');
+        if (targetId === ROOM_PLAYER_ID) {
+          this.playAnimation('death');
+        }
       }
     } else if (e.type === 'pickup') {
       const targetId = e.target;
@@ -293,6 +336,8 @@ export class GameRenderer {
           this.scene.remove(mesh);
           this.meshByEntityId.delete(targetId);
         }
+        // v3.5: 拾取 SFX
+        sfx.play('pickup');
       }
     }
   }

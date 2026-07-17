@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Typecheck · Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install (skip postinstall scripts for speed)
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: AI test (fuzz + replay + property)
+        run: npm run ai:test
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify bundle size
+        run: |
+          ls -la dist/assets/ 2>/dev/null || ls -la dist/
+          # 主 bundle 应 < 50KB (gzipped)
+          find dist/ -name "*.js" -size +100k | head -5

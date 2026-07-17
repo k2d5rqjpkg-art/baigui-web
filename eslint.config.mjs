@@ -16,6 +16,8 @@ export default [
       'rl/**/__pycache__/**',
       // Day0 旧入口, tsconfig 已排除, ESLint 同步排除
       'src/main.ts',
+      // scripts/ 是 Node CLI 入口 (用 process/fs), 不走 browser globals
+      'scripts/**',
     ],
   },
   js.configs.recommended,

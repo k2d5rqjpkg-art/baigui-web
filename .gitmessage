@@ -1,0 +1,5 @@
+<type>(<scope>): <subject>
+
+<body (optional, wrap at 72 chars)>
+
+<footer (optional, e.g. Refs #123)>

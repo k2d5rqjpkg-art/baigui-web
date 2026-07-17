@@ -18,7 +18,10 @@
     "ai:test": "vitest run src/core/sim/__tests__/fuzz-tick.test.ts src/core/sim/__tests__/replay.test.ts server/__tests__/behavior-coverage.test.ts server/__tests__/smoke-e2e.test.ts server/__tests__/rl-agent.test.ts 2>&1 | tail -30",
     "ai:bench": "vitest run src/core/sim/__tests__/perf-bench.test.ts --reporter=verbose 2>&1 | tail -30",
     "ai:fuzz": "vitest run src/core/sim/__tests__/fuzz-tick.test.ts --reporter=verbose 2>&1 | tail -30",
-    "ai:all": "npm run ai:test && npm run ai:bench && npm run ai:fuzz"
+    "ai:all": "npm run ai:test && npm run ai:bench && npm run ai:fuzz",
+    "changelog": "node scripts/gen-changelog.mjs",
+    "dump": "node scripts/state-dump.mjs",
+    "bench:repl": "node scripts/bench-repl.mjs"
   },
   "keywords": [],
   "author": "",

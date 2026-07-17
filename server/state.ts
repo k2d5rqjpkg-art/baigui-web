@@ -34,6 +34,8 @@ import { ITEM_TABLE } from '../src/core/sim/items.js';
 import { generateRoomContent, talkToNpc, findAdjacentNpc, type NpcData } from './quest.js';
 import { log } from '../src/core/log.js';
 import type { PersistenceLayer } from './persistence.js';
+import { gainXp, killRewardXp } from '../src/core/sim/progression.js';
+import { gainSkillPointsOnLevelUp } from '../src/core/sim/skills.js';
 
 const MAX_PLAYERS = 4;
 
@@ -280,12 +282,35 @@ export class GameRoom {
     tick: number;
   } {
     const result = tick(this.state, intents, dt, { layout: this.layout });
-    this.state = result.state;
-    this.unconsumedEvents.push(...result.events);
+    let nextState = result.state;
+    const allEvents = [...result.events];
+
+    // Day14: 击杀 → XP → 升级 → 技能点 (闭环)
+    for (const e of result.events) {
+      if (e.type !== 'death' || !e.source || !e.target) continue;
+      const killer = nextState.entities[e.source];
+      const victim = nextState.entities[e.target] ?? this.state.entities[e.target];
+      if (!killer || killer.kind !== 'player') continue;
+      // victim 可能已 hp=0 仍在 entities; level 取死亡前或当前
+      const monsterLevel = victim?.level ?? 1;
+      const xp = killRewardXp(monsterLevel);
+      const xpResult = gainXp(nextState, e.source, xp);
+      nextState = xpResult.newState;
+      allEvents.push(...xpResult.events);
+      if (xpResult.leveledUp) {
+        nextState = gainSkillPointsOnLevelUp(nextState, e.source, xpResult.newLevel);
+        log.info(
+          `[room ${this.id}] ${e.source} +${xp}xp → lv${xpResult.newLevel} (+1 skill point)`,
+        );
+      }
+    }
+
+    this.state = nextState;
+    this.unconsumedEvents.push(...allEvents);
     return {
-      state: result.state,
-      events: result.events,
-      tick: result.state.tick,
+      state: this.state,
+      events: allEvents,
+      tick: this.state.tick,
     };
   }
 

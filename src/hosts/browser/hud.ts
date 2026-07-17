@@ -22,6 +22,9 @@ export class GameHud {
   private hpText: HTMLDivElement;
   private levelText: HTMLDivElement;
   private atkDefText: HTMLDivElement;
+  private xpBar: HTMLDivElement;
+  private xpText: HTMLDivElement;
+  private skillText: HTMLDivElement;
   private logBox: HTMLDivElement;
   private helpBox: HTMLDivElement;
   private gameOverBox: HTMLDivElement;
@@ -59,8 +62,14 @@ export class GameHud {
         <div id="__hpfill" style="width:100%;height:100%;background:linear-gradient(90deg,#cc3333,#ee5555);transition:width 200ms"></div>
       </div>
       <div id="__hptext" style="font-size:12px;margin-top:4px;color:#f5e6c8">100 / 100</div>
-      <div id="__level" style="font-size:12px;margin-top:6px;color:#d4a017">Lv.5</div>
-      <div id="__atkdef" style="font-size:11px;margin-top:2px;color:#aaa">ATK 30 · DEF 5</div>
+      <div id="__level" style="font-size:12px;margin-top:6px;color:#d4a017">Lv.1</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">XP</div>
+      <div id="__xpbar" style="width:200px;height:8px;background:#1a1a33;border:1px solid #444466;border-radius:3px;overflow:hidden;margin-top:2px">
+        <div id="__xpfill" style="width:0%;height:100%;background:linear-gradient(90deg,#4488ff,#66aaff);transition:width 200ms"></div>
+      </div>
+      <div id="__xptext" style="font-size:11px;margin-top:2px;color:#88aacc">0 / 100</div>
+      <div id="__atkdef" style="font-size:11px;margin-top:4px;color:#aaa">ATK 30 · DEF 5</div>
+      <div id="__skillpts" style="font-size:11px;margin-top:2px;color:#88cc88">技能点 0</div>
     `;
     this.root.appendChild(topLeft);
 
@@ -68,6 +77,9 @@ export class GameHud {
     this.hpText = topLeft.querySelector('#__hptext') as HTMLDivElement;
     this.levelText = topLeft.querySelector('#__level') as HTMLDivElement;
     this.atkDefText = topLeft.querySelector('#__atkdef') as HTMLDivElement;
+    this.xpBar = topLeft.querySelector('#__xpfill') as HTMLDivElement;
+    this.xpText = topLeft.querySelector('#__xptext') as HTMLDivElement;
+    this.skillText = topLeft.querySelector('#__skillpts') as HTMLDivElement;
 
     // === 右下 战斗日志 ===
     const bottomRight = document.createElement('div');
@@ -158,6 +170,13 @@ export class GameHud {
     this.hpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.levelText.textContent = `Lv.${p.level}`;
     this.atkDefText.textContent = `ATK ${p.atk} · DEF ${p.def}`;
+    // Day15: XP 进度条 + 技能点
+    const xpNeed = Math.max(1, p.xpToNext);
+    const xpRatio = Math.max(0, Math.min(1, p.xp / xpNeed));
+    this.xpBar.style.width = `${xpRatio * 100}%`;
+    this.xpText.textContent = `${p.xp} / ${p.xpToNext}`;
+    this.skillText.textContent = `技能点 ${p.skillPoints}`;
+    this.skillText.style.color = p.skillPoints > 0 ? '#aaff88' : '#88cc88';
   }
 
   /** 处理战斗事件, 写日志 */
@@ -186,6 +205,12 @@ export class GameHud {
         const tgtName = e.target ? this.nameOf(e.target) : '?';
         text = `拾取 ${tgtName}`;
         color = '#d4a017';
+        break;
+      }
+      case 'level_up': {
+        const lv = 'newLevel' in e.data ? e.data.newLevel : '?';
+        text = `⬆ 升级! Lv.${lv}`;
+        color = '#66ff99';
         break;
       }
       case 'move': {

@@ -25,6 +25,8 @@ import {
   generateEncounter,
   ITEM_TABLE,
 } from '../../core/sim';
+import { gainXp, killRewardXp, getXp, getXpToNext } from '../../core/sim/progression';
+import { gainSkillPointsOnLevelUp, getSkillPoints } from '../../core/sim/skills';
 import type {
   GameState,
   Action,
@@ -72,6 +74,10 @@ export interface PlayerSnapshot {
   def: number;
   level: number;
   alive: boolean;
+  /** Day15: 经验 / 升级进度 / 技能点 */
+  xp: number;
+  xpToNext: number;
+  skillPoints: number;
 }
 
 // ============ BrowserGame 主类 ============
@@ -283,6 +289,9 @@ export class BrowserGame {
       def: p.def,
       level: p.level,
       alive: p.hp > 0,
+      xp: getXp(p),
+      xpToNext: getXpToNext(p),
+      skillPoints: getSkillPoints(p),
     };
   }
 
@@ -425,12 +434,29 @@ export class BrowserGame {
     // 调 sim 核心
     const result = simTick(this.state, allActions, dt, { layout: this.layout });
 
+    // Day14/15: 本地模式同样 击杀→XP→升级→技能点
+    let nextState = result.state;
+    const allEvents = [...result.events];
+    for (const e of result.events) {
+      if (e.type !== 'death' || !e.source || !e.target) continue;
+      const killer = nextState.entities[e.source];
+      if (!killer || killer.kind !== 'player') continue;
+      const victim = nextState.entities[e.target] ?? this.state.entities[e.target];
+      const xp = killRewardXp(victim?.level ?? 1);
+      const xpResult = gainXp(nextState, e.source, xp);
+      nextState = xpResult.newState;
+      allEvents.push(...xpResult.events);
+      if (xpResult.leveledUp) {
+        nextState = gainSkillPointsOnLevelUp(nextState, e.source, xpResult.newLevel);
+      }
+    }
+
     // 更新状态 (sim 返回新 state, 我们替换)
-    this.state = result.state;
-    this.recentEvents = result.events;
+    this.state = nextState;
+    this.recentEvents = allEvents;
 
     // 分发事件
-    for (const e of result.events) {
+    for (const e of allEvents) {
       for (const h of this.eventHandlers) {
         try {
           h(e);
@@ -447,7 +473,7 @@ export class BrowserGame {
     }
 
     // 击杀事件 → onPlayerKill
-    for (const e of result.events) {
+    for (const e of allEvents) {
       if (e.type === 'death' && e.source === BrowserGame.PLAYER_ID && e.target) {
         if (this.onPlayerKill) this.onPlayerKill(e.target);
       }

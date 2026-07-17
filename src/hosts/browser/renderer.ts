@@ -26,6 +26,8 @@ import {
 import type { EnemyType } from '../../core/components';
 import { sfx } from '../../render/sfx-gen';
 import { AnimationMixer, ANIMATION_PRESETS } from '../../render/animation-mixer';
+import { terrainToMesh, buildTerrainMesh } from '../../render/terrain-mesh';
+import { settlementToMeshes } from '../../render/building-mesh';
 
 // v3.5: 玩家 entity id 常量 (与 server/state.ts ROOM_PLAYER_ID 一致)
 const ROOM_PLAYER_ID = 'e_player_1' as const;
@@ -46,6 +48,9 @@ export class GameRenderer {
   private mixer = new AnimationMixer();
   private currentAnimation = 'idle';
   private animationTime = 0;
+  /** Day11: terrain mesh + 村庄建筑 (借鉴 WoC 程序化几何) */
+  private terrainMesh: THREE.Mesh | null = null;
+  private buildingMeshes: THREE.Mesh[] = [];
   private camera: THREE.OrthographicCamera;
   private renderer: THREE.WebGLRenderer;
   private container: HTMLElement;
@@ -208,8 +213,32 @@ export class GameRenderer {
       this.scene.add(lines);
     }
 
-    // 4. 初始 entities
+    // 5. 初始 entities
     this.syncEntities(game);
+
+    // 6. Day11: 程序化地形 + 村庄 (借鉴 WoC Three.js 几何)
+    // terrain mesh: 用 sim 网格宽高, 中心偏移对齐 renderer 坐标系
+    const w = layout.width;
+    const h = layout.height;
+    // 中心偏移: sim 中心 (w/2, h/2) → world 中心
+    const centerX = -((w - 1) / 2) * CELL_SIZE;
+    const centerY = ((h - 1) / 2) * CELL_SIZE;
+    this.terrainMesh = buildTerrainMesh(42, w, h);
+    this.terrainMesh.position.set(centerX, centerY, -1.5);
+    this.terrainMesh.scale.set(CELL_SIZE, CELL_SIZE, 1);
+    this.scene.add(this.terrainMesh);
+
+    // 村庄: 在地图中心生成 5 个建筑
+    this.buildingMeshes = settlementToMeshes(0, 0, 5, 42, 10);
+    for (const b of this.buildingMeshes) {
+      // building 的 x/z 是 sim 坐标, 转 world
+      b.position.set(
+        b.position.x * CELL_SIZE,
+        b.position.y * CELL_SIZE,
+        b.position.z * CELL_SIZE,
+      );
+      this.scene.add(b);
+    }
   }
 
   /** 每帧从 sim 同步 entities 到 mesh */

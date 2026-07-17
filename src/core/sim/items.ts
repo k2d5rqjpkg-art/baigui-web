@@ -234,3 +234,65 @@ export function pickup(
     newState: { ...state, entities: newEntities },
   };
 }
+
+/**
+ * Day22: 从背包装备一件物品 (template id)
+ * - 从 inventory 移除 templateId
+ * - 装到对应 slot; 旧装备退回背包
+ * - 重算 atk/def/maxHp
+ */
+export function equipFromInventory(
+  state: GameState,
+  entityId: EntityId,
+  templateId: string,
+): PickupResult {
+  const entity = state.entities[entityId];
+  if (!entity) return { events: [], newState: state };
+
+  const invIdx = entity.inventory.indexOf(templateId);
+  if (invIdx < 0) return { events: [], newState: state };
+
+  const tpl = getItemTemplate(templateId);
+  if (!tpl) return { events: [], newState: state };
+
+  const oldEquip = entity.equipment[tpl.slot];
+  const newInventory = entity.inventory.filter((_, i) => i !== invIdx);
+  if (oldEquip) newInventory.push(oldEquip);
+
+  const newEquipment: Partial<Record<EquipSlot, string>> = {
+    ...entity.equipment,
+    [tpl.slot]: templateId,
+  };
+
+  const affixDelta = sumAffixes(entity.equipment);
+  const baseAtk = entity.atk - affixDelta.atk;
+  const baseDef = entity.def - affixDelta.def;
+  const baseMaxHp = entity.maxHp - affixDelta.hp;
+  const newAffix = sumAffixes(newEquipment);
+
+  const newEntity: SimEntity = {
+    ...entity,
+    inventory: newInventory,
+    equipment: newEquipment,
+    atk: baseAtk + newAffix.atk,
+    def: baseDef + newAffix.def,
+    maxHp: baseMaxHp + newAffix.hp,
+    hp: Math.min(entity.hp, baseMaxHp + newAffix.hp),
+  };
+
+  const events: PickupResult['events'] = [{
+    type: 'equip_swap',
+    source: entityId,
+    target: null,
+    data: { slot: tpl.slot, oldItem: oldEquip, newItem: templateId },
+    tick: state.tick,
+  }];
+
+  return {
+    events,
+    newState: {
+      ...state,
+      entities: { ...state.entities, [entityId]: newEntity },
+    },
+  };
+}

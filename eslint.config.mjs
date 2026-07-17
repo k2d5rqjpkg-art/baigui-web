@@ -75,6 +75,10 @@ export default [
         __dirname: 'readonly',
         __filename: 'readonly',
         URL: 'readonly',
+        URLSearchParams: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        HTMLButtonElement: 'readonly',
         // vitest
         describe: 'readonly',
         it: 'readonly',

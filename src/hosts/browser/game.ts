@@ -24,6 +24,7 @@ import {
   worldGen,
   generateEncounter,
   ITEM_TABLE,
+  equipFromInventory,
 } from '../../core/sim';
 import { gainXp, killRewardXp, getXp, getXpToNext } from '../../core/sim/progression';
 import { gainSkillPointsOnLevelUp, getSkillPoints, learnSkill } from '../../core/sim/skills';
@@ -332,6 +333,75 @@ export class BrowserGame {
   /** 获取地图宽高 (renderer 计算相机用) */
   getMapSize(): { width: number; height: number } {
     return { width: this.layout.width, height: this.layout.height };
+  }
+
+  /**
+   * Day24: 应用本地存档到玩家
+   */
+  applyLocalSave(save: {
+    level: number;
+    xp: number;
+    hp: number;
+    maxHp: number;
+    atk: number;
+    def: number;
+    inventory: string[];
+    equipment: Record<string, string>;
+    classKind: string;
+    skillPoints: number;
+    learnedSkills: string[];
+  }): boolean {
+    if (this.mode === 'network') {
+      log.warn('[game] applyLocalSave not supported in network mode');
+      return false;
+    }
+    const id = BrowserGame.PLAYER_ID;
+    const p = this.state.entities[id];
+    if (!p) return false;
+
+    const buffs: any[] = [
+      { type: 'class', classKind: save.classKind, skillPoints: save.skillPoints },
+      { type: 'xp', xp: save.xp },
+      ...save.learnedSkills.map((skillId) => ({ type: 'skill_learned', skillId })),
+    ];
+
+    this.state = {
+      ...this.state,
+      entities: {
+        ...this.state.entities,
+        [id]: {
+          ...p,
+          level: save.level,
+          hp: save.hp,
+          maxHp: save.maxHp,
+          atk: save.atk,
+          def: save.def,
+          inventory: [...save.inventory],
+          equipment: { ...save.equipment },
+          buffs: buffs as any,
+        },
+      },
+    };
+    return true;
+  }
+
+  /**
+   * Day22: 从背包装备 templateId
+   */
+  equipInventoryItem(templateId: string): boolean {
+    if (this.mode === 'network') {
+      log.warn('[game] equipInventoryItem not supported in network mode yet');
+      return false;
+    }
+    const result = equipFromInventory(this.state, BrowserGame.PLAYER_ID, templateId);
+    if (result.events.length === 0) return false;
+    this.state = result.newState;
+    for (const e of result.events) {
+      for (const h of this.eventHandlers) {
+        try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
+      }
+    }
+    return true;
   }
 
   /**

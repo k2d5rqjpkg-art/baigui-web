@@ -39,7 +39,7 @@ export {
 export { resolveCombat } from './combat';
 export { moveEntity } from './movement';
 export type { MoveResult, MoveOptions } from './movement';
-export { pickup, getItemTemplate, sumAffixes, ITEM_TABLE } from './items';
+export { pickup, equipFromInventory, getItemTemplate, sumAffixes, ITEM_TABLE } from './items';
 export type { PickupResult } from './items';
 export { generateEncounter } from './encounters';
 export { worldGen } from './world';

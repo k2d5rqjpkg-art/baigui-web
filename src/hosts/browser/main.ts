@@ -24,6 +24,9 @@ import { GameInput } from './input';
 import { GameHud } from './hud';
 import { AdvisorPanel } from './advisor-panel';
 import { SkillPanel } from './skill-panel';
+import { InventoryPanel } from './inventory-panel';
+import { PvpPanel } from './pvp-panel';
+import { SaveLoadPanel } from './save-load';
 import { GameClient, defaultWsUrl, defaultRoomId } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
@@ -44,6 +47,9 @@ class BrowserHost {
   hud: GameHud;
   advisor: AdvisorPanel;
   skills: SkillPanel;
+  inventory: InventoryPanel;
+  pvp: PvpPanel;
+  saveLoad: SaveLoadPanel;
   client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
@@ -68,6 +74,12 @@ class BrowserHost {
     this.hud = new GameHud(this.game, container);
     // Day18: 技能树 (K 键)
     this.skills = new SkillPanel(this.game, container);
+    // Day22: 背包 (I 键)
+    this.inventory = new InventoryPanel(this.game, container);
+    // Day23: PvP (P 键)
+    this.pvp = new PvpPanel(container, 'browser-p1');
+    // Day24: 存档 (O 键)
+    this.saveLoad = new SaveLoadPanel(this.game, container);
     // v1.1: AI 顾问面板 (1Hz 调 LLM/fallback, 无 key 时也跑)
     this.advisor = new AdvisorPanel(container);
     this.advisor.start(
@@ -100,6 +112,9 @@ class BrowserHost {
     this.input.dispose();
     this.hud.dispose();
     this.skills.dispose();
+    this.inventory.dispose();
+    this.pvp.dispose();
+    this.saveLoad.dispose();
     this.advisor.dispose();
   }
 }

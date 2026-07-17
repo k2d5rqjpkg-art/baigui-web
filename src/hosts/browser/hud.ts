@@ -107,7 +107,7 @@ export class GameHud {
     `;
     bottomLeft.innerHTML = `
       <div style="color:#d4a017;margin-bottom:3px">操作</div>
-      <div>WASD/方向键: 移动 · J/空格: 攻击 · K: 技能树 · 自动拾取 · R: 重置</div>
+      <div>WASD 移动 · J 攻击 · K 技能 · I 背包 · P PvP · O 存档 · R 重置</div>
     `;
     this.root.appendChild(bottomLeft);
     this.helpBox = bottomLeft;

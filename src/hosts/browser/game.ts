@@ -336,6 +336,32 @@ export class BrowserGame {
   }
 
   /**
+   * Day26: 原地复活 — 满血回到出生点, 不重置地图
+   */
+  respawnPlayer(): boolean {
+    if (this.mode === 'network') {
+      log.warn('[game] respawnPlayer not supported in network mode');
+      return false;
+    }
+    const id = BrowserGame.PLAYER_ID;
+    const p = this.state.entities[id];
+    if (!p) return false;
+    const spawn = this.layout.spawnPoints[0] ?? { x: 5, y: 5 };
+    this.state = {
+      ...this.state,
+      entities: {
+        ...this.state.entities,
+        [id]: {
+          ...p,
+          hp: p.maxHp,
+          pos: { x: spawn.x, y: spawn.y },
+        },
+      },
+    };
+    return true;
+  }
+
+  /**
    * Day24: 应用本地存档到玩家
    */
   applyLocalSave(save: {

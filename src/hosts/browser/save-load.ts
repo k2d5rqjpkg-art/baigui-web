@@ -76,9 +76,11 @@ export class SaveLoadPanel {
   private statusEl: HTMLDivElement;
   private visible = false;
   private game: BrowserGame;
+  private onAfterLoad?: () => void;
 
-  constructor(game: BrowserGame, container: HTMLElement) {
+  constructor(game: BrowserGame, container: HTMLElement, onAfterLoad?: () => void) {
     this.game = game;
+    this.onAfterLoad = onAfterLoad;
     this.root = document.createElement('div');
     this.root.style.cssText = `
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -143,6 +145,8 @@ export class SaveLoadPanel {
     this.statusEl.textContent = ok
       ? `已读取 Lv.${data.level} · 技能点 ${data.skillPoints}`
       : '读取失败 (network 模式?)';
+    // Day25: 读档后强制刷新 HUD 等
+    if (ok) this.onAfterLoad?.();
   }
 
   dispose(): void {

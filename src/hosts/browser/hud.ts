@@ -107,7 +107,7 @@ export class GameHud {
     `;
     bottomLeft.innerHTML = `
       <div style="color:#d4a017;margin-bottom:3px">操作</div>
-      <div>WASD 移动 · J 攻击 · K 技能 · I 背包 · P PvP · O 存档 · R 重置</div>
+      <div>WASD 移动 · J 攻击 · K 技能 · I 背包 · P PvP · O 存档 · Esc 设置 · R 重开</div>
     `;
     this.root.appendChild(bottomLeft);
     this.helpBox = bottomLeft;
@@ -140,13 +140,29 @@ export class GameHud {
     go.style.cssText = `
       position: absolute; inset: 0; display: none;
       background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
-      flex-direction: column; pointer-events: auto; cursor: pointer;
+      flex-direction: column; pointer-events: auto;
     `;
     go.innerHTML = `
       <div style="font-size:64px;color:#cc3333;font-weight:bold;text-shadow:0 0 20px #ff0000">GAME OVER</div>
-      <div style="font-size:18px;color:#aaa;margin-top:20px">点击或按 R 重来</div>
+      <div style="font-size:16px;color:#aaa;margin-top:16px;margin-bottom:18px">选择继续方式</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button id="__go_respawn" style="padding:10px 18px;cursor:pointer;background:#335533;color:#efe;border:1px solid #66aa66;border-radius:8px;font-size:14px">复活 (出生点)</button>
+        <button id="__go_reset" style="padding:10px 18px;cursor:pointer;background:#553333;color:#fee;border:1px solid #aa6666;border-radius:8px;font-size:14px">重开地图 (R)</button>
+      </div>
     `;
-    go.addEventListener('click', () => game.reset());
+    go.querySelector('#__go_respawn')!.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (game.respawnPlayer()) {
+        this.hideGameOver();
+        this.refresh();
+      }
+    });
+    go.querySelector('#__go_reset')!.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      game.reset();
+      this.hideGameOver();
+      this.refresh();
+    });
     this.root.appendChild(go);
     this.gameOverBox = go;
 
@@ -186,6 +202,8 @@ export class GameHud {
     const invStr = p.inventoryNames?.length ? p.inventoryNames.join(', ') : '空';
     this.invText.textContent = `背包装备 ${p.inventoryCount} | ${eqStr}\n${invStr}`;
     this.invText.style.whiteSpace = 'pre-wrap';
+    // Day26: 复活/重开后若存活则关闭 Game Over
+    if (p.alive) this.hideGameOver();
   }
 
   /** 处理战斗事件, 写日志 */

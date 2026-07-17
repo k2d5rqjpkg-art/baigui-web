@@ -311,11 +311,12 @@ export function learnSkill(
     return { newState: state, success: false, reason: 'no skill points', events: [] };
   }
 
-  // 应用: 扣 1 点 + 加 buff + 加 bonuses 到 entity
+  // 应用: 扣 1 点 + 保留已学技能 + 加新 skill_learned + 更新 class
   const newClassInfo: ClassInfoBuff = { type: 'class', classKind: entityClass, skillPoints: points - 1 };
-  const newBuffs = entity.buffs.filter((b) => (b as any).type !== 'class' && (b as any).type !== 'skill_learned');
-  newBuffs.push(newClassInfo as any);
-  newBuffs.push({ type: 'skill_learned', skillId } as any);
+  const kept = entity.buffs.filter(
+    (b) => (b as any).type !== 'class',
+  );
+  const newBuffs = [...kept, newClassInfo as any, { type: 'skill_learned', skillId } as any];
 
   // 加 bonuses 到 entity stats
   let atk = entity.atk, def = entity.def, hp = entity.hp, maxHp = entity.maxHp;

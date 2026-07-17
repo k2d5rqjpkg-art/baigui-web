@@ -23,6 +23,7 @@ import type { GameRenderer } from './renderer';
 import { GameInput } from './input';
 import { GameHud } from './hud';
 import { AdvisorPanel } from './advisor-panel';
+import { SkillPanel } from './skill-panel';
 import { GameClient, defaultWsUrl } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
@@ -42,6 +43,7 @@ class BrowserHost {
   input: GameInput;
   hud: GameHud;
   advisor: AdvisorPanel;
+  skills: SkillPanel;
   client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
@@ -62,6 +64,8 @@ class BrowserHost {
     this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
     this.input = new GameInput(this.game);
     this.hud = new GameHud(this.game, container);
+    // Day18: 技能树 (K 键)
+    this.skills = new SkillPanel(this.game, container);
     // v1.1: AI 顾问面板 (1Hz 调 LLM/fallback, 无 key 时也跑)
     this.advisor = new AdvisorPanel(container);
     this.advisor.start(
@@ -93,6 +97,7 @@ class BrowserHost {
     this.renderer?.dispose();
     this.input.dispose();
     this.hud.dispose();
+    this.skills.dispose();
     this.advisor.dispose();
   }
 }

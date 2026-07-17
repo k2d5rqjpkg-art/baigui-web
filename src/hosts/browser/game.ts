@@ -26,7 +26,7 @@ import {
   ITEM_TABLE,
 } from '../../core/sim';
 import { gainXp, killRewardXp, getXp, getXpToNext } from '../../core/sim/progression';
-import { gainSkillPointsOnLevelUp, getSkillPoints } from '../../core/sim/skills';
+import { gainSkillPointsOnLevelUp, getSkillPoints, learnSkill } from '../../core/sim/skills';
 import type {
   GameState,
   Action,
@@ -320,6 +320,30 @@ export class BrowserGame {
     return { width: this.layout.width, height: this.layout.height };
   }
 
+  /**
+   * Day18: 学习技能 (本地 sim)
+   * @returns 是否成功
+   */
+  learnPlayerSkill(skillId: string): boolean {
+    if (this.mode === 'network') {
+      log.warn('[game] learnPlayerSkill not supported in network mode yet');
+      return false;
+    }
+    const id = BrowserGame.PLAYER_ID;
+    const result = learnSkill(this.state, id, skillId);
+    if (!result.success) {
+      log.info('[game] learn failed:', result.reason);
+      return false;
+    }
+    this.state = result.newState;
+    for (const e of result.events) {
+      for (const h of this.eventHandlers) {
+        try { h(e); } catch (err) { log.error('[game] event handler error:', err); }
+      }
+    }
+    return true;
+  }
+
   /** 重置游戏 */
   reset(seed?: number): void {
     // network 模式: 发 reset intent 给 server (Day4+ 优化: 单独 /reset endpoint)
@@ -361,7 +385,8 @@ export class BrowserGame {
           faction: 'player',
           inventory: [],
           equipment: {},
-          buffs: [],
+          // Day18: 默认 warrior + 2 技能点 (可开技能树 K)
+          buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 } as any],
         });
 
         // 怪物

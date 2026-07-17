@@ -12,6 +12,7 @@
 
 import { BrowserGame } from './game';
 import type { GameEvent, SimEntity, EntityId } from '../../core/sim';
+import { exportPlayerSave, writeSave } from './save-load';
 
 const MAX_LOG = 6;
 
@@ -170,6 +171,17 @@ export class GameHud {
     this.unsubEvent = game.onEvent((e) => this.handleEvent(e));
     // 死亡回调
     game.onPlayerDeath = () => this.showGameOver();
+    // Day29: 升级自动存档
+    game.onEvent((e) => {
+      if (e.type === 'level_up') {
+        try {
+          const data = exportPlayerSave(game);
+          if (data) writeSave(data);
+        } catch {
+          // ignore auto-save failure
+        }
+      }
+    });
 
     // 初次刷新
     this.refresh();

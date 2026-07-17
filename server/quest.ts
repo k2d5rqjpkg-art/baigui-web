@@ -86,11 +86,16 @@ export async function generateRoomContent(
   level: number,
   spawnPoints: { x: number; y: number }[],
   monsterSpawns: { x: number; y: number }[],
+  seed: number = 1,
 ): Promise<RoomContent> {
   const biome = BIOMES[Math.abs(level - 1) % BIOMES.length] ?? 'forest';
 
-  // quest: 调 LLM,失败 fallback
-  const { quest } = await generateQuest(level, biome);
+  // quest: v1.3 用 quest-pool 生成 3 个任务 (借鉴 WoC 90 任务池)
+  // biome → 模板筛选, 同 seed → 同结果
+  const quests = await import('../src/core/llm/quest-pool.js').then((m) =>
+    m.generateQuests(seed, level, biome, 3, process.env.DEEPSEEK_API_KEY),
+  );
+  const quest = quests[0] ?? null;
 
   // npcs: 2 个,固定池
   const npcCount = 2;

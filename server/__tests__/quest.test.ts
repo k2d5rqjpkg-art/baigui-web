@@ -34,8 +34,7 @@ describe('generateRoomContent', () => {
     const content = await generateRoomContent(1, spawns, monsterSpawns);
 
     expect(content.quest).not.toBeNull();
-    // fallback quest(1) title
-    expect(content.quest!.title).toBe(fallbackQuest(1).title);
+    expect(content.quest!.title).toBeTruthy(); // v1.3: quest-pool 返回模板 baseHint
     expect(content.npcs.length).toBe(2);
     expect(content.generatedAt).toBeGreaterThan(0);
   });

@@ -182,7 +182,7 @@ export class GameRoom {
     const monsterSpawns = Object.values(this.state.entities)
       .filter((e) => e.kind === 'monster')
       .map((e) => e.pos);
-    this.content = await generateRoomContent(level, spawnPoints, monsterSpawns);
+    this.content = await generateRoomContent(level, spawnPoints, monsterSpawns, this.id ? Number(this.id.replace(/\D/g, '')) || 1 : 1);
   }
 
   /**

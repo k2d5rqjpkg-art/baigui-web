@@ -24,7 +24,7 @@ import { GameInput } from './input';
 import { GameHud } from './hud';
 import { AdvisorPanel } from './advisor-panel';
 import { SkillPanel } from './skill-panel';
-import { GameClient, defaultWsUrl } from './network';
+import { GameClient, defaultWsUrl, defaultRoomId } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
 
@@ -51,8 +51,10 @@ class BrowserHost {
     // 成功 → network 模式 (server 权威);失败 → 本地 sim fallback
     this.client = new GameClient(defaultWsUrl());
     this.client.onOpen = () => {
-      // 加入 slot 1 (Day4: 简化 — 自动占 slot 1)
-      this.client?.hello(1);
+      // Day20: 支持 ?room= 进指定房间 (默认 room-0)
+      const roomId = defaultRoomId();
+      this.client?.hello(1, roomId);
+      log.info('[host] hello room=', roomId);
     };
     this.client.onError = (msg) => {
       log.warn('[host] server error:', msg.message);

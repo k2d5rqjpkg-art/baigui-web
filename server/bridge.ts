@@ -27,6 +27,7 @@ import { ROOM_PLAYER_ID } from './state.js';
 import type { Action, Intent, EntityId, GameEvent, SimEntity } from '../src/core/sim/types.js';
 import { log } from '../src/core/log.js';
 import { RoomPool } from './room-pool.js';
+import { PvPMatchService } from './pvp-match.js';
 
 const PORT = parseInt(process.env.PORT ?? process.env.SERVER_PORT ?? '8787', 10);
 const TICK_DT_MS = 50; // 20Hz
@@ -34,6 +35,8 @@ const TICK_DT_MS = 50; // 20Hz
 // Day13: 房间池 (跨服 / 大世界); 默认 room-0 兼容旧 RL / 客户端
 const roomPool = new RoomPool();
 const room = roomPool.getOrCreate('room-0', 1);
+// Day19: PvP 匹配服务
+const pvpMatch = new PvPMatchService(roomPool);
 // v2.0: 初始化持久化层 (有 DATABASE_URL 用 PG, 否则 memory)
 import('./persistence.js').then(async (m) => {
   const p = await m.createPersistence();
@@ -276,6 +279,37 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // Day19: PvP 匹配 API
+    if (req.method === 'POST' && url.pathname === '/pvp/queue') {
+      const body = await readJson(req);
+      const playerId = String(body.playerId ?? '');
+      const rating = Number(body.rating ?? 1200);
+      if (!playerId) return send(res, 400, { error: 'playerId required' });
+      pvpMatch.enqueue(playerId, Number.isFinite(rating) ? rating : 1200);
+      // 入队后立刻尝试匹配
+      const found = pvpMatch.tryMatch();
+      return send(res, 200, {
+        ok: true,
+        queued: !found,
+        queueSize: pvpMatch.queueSize(),
+        match: found,
+      });
+    }
+    if (req.method === 'POST' && url.pathname === '/pvp/cancel') {
+      const body = await readJson(req);
+      const playerId = String(body.playerId ?? '');
+      if (!playerId) return send(res, 400, { error: 'playerId required' });
+      pvpMatch.cancel(playerId);
+      return send(res, 200, { ok: true, queueSize: pvpMatch.queueSize() });
+    }
+    if (req.method === 'POST' && url.pathname === '/pvp/match') {
+      const found = pvpMatch.tryMatch();
+      return send(res, 200, { ok: true, match: found, queueSize: pvpMatch.queueSize() });
+    }
+    if (req.method === 'GET' && url.pathname === '/pvp/queue') {
+      return send(res, 200, { queueSize: pvpMatch.queueSize() });
+    }
+
     send(res, 404, { error: 'not found', path: url.pathname });
   } catch (err) {
     log.error('[bridge] handler error:', err);
@@ -291,7 +325,7 @@ export function startBridgeServer(port: number = PORT): Promise<http.Server> {
   return new Promise((resolve) => {
     const s = server.listen(port, () => {
       log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${port}`);
-      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health, GET /rooms`);
+      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health, GET /rooms, POST /pvp/queue|cancel|match`);
       resolve(s);
     });
   });

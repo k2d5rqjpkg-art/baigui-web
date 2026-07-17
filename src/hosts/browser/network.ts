@@ -191,3 +191,21 @@ export function defaultWsUrl(): string {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${proto}//${window.location.host}/ws`;
 }
+
+/**
+ * Day20: 从 URL 解析房间 id
+ * 支持: ?room=lobby-1  或  #room=pvp-xx
+ * 非法字符回落 room-0
+ */
+export function defaultRoomId(): string {
+  try {
+    const q = new URLSearchParams(window.location.search).get('room');
+    if (q && /^[a-zA-Z0-9_-]{1,64}$/.test(q)) return q;
+    const hash = window.location.hash.replace(/^#/, '');
+    if (hash.startsWith('room=')) {
+      const id = hash.slice(5);
+      if (/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return id;
+    }
+  } catch { /* ignore */ }
+  return 'room-0';
+}

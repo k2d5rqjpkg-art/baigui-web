@@ -26,6 +26,7 @@ import {
   ITEM_TABLE,
   equipFromInventory,
 } from '../../core/sim';
+import { enterDungeon, type DungeonConfig } from '../../core/sim/dungeon';
 import { gainXp, killRewardXp, getXp, getXpToNext } from '../../core/sim/progression';
 import { gainSkillPointsOnLevelUp, getSkillPoints, learnSkill } from '../../core/sim/skills';
 import type {
@@ -412,12 +413,15 @@ export class BrowserGame {
   }
 
   /**
-   * Day22: 从背包装备 templateId
+   * Day22/33: 从背包装备 templateId (本地 or bridge)
    */
   equipInventoryItem(templateId: string): boolean {
     if (this.mode === 'network') {
-      log.warn('[game] equipInventoryItem not supported in network mode yet');
-      return false;
+      void this.bridgePost('/equip', {
+        entityId: this.networkEid,
+        templateId,
+      });
+      return true;
     }
     const result = equipFromInventory(this.state, BrowserGame.PLAYER_ID, templateId);
     if (result.events.length === 0) return false;
@@ -431,13 +435,15 @@ export class BrowserGame {
   }
 
   /**
-   * Day18: 学习技能 (本地 sim)
-   * @returns 是否成功
+   * Day18/33: 学习技能 (本地 or bridge)
    */
   learnPlayerSkill(skillId: string): boolean {
     if (this.mode === 'network') {
-      log.warn('[game] learnPlayerSkill not supported in network mode yet');
-      return false;
+      void this.bridgePost('/skill/learn', {
+        entityId: this.networkEid,
+        skillId,
+      });
+      return true;
     }
     const id = BrowserGame.PLAYER_ID;
     const result = learnSkill(this.state, id, skillId);
@@ -452,6 +458,61 @@ export class BrowserGame {
       }
     }
     return true;
+  }
+
+  /**
+   * Day35: 进入副本 (本地)
+   */
+  enterDungeonLocal(dungeonId: string = 'cave_1'): boolean {
+    if (this.mode === 'network') {
+      void this.bridgePost('/dungeon/enter', { dungeonId });
+      return true;
+    }
+    const player = this.state.entities[BrowserGame.PLAYER_ID];
+    const dungeon: DungeonConfig = {
+      id: dungeonId,
+      name: dungeonId === 'cave_1' ? '百鬼洞窟' : dungeonId,
+      recommendedPartySize: 3,
+      bossId: `e_boss_${dungeonId}` as EntityId,
+      lootTable: ITEM_TABLE.slice(0, 4),
+      bossLevel: Math.max(3, player?.level ?? 5),
+    };
+    const entered = enterDungeon(this.state, dungeon);
+    let s = entered.state;
+    if (player) {
+      const spawn = entered.layout.spawnPoints[0] ?? { x: 5, y: 5 };
+      s = addEntity(s, { ...player, pos: { x: spawn.x, y: spawn.y }, hp: Math.max(1, player.hp) });
+    }
+    this.state = s;
+    this.layout = entered.layout;
+    log.info('[game] entered dungeon', dungeon.name);
+    return true;
+  }
+
+  private bridgeBase(): string {
+    return (import.meta as any).env?.VITE_BRIDGE_URL
+      ?? `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8787`;
+  }
+
+  private async bridgePost(path: string, body: object): Promise<void> {
+    try {
+      const res = await fetch(`${this.bridgeBase()}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.snapshot?.entities) {
+        // 轻量合并: 用快照 entities 重建 state.entities
+        const entities: Record<string, SimEntity> = {};
+        for (const e of data.snapshot.entities as SimEntity[]) entities[e.id] = e;
+        this.state = { ...this.state, entities: entities as any, tick: data.snapshot.tick ?? this.state.tick };
+        if (data.snapshot.layout) this.layout = data.snapshot.layout;
+      }
+      if (!data.ok) log.info('[game] bridge', path, data.reason ?? data);
+    } catch (err) {
+      log.warn('[game] bridgePost failed', path, err);
+    }
   }
 
   /** 重置游戏 */

@@ -310,6 +310,32 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { queueSize: pvpMatch.queueSize() });
     }
 
+    // Day33: 学技能 / 装备
+    if (req.method === 'POST' && url.pathname === '/skill/learn') {
+      const body = await readJson(req);
+      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const skillId = String(body.skillId ?? '');
+      if (!skillId) return send(res, 400, { error: 'skillId required' });
+      const r = room.applyLearnSkill(entityId, skillId);
+      return send(res, r.ok ? 200 : 400, { ok: r.ok, reason: r.reason, snapshot: room.getSnapshot() });
+    }
+    if (req.method === 'POST' && url.pathname === '/equip') {
+      const body = await readJson(req);
+      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const templateId = String(body.templateId ?? '');
+      if (!templateId) return send(res, 400, { error: 'templateId required' });
+      const r = room.applyEquip(entityId, templateId);
+      return send(res, r.ok ? 200 : 400, { ok: r.ok, snapshot: room.getSnapshot() });
+    }
+
+    // Day35: 进副本
+    if (req.method === 'POST' && url.pathname === '/dungeon/enter') {
+      const body = await readJson(req);
+      const dungeonId = String(body.dungeonId ?? 'cave_1');
+      const r = room.enterDungeonRun(dungeonId);
+      return send(res, 200, { ok: r.ok, name: r.name, snapshot: room.getSnapshot() });
+    }
+
     send(res, 404, { error: 'not found', path: url.pathname });
   } catch (err) {
     log.error('[bridge] handler error:', err);
@@ -325,7 +351,7 @@ export function startBridgeServer(port: number = PORT): Promise<http.Server> {
   return new Promise((resolve) => {
     const s = server.listen(port, () => {
       log.info(`[bridge] HTTP bridge + RL hook listening on http://localhost:${port}`);
-      log.info(`[bridge] endpoints: GET /state, POST /action, GET /reset?seed, GET /health, GET /rooms, POST /pvp/queue|cancel|match`);
+      log.info(`[bridge] endpoints: … /pvp/* /skill/learn /equip /dungeon/enter`);
       resolve(s);
     });
   });

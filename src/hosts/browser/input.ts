@@ -74,6 +74,12 @@ export class GameInput {
         ev.preventDefault();
         return;
 
+      // Day35: 进副本
+      case 'KeyG':
+        this.game.enterDungeonLocal('cave_1');
+        ev.preventDefault();
+        return;
+
       default:
         return;
     }

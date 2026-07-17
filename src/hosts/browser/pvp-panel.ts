@@ -61,7 +61,13 @@ export class PvpPanel {
       });
       const data = await res.json();
       if (data.match?.roomId) {
-        this.statusEl.innerHTML = `匹配成功!<br>房间 <b>${data.match.roomId}</b><br>对手 ${data.match.playerA} vs ${data.match.playerB}<br>打开: <code>?room=${data.match.roomId}</code>`;
+        this.statusEl.innerHTML = `匹配成功!<br>房间 <b>${data.match.roomId}</b><br>3 秒后跳转…`;
+        // Day34: 自动进房
+        setTimeout(() => {
+          const url = new URL(window.location.href);
+          url.searchParams.set('room', data.match.roomId);
+          window.location.href = url.toString();
+        }, 1500);
       } else {
         this.statusEl.textContent = `已入队，等待对手 (queue=${data.queueSize})`;
       }

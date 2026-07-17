@@ -30,12 +30,13 @@ import type {
 import { tick, emptyState, addEntity } from '../src/core/sim/tick.js';
 import { worldGen } from '../src/core/sim/world.js';
 import { generateEncounter } from '../src/core/sim/encounters.js';
-import { ITEM_TABLE } from '../src/core/sim/items.js';
+import { ITEM_TABLE, equipFromInventory } from '../src/core/sim/items.js';
 import { generateRoomContent, talkToNpc, findAdjacentNpc, type NpcData } from './quest.js';
 import { log } from '../src/core/log.js';
 import type { PersistenceLayer } from './persistence.js';
 import { gainXp, killRewardXp } from '../src/core/sim/progression.js';
-import { gainSkillPointsOnLevelUp } from '../src/core/sim/skills.js';
+import { gainSkillPointsOnLevelUp, learnSkill } from '../src/core/sim/skills.js';
+import { enterDungeon, type DungeonConfig } from '../src/core/sim/dungeon.js';
 
 const MAX_PLAYERS = 4;
 
@@ -340,5 +341,57 @@ export class GameRoom {
   /** 通过 entityId 查 entity (供 bridge.ts 找最近敌人用) */
   getEntity(eid: EntityId): SimEntity | undefined {
     return this.state.entities[eid];
+  }
+
+  /** Day33: 学技能 */
+  applyLearnSkill(entityId: EntityId, skillId: string): { ok: boolean; reason: string; events: GameEvent[] } {
+    const r = learnSkill(this.state, entityId, skillId);
+    if (r.success) {
+      this.state = r.newState;
+      this.unconsumedEvents.push(...r.events);
+    }
+    return { ok: r.success, reason: r.reason, events: r.events };
+  }
+
+  /** Day33: 从背包装备 */
+  applyEquip(entityId: EntityId, templateId: string): { ok: boolean; events: GameEvent[] } {
+    const r = equipFromInventory(this.state, entityId, templateId);
+    if (r.events.length > 0) {
+      this.state = r.newState;
+      this.unconsumedEvents.push(...r.events);
+      return { ok: true, events: r.events };
+    }
+    return { ok: false, events: [] };
+  }
+
+  /**
+   * Day35: 进入副本 — 替换 layout + 注入 boss/怪, 保留玩家进度
+   */
+  enterDungeonRun(dungeonId: string = 'cave_1'): { ok: boolean; name: string } {
+    const player = Object.values(this.state.entities).find((e) => e.kind === 'player');
+    const loot = ITEM_TABLE.slice(0, 4);
+    const dungeon: DungeonConfig = {
+      id: dungeonId,
+      name: dungeonId === 'cave_1' ? '百鬼洞窟' : dungeonId,
+      recommendedPartySize: 3,
+      bossId: `e_boss_${dungeonId}` as EntityId,
+      lootTable: loot,
+      bossLevel: Math.max(3, player?.level ?? 5),
+    };
+    const entered = enterDungeon(this.state, dungeon);
+    // 把玩家带进副本 (保留属性)
+    let s = entered.state;
+    if (player) {
+      const spawn = entered.layout.spawnPoints[0] ?? { x: 5, y: 5 };
+      s = addEntity(s, {
+        ...player,
+        pos: { x: spawn.x, y: spawn.y },
+        hp: Math.max(1, player.hp),
+      });
+    }
+    this.state = s;
+    this.layout = entered.layout;
+    log.info(`[room ${this.id}] entered dungeon ${dungeon.name}`);
+    return { ok: true, name: dungeon.name };
   }
 }

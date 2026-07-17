@@ -29,6 +29,7 @@ import { PvpPanel } from './pvp-panel';
 import { SaveLoadPanel, readSave, applySaveToGame } from './save-load';
 import { SettingsPanel } from './settings-panel';
 import { StatusBar } from './status-bar';
+import { Minimap } from './minimap';
 import { GameClient, defaultWsUrl, defaultRoomId } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
@@ -54,6 +55,7 @@ class BrowserHost {
   saveLoad: SaveLoadPanel;
   settings: SettingsPanel;
   statusBar: StatusBar;
+  minimap: Minimap;
   client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
@@ -90,6 +92,8 @@ class BrowserHost {
     this.settings = new SettingsPanel(container);
     // Day30: 状态条
     this.statusBar = new StatusBar(this.game, container);
+    // Day36: 小地图
+    this.minimap = new Minimap(this.game, container);
     // Day31: 启动自动读档 (仅本地模式, 有存档则应用)
     try {
       const save = readSave();
@@ -138,6 +142,7 @@ class BrowserHost {
     this.saveLoad.dispose();
     this.settings.dispose();
     this.statusBar.dispose();
+    this.minimap.dispose();
     this.advisor.dispose();
   }
 }

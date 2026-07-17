@@ -121,3 +121,10 @@ export class RoomPool {
     return total;
   }
 }
+
+/** Day16: 校验 roomId (防路径注入, 只允许字母数字 -_) */
+export function sanitizeRoomId(raw: unknown): string {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 64) return 'room-0';
+  if (!/^[a-zA-Z0-9_-]+$/.test(raw)) return 'room-0';
+  return raw;
+}

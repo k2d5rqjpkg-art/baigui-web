@@ -73,9 +73,9 @@ export class GameClient {
     this.connect();
   }
 
-  /** 发送 hello 加入房间 */
-  hello(slotId: number): void {
-    this.send({ type: 'hello', slotId });
+  /** 发送 hello 加入房间 (Day16: 可选 roomId) */
+  hello(slotId: number, roomId?: string): void {
+    this.send({ type: 'hello', slotId, ...(roomId ? { roomId } : {}) });
   }
 
   /** 发送 Discrete intent (0..5) */

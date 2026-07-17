@@ -30,6 +30,7 @@ import { SaveLoadPanel, readSave, applySaveToGame } from './save-load';
 import { SettingsPanel } from './settings-panel';
 import { StatusBar } from './status-bar';
 import { Minimap } from './minimap';
+import { SkillHotbar } from './hotbar';
 import { GameClient, defaultWsUrl, defaultRoomId } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
@@ -56,6 +57,7 @@ class BrowserHost {
   settings: SettingsPanel;
   statusBar: StatusBar;
   minimap: Minimap;
+  hotbar: SkillHotbar;
   client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
@@ -94,6 +96,8 @@ class BrowserHost {
     this.statusBar = new StatusBar(this.game, container);
     // Day36: 小地图
     this.minimap = new Minimap(this.game, container);
+    // Day39: 技能热键 1-3
+    this.hotbar = new SkillHotbar(this.game, container);
     // Day31: 启动自动读档 (仅本地模式, 有存档则应用)
     try {
       const save = readSave();
@@ -143,6 +147,7 @@ class BrowserHost {
     this.settings.dispose();
     this.statusBar.dispose();
     this.minimap.dispose();
+    this.hotbar.dispose();
     this.advisor.dispose();
   }
 }

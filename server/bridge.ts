@@ -336,6 +336,14 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { ok: r.ok, name: r.name, snapshot: room.getSnapshot() });
     }
 
+    // Day38: 复活
+    if (req.method === 'POST' && url.pathname === '/respawn') {
+      const body = await readJson(req);
+      const entityId = (body.entityId ?? ROOM_PLAYER_ID) as import('../src/core/sim/types.js').EntityId;
+      const ok = room.respawnPlayer(entityId);
+      return send(res, ok ? 200 : 400, { ok, snapshot: room.getSnapshot() });
+    }
+
     send(res, 404, { error: 'not found', path: url.pathname });
   } catch (err) {
     log.error('[bridge] handler error:', err);

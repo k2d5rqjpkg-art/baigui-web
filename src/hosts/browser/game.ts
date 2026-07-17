@@ -26,7 +26,7 @@ import {
   ITEM_TABLE,
   equipFromInventory,
 } from '../../core/sim';
-import { enterDungeon, type DungeonConfig } from '../../core/sim/dungeon';
+import { enterDungeon, distributeLoot, type DungeonConfig } from '../../core/sim/dungeon';
 import { gainXp, killRewardXp, getXp, getXpToNext } from '../../core/sim/progression';
 import { gainSkillPointsOnLevelUp, getSkillPoints, learnSkill } from '../../core/sim/skills';
 import type {
@@ -127,6 +127,10 @@ export class BrowserGame {
 
   // 玩家击杀回调 (用于音效/特效) — Day4 占位, 主流程暂未订阅
   onPlayerKill?: (monsterId: EntityId) => void;
+  /** Day37: 本地副本 */
+  private activeDungeon: DungeonConfig | null = null;
+  /** Day40: 本地连杀 */
+  private localKillStreak = 0;
 
   constructor(options: BrowserGameOptions = {}) {
     this.options = {
@@ -341,8 +345,8 @@ export class BrowserGame {
    */
   respawnPlayer(): boolean {
     if (this.mode === 'network') {
-      log.warn('[game] respawnPlayer not supported in network mode');
-      return false;
+      void this.bridgePost('/respawn', { entityId: this.networkEid });
+      return true;
     }
     const id = BrowserGame.PLAYER_ID;
     const p = this.state.entities[id];
@@ -359,6 +363,7 @@ export class BrowserGame {
         },
       },
     };
+    this.localKillStreak = 0;
     return true;
   }
 
@@ -485,6 +490,7 @@ export class BrowserGame {
     }
     this.state = s;
     this.layout = entered.layout;
+    this.activeDungeon = dungeon;
     log.info('[game] entered dungeon', dungeon.name);
     return true;
   }
@@ -645,6 +651,65 @@ export class BrowserGame {
       if (xpResult.leveledUp) {
         nextState = gainSkillPointsOnLevelUp(nextState, e.source, xpResult.newLevel);
       }
+
+      // Day40 连杀
+      if (e.source === BrowserGame.PLAYER_ID) {
+        this.localKillStreak += 1;
+        if (this.localKillStreak >= 2) {
+          allEvents.push({
+            type: 'unknown_action',
+            source: e.source,
+            target: e.target,
+            data: { reason: `kill_streak_${this.localKillStreak}` },
+            tick: nextState.tick,
+          });
+        }
+      }
+
+      // Day37 boss 掉落
+      if (this.activeDungeon && victim && String(victim.id) === String(this.activeDungeon.bossId)) {
+        const loot = distributeLoot(
+          this.activeDungeon.lootTable,
+          [{ id: e.source, damageDealt: 999 }],
+          nextState.rng,
+        );
+        const k = nextState.entities[e.source];
+        if (k) {
+          const newInv = [...k.inventory];
+          for (const entry of loot.entries) {
+            if (entry.recipientId === e.source) {
+              newInv.push(entry.itemId);
+              allEvents.push({
+                type: 'pickup',
+                source: e.source,
+                target: null,
+                data: {
+                  slot: entry.template.slot,
+                  item: entry.itemId,
+                  itemName: entry.template.name,
+                },
+                tick: nextState.tick,
+              });
+            }
+          }
+          nextState = {
+            ...nextState,
+            entities: { ...nextState.entities, [e.source]: { ...k, inventory: newInv } },
+          };
+          allEvents.push({
+            type: 'unknown_action',
+            source: e.source,
+            target: e.target,
+            data: { reason: `dungeon_clear:${this.activeDungeon.name}` },
+            tick: nextState.tick,
+          });
+          this.activeDungeon = null;
+        }
+      }
+    }
+
+    for (const e of result.events) {
+      if (e.type === 'death' && e.target === BrowserGame.PLAYER_ID) this.localKillStreak = 0;
     }
 
     // 更新状态 (sim 返回新 state, 我们替换)

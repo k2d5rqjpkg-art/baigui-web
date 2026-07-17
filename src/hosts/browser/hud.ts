@@ -108,7 +108,7 @@ export class GameHud {
     `;
     bottomLeft.innerHTML = `
       <div style="color:#d4a017;margin-bottom:3px">操作</div>
-      <div>WASD · J 攻击 · K 技能 · I 背包 · G 副本 · P PvP · O 存档 · Esc 设置</div>
+      <div>WASD · J 攻击 · 1-3 技能 · K 树 · I 包 · G 本 · P PvP · O 档 · Esc</div>
     `;
     this.root.appendChild(bottomLeft);
     this.helpBox = bottomLeft;
@@ -256,10 +256,23 @@ export class GameHud {
         // 太多 move 事件会刷屏, 跳过
         return;
       }
-      case 'unknown_action':
+      case 'unknown_action': {
+        const reason = 'reason' in e.data ? String(e.data.reason) : '';
+        if (reason.startsWith('kill_streak_')) {
+          const n = reason.replace('kill_streak_', '');
+          text = `🔥 ${n} 连杀!`;
+          color = '#ff8844';
+          break;
+        }
+        if (reason.startsWith('dungeon_clear:')) {
+          text = `🏆 通关 ${reason.slice('dungeon_clear:'.length)} · 战利品入包`;
+          color = '#ffd700';
+          break;
+        }
         text = `无效操作`;
         color = '#888';
         break;
+      }
       default:
         return;
     }

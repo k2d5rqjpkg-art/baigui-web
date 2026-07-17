@@ -36,7 +36,7 @@ import { log } from '../src/core/log.js';
 import type { PersistenceLayer } from './persistence.js';
 import { gainXp, killRewardXp } from '../src/core/sim/progression.js';
 import { gainSkillPointsOnLevelUp, learnSkill } from '../src/core/sim/skills.js';
-import { enterDungeon, type DungeonConfig } from '../src/core/sim/dungeon.js';
+import { enterDungeon, distributeLoot, type DungeonConfig } from '../src/core/sim/dungeon.js';
 
 const MAX_PLAYERS = 4;
 
@@ -64,6 +64,11 @@ export class GameRoom {
   content: import('./quest.js').RoomContent = { quest: null, npcs: [], generatedAt: 0 };
   /** v2.0: 持久化层 (可选, 默认 null 用 memory) */
   persistence: PersistenceLayer | null = null;
+
+  /** Day35: 当前副本配置 (通关发奖用) */
+  activeDungeon: DungeonConfig | null = null;
+  /** Day40: 玩家连杀 */
+  private killStreaks = new Map<string, number>();
 
   constructor(id: string) {
     this.id = id;
@@ -304,6 +309,69 @@ export class GameRoom {
           `[room ${this.id}] ${e.source} +${xp}xp → lv${xpResult.newLevel} (+1 skill point)`,
         );
       }
+
+      // Day40: 连杀
+      const streak = (this.killStreaks.get(e.source) ?? 0) + 1;
+      this.killStreaks.set(e.source, streak);
+      if (streak >= 2) {
+        allEvents.push({
+          type: 'unknown_action',
+          source: e.source,
+          target: e.target,
+          data: { reason: `kill_streak_${streak}` },
+          tick: nextState.tick,
+        });
+      }
+
+      // Day37: boss 通关掉落
+      if (this.activeDungeon && victim && String(victim.id) === String(this.activeDungeon.bossId)) {
+        const loot = distributeLoot(
+          this.activeDungeon.lootTable,
+          [{ id: e.source, damageDealt: 999 }],
+          nextState.rng,
+        );
+        const k = nextState.entities[e.source];
+        if (k) {
+          const newInv = [...k.inventory];
+          for (const entry of loot.entries) {
+            if (entry.recipientId === e.source) {
+              newInv.push(entry.itemId);
+              allEvents.push({
+                type: 'pickup',
+                source: e.source,
+                target: null,
+                data: {
+                  slot: entry.template.slot,
+                  item: entry.itemId,
+                  itemName: entry.template.name,
+                },
+                tick: nextState.tick,
+              });
+            }
+          }
+          nextState = {
+            ...nextState,
+            entities: {
+              ...nextState.entities,
+              [e.source]: { ...k, inventory: newInv },
+            },
+          };
+          allEvents.push({
+            type: 'unknown_action',
+            source: e.source,
+            target: e.target,
+            data: { reason: `dungeon_clear:${this.activeDungeon.name}` },
+            tick: nextState.tick,
+          });
+          log.info(`[room ${this.id}] dungeon cleared: ${this.activeDungeon.name}`);
+          this.activeDungeon = null;
+        }
+      }
+    }
+
+    // 玩家死亡清连杀
+    for (const e of result.events) {
+      if (e.type === 'death' && e.target) this.killStreaks.delete(e.target);
     }
 
     this.state = nextState;
@@ -391,7 +459,28 @@ export class GameRoom {
     }
     this.state = s;
     this.layout = entered.layout;
+    this.activeDungeon = dungeon;
     log.info(`[room ${this.id}] entered dungeon ${dungeon.name}`);
     return { ok: true, name: dungeon.name };
+  }
+
+  /** Day38: 网络复活 */
+  respawnPlayer(entityId: EntityId): boolean {
+    const p = this.state.entities[entityId];
+    if (!p) return false;
+    const spawn = this.layout.spawnPoints[0] ?? { x: 5, y: 5 };
+    this.state = {
+      ...this.state,
+      entities: {
+        ...this.state.entities,
+        [entityId]: {
+          ...p,
+          hp: p.maxHp,
+          pos: { x: spawn.x, y: spawn.y },
+        },
+      },
+    };
+    this.killStreaks.delete(entityId);
+    return true;
   }
 }

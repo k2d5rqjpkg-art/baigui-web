@@ -160,7 +160,6 @@ export function expandQuest(
   // LLM 装饰 (失败 fallback)
   let title: string;
   let description: string;
-  let objective: string;
   if (apiKey) {
     try {
       // 简化: 实际 LLM 调用放 server 端, 客户端只 sync 模板
@@ -178,7 +177,7 @@ export function expandQuest(
     description = `在 ${template.biome} 区域, ${template.baseHint}`;
   }
 
-  objective = `完成 ${template.kind} 任务: ${template.target} ×${template.count}`;
+  const objective = `完成 ${template.kind} 任务: ${template.target} ×${template.count}`;
   const reward = template.rewardTemplate;
 
   return { title, description, objective, reward };

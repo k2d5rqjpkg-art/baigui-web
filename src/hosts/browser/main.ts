@@ -22,6 +22,7 @@ import { BrowserGame } from './game';
 import type { GameRenderer } from './renderer';
 import { GameInput } from './input';
 import { GameHud } from './hud';
+import { AdvisorPanel } from './advisor-panel';
 import { GameClient, defaultWsUrl } from './network';
 import { log } from '../../core/log';
 /// <reference types="vite/client" />
@@ -40,6 +41,7 @@ class BrowserHost {
   renderer: GameRenderer | null = null;  // 异步加载, 加载完才有
   input: GameInput;
   hud: GameHud;
+  advisor: AdvisorPanel;
   client: GameClient | null = null;
 
   constructor(container: HTMLElement) {
@@ -60,6 +62,12 @@ class BrowserHost {
     this.game = new BrowserGame({ tickHz: 20, networkClient: this.client });
     this.input = new GameInput(this.game);
     this.hud = new GameHud(this.game, container);
+    // v1.1: AI 顾问面板 (1Hz 调 LLM/fallback, 无 key 时也跑)
+    this.advisor = new AdvisorPanel(container);
+    this.advisor.start(
+      () => this.game.getState(),
+      () => this.game.getEntities().find((e) => e.kind === 'player') || null,
+    );
 
     // HUD 主动刷新 (HP/level 变化)
     setInterval(() => this.hud.refresh(), 200);
@@ -85,6 +93,7 @@ class BrowserHost {
     this.renderer?.dispose();
     this.input.dispose();
     this.hud.dispose();
+    this.advisor.dispose();
   }
 }
 

@@ -16,6 +16,8 @@
 
 import type { QuestJson } from "./prompts/quest.js";
 import type { DialogueJson } from "./prompts/dialogue.js";
+import type { SimEntity, GameState } from "../sim/types.js";
+import type { AdvisorSuggestion, AdvisorGoal } from "./advisor-types.js";
 
 const QUESTS_BY_LEVEL: Record<number, QuestJson> = {
   1: {
@@ -101,3 +103,121 @@ export const _fallbackTables = {
   quests: QUESTS_BY_LEVEL,
   npcs: NPCS,
 } as const;
+
+// ============ AI Advisor fallback (v1.1) ============
+
+/**
+ * 启发式建议 — 无 LLM key 时使用
+ * 规则:
+ *   - HP < 30%: retreat (后退)
+ *   - HP < 70% 且邻接有 monster: 先 attack (再考虑 retreat)
+ *   - 邻接 monster: attack
+ *   - 邻接 NPC: talk
+ *   - 周围有 item: 走过去捡 (move toward nearest)
+ *   - 默认: 随机 explore 方向
+ */
+export function fallbackAdvisor(player: SimEntity, state: GameState): AdvisorSuggestion {
+  const hpRatio = player.hp / Math.max(1, player.maxHp);
+  const playerPos = player.pos;
+
+  // 找最近 monster
+  const monsters = Object.values(state.entities).filter((e) => e.kind === 'monster');
+  const adjacentMonster = monsters.find(
+    (m) => Math.abs(m.pos.x - playerPos.x) <= 1 && Math.abs(m.pos.y - playerPos.y) <= 1,
+  );
+
+  // 找最近 NPC (10 步内)
+  const npcs = (state as any).content?.npcs || [];
+  const nearbyNpc = npcs.find(
+    (n: any) => Math.abs(n.pos.x - playerPos.x) <= 1 && Math.abs(n.pos.y - playerPos.y) <= 1,
+  );
+
+  // 找最近 item
+  const items = Object.values(state.entities).filter((e) => e.kind === 'item');
+  const nearestItem = items
+    .map((i) => ({ i, d: Math.abs(i.pos.x - playerPos.x) + Math.abs(i.pos.y - playerPos.y) }))
+    .sort((a, b) => a.d - b.d)[0];
+
+  let goal: AdvisorGoal;
+  let action: AdvisorSuggestion['nextAction'];
+  let reason: string;
+
+  if (hpRatio < 0.3 && adjacentMonster) {
+    // 撤退: 远离最近的怪
+    goal = 'retreat';
+    const dx = playerPos.x - adjacentMonster.pos.x;
+    const dy = playerPos.y - adjacentMonster.pos.y;
+    action = {
+      type: 'move',
+      entityId: player.id,
+      payload: {
+        dx: dx > 0 ? 1 : dx < 0 ? -1 : 0,
+        dy: dy > 0 ? 1 : dy < 0 ? -1 : 0,
+      },
+    };
+    reason = `HP ${(hpRatio * 100).toFixed(0)}%, 撤退`;
+  } else if (adjacentMonster) {
+    goal = 'attack';
+    action = {
+      type: 'attack',
+      entityId: player.id,
+      payload: { targetId: adjacentMonster.id },
+    };
+    reason = `邻接怪物 ${adjacentMonster.id}, 攻击`;
+  } else if (nearbyNpc) {
+    goal = 'talk';
+    action = {
+      type: 'move',
+      entityId: player.id,
+      payload: { dx: 0, dy: 0 }, // 当前已邻接, 触发对话是 J 键
+    };
+    reason = `邻接 NPC ${nearbyNpc.name}, 对话`;
+  } else if (monsters.length > 0) {
+    // 朝最近 monster 走
+    const nearest = monsters
+      .map((m) => ({ m, d: Math.abs(m.pos.x - playerPos.x) + Math.abs(m.pos.y - playerPos.y) }))
+      .sort((a, b) => a.d - b.d)[0];
+    if (nearest) {
+      goal = 'attack';
+      const dx = nearest.m.pos.x - playerPos.x;
+      const dy = nearest.m.pos.y - playerPos.y;
+      action = {
+        type: 'move',
+        entityId: player.id,
+        payload: {
+          dx: dx > 0 ? 1 : dx < 0 ? -1 : 0,
+          dy: dy > 0 ? 1 : dy < 0 ? -1 : 0,
+        },
+      };
+      reason = `向最近怪 ${nearest.m.id} 移动`;
+    } else {
+      goal = 'idle';
+      action = { type: 'move', entityId: player.id, payload: { dx: 0, dy: 0 } };
+      reason = '无事可做';
+    }
+  } else if (nearestItem && nearestItem.d > 0) {
+    goal = 'explore';
+    const dx = nearestItem.i.pos.x - playerPos.x;
+    const dy = nearestItem.i.pos.y - playerPos.y;
+    action = {
+      type: 'move',
+      entityId: player.id,
+      payload: {
+        dx: dx > 0 ? 1 : dx < 0 ? -1 : 0,
+        dy: dy > 0 ? 1 : dy < 0 ? -1 : 0,
+      },
+    };
+    reason = `捡物品 ${nearestItem.i.id}`;
+  } else {
+    goal = 'idle';
+    action = { type: 'move', entityId: player.id, payload: { dx: 0, dy: 0 } };
+    reason = '等待玩家操作';
+  }
+
+  return {
+    goal,
+    nextAction: action,
+    reason,
+    source: 'fallback',
+  };
+}

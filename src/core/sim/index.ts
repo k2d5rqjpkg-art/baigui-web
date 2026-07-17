@@ -43,7 +43,7 @@ export { pickup, equipFromInventory, getItemTemplate, sumAffixes, ITEM_TABLE } f
 export type { PickupResult } from './items';
 export { generateEncounter } from './encounters';
 export { worldGen } from './world';
-
+export { Recorder, replay, type ReplayFrame, type ReplayResult } from './replay';
 // 核心入口
 export { tick, emptyState, addEntity } from './tick';
 export type { TickOptions, TickResult } from './tick';

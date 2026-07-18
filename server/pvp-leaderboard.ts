@@ -117,25 +117,153 @@ class PostgresLeaderboard implements LeaderboardStorage {
   }
 
   async loadAllEntries(): Promise<LeaderboardEntry[]> {
-    // 简化: 用 raw query (persistence interface 没通用 list)
-    // 实际生产应该扩展 PersistenceLayer 加 leaderboard 方法
-    return [];
+    if (!('pool' in this.persistence)) return [];
+    const client = await (
+      this.persistence as {
+        pool: {
+          connect: () => Promise<{
+            query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+            release: () => void;
+          }>;
+        };
+      }
+    ).pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT player_id, rating, wins, losses, last_match_at FROM leaderboard ORDER BY rating DESC',
+        [],
+      );
+      return (result.rows as Array<Record<string, unknown>>).map((row) => ({
+        playerId: String(row.player_id),
+        rating: Number(row.rating),
+        wins: Number(row.wins),
+        losses: Number(row.losses),
+        lastMatchAt: Number(row.last_match_at),
+      }));
+    } finally {
+      client.release();
+    }
   }
 
   async loadEntry(playerId: string): Promise<LeaderboardEntry | null> {
-    return null;
+    if (!('pool' in this.persistence)) return null;
+    const client = await (
+      this.persistence as {
+        pool: {
+          connect: () => Promise<{
+            query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+            release: () => void;
+          }>;
+        };
+      }
+    ).pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT player_id, rating, wins, losses, last_match_at FROM leaderboard WHERE player_id = $1',
+        [playerId],
+      );
+      const row = result.rows[0] as Record<string, unknown> | undefined;
+      if (!row) return null;
+      return {
+        playerId: String(row.player_id),
+        rating: Number(row.rating),
+        wins: Number(row.wins),
+        losses: Number(row.losses),
+        lastMatchAt: Number(row.last_match_at),
+      };
+    } finally {
+      client.release();
+    }
   }
 
   async saveEntry(entry: LeaderboardEntry): Promise<void> {
-    log.debug(`[leaderboard/pg] save ${entry.playerId} rating=${entry.rating}`);
+    if (!('pool' in this.persistence)) return;
+    const client = await (
+      this.persistence as {
+        pool: {
+          connect: () => Promise<{
+            query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+            release: () => void;
+          }>;
+        };
+      }
+    ).pool.connect();
+    try {
+      await client.query(
+        `INSERT INTO leaderboard (player_id, rating, wins, losses, last_match_at)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (player_id) DO UPDATE SET
+           rating = $2, wins = $3, losses = $4, last_match_at = $5`,
+        [entry.playerId, entry.rating, entry.wins, entry.losses, entry.lastMatchAt],
+      );
+    } finally {
+      client.release();
+    }
   }
 
   async saveMatchResult(result: MatchResult): Promise<void> {
-    log.debug(`[leaderboard/pg] save match ${result.matchId}`);
+    if (!('pool' in this.persistence)) return;
+    const client = await (
+      this.persistence as {
+        pool: {
+          connect: () => Promise<{
+            query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+            release: () => void;
+          }>;
+        };
+      }
+    ).pool.connect();
+    try {
+      await client.query(
+        `INSERT INTO pvp_matches (match_id, player_a, player_b, winner_a, new_rating_a, new_rating_b, delta_a, played_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (match_id) DO NOTHING`,
+        [
+          result.matchId,
+          result.playerA,
+          result.playerB,
+          result.winnerA,
+          result.newRatingA,
+          result.newRatingB,
+          result.deltaA,
+          result.playedAt,
+        ],
+      );
+    } finally {
+      client.release();
+    }
   }
 
   async loadRecentMatches(limit: number): Promise<MatchResult[]> {
-    return [];
+    if (!('pool' in this.persistence)) return [];
+    const client = await (
+      this.persistence as {
+        pool: {
+          connect: () => Promise<{
+            query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+            release: () => void;
+          }>;
+        };
+      }
+    ).pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM pvp_matches ORDER BY played_at DESC LIMIT $1',
+        [limit],
+      );
+      return (result.rows as Array<Record<string, unknown>>).map((row) => ({
+        matchId: String(row.match_id),
+        playerA: String(row.player_a),
+        playerB: String(row.player_b),
+        winnerA: row.winner_a === null ? null : Boolean(row.winner_a),
+        newRatingA: Number(row.new_rating_a),
+        newRatingB: Number(row.new_rating_b),
+        deltaA: Number(row.delta_a),
+        playedAt: Number(row.played_at),
+      }));
+    } finally {
+      client.release();
+    }
   }
 
   async close(): Promise<void> {
@@ -147,10 +275,10 @@ class PostgresLeaderboard implements LeaderboardStorage {
 export async function createLeaderboard(
   persistence: PersistenceLayer | null,
 ): Promise<LeaderboardStorage> {
-  if (persistence) {
-    // 真要 PG 时, 应该让 leaderboard 直接用 pg client
-    // 简化: 暂用 memory (接口预留)
-    return new MemoryLeaderboard();
+  if (persistence && 'pool' in persistence) {
+    const storage = new PostgresLeaderboard(persistence);
+    await storage.init();
+    return storage;
   }
   return new MemoryLeaderboard();
 }

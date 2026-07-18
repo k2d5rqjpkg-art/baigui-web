@@ -10,9 +10,20 @@
  *   - 学习技能: 解锁 + 永久
  *   - 学习后的技能提供 passive 加成
  */
-import type { GameState, SimEntity, EntityId, GameEvent } from './types';
+import type {
+  GameState,
+  SimEntity,
+  EntityId,
+  GameEvent,
+  ClassKind,
+  ClassData,
+  SkillLearnedData,
+  EntityData,
+  KillStreakData,
+  GameEventData,
+} from './types';
 
-export type ClassKind = 'warrior' | 'mage' | 'rogue';
+export type { ClassKind } from './types';
 
 export type SkillTier = 'basic' | 'advanced' | 'master';
 
@@ -378,26 +389,12 @@ export const SKILL_LIBRARY: Record<string, Skill> = {
   },
 };
 
-/** 玩家学过的技能 id 列表 (存 SimEntity.buffs 或新字段) */
-// 借用 buffs 数组: { type: 'skill_learned', skillId }
-export interface SkillLearnedBuff {
-  type: 'skill_learned';
-  skillId: string;
-}
-
-/** 玩家职业 + 学过的技能 (存 buffs) */
-export interface ClassInfoBuff {
-  type: 'class';
-  classKind: ClassKind;
-  skillPoints: number;
-}
-
 /** 获取 entity 已学技能 */
 export function getLearnedSkills(entity: SimEntity): string[] {
   const skills: string[] = [];
-  for (const b of entity.buffs) {
-    if ((b as any).type === 'skill_learned') {
-      skills.push((b as any).skillId);
+  for (const d of entity.buffs) {
+    if (d.type === 'skill_learned') {
+      skills.push(d.skillId);
     }
   }
   return skills;
@@ -405,9 +402,9 @@ export function getLearnedSkills(entity: SimEntity): string[] {
 
 /** 获取 entity 职业 (默认 warrior) */
 export function getClass(entity: SimEntity): ClassKind {
-  for (const b of entity.buffs) {
-    if ((b as any).type === 'class') {
-      return (b as any).classKind as ClassKind;
+  for (const d of entity.buffs) {
+    if (d.type === 'class') {
+      return d.classKind;
     }
   }
   return 'warrior';
@@ -415,9 +412,9 @@ export function getClass(entity: SimEntity): ClassKind {
 
 /** 获取 entity 技能点 */
 export function getSkillPoints(entity: SimEntity): number {
-  for (const b of entity.buffs) {
-    if ((b as any).type === 'class') {
-      return (b as any).skillPoints ?? 0;
+  for (const d of entity.buffs) {
+    if (d.type === 'class') {
+      return d.skillPoints;
     }
   }
   return 0;
@@ -427,15 +424,18 @@ export function getSkillPoints(entity: SimEntity): number {
 export function gainSkillPointsOnLevelUp(
   state: GameState,
   entityId: EntityId,
-  newLevel: number,
+  _newLevel: number,
 ): GameState {
   const entity = state.entities[entityId];
   if (!entity) return state;
   const points = getSkillPoints(entity) + 1;
   const classKind = getClass(entity);
-  const newBuffs = entity.buffs.filter((b) => (b as any).type !== 'class');
-  newBuffs.push({ type: 'class', classKind, skillPoints: points } as any);
-  return { ...state, entities: { ...state.entities, [entityId]: { ...entity, buffs: newBuffs } } };
+  const newBuffs: EntityData[] = entity.buffs.filter((d) => d.type !== 'class');
+  newBuffs.push({ type: 'class', classKind, skillPoints: points });
+  return {
+    ...state,
+    entities: { ...state.entities, [entityId]: { ...entity, buffs: newBuffs } },
+  };
 }
 
 /** 学技能结果 */
@@ -489,7 +489,12 @@ export function learnSkill(
   // 检查前置
   for (const prereq of skill.prereq) {
     if (!learned.includes(prereq)) {
-      return { newState: state, success: false, reason: `missing prereq: ${prereq}`, events: [] };
+      return {
+        newState: state,
+        success: false,
+        reason: `missing prereq: ${prereq}`,
+        events: [],
+      };
     }
   }
 
@@ -500,13 +505,14 @@ export function learnSkill(
   }
 
   // 应用: 扣 1 点 + 保留已学技能 + 加新 skill_learned + 更新 class
-  const newClassInfo: ClassInfoBuff = {
+  const newClassInfo: ClassData = {
     type: 'class',
     classKind: entityClass,
     skillPoints: points - 1,
   };
-  const kept = entity.buffs.filter((b) => (b as any).type !== 'class');
-  const newBuffs = [...kept, newClassInfo as any, { type: 'skill_learned', skillId } as any];
+  const newSkill: SkillLearnedData = { type: 'skill_learned', skillId };
+  const kept = entity.buffs.filter((d) => d.type !== 'class');
+  const newBuffs: EntityData[] = [...kept, newClassInfo, newSkill];
 
   // 加 bonuses 到 entity stats
   let atk = entity.atk,
@@ -532,11 +538,12 @@ export function learnSkill(
     buffs: newBuffs,
   };
 
+  const eventData: GameEventData = { newLevel: entity.level };
   const event: GameEvent = {
-    type: 'level_up', // 复用 level_up event, data 含 skillId
+    type: 'level_up',
     source: entityId,
     target: entityId,
-    data: { newLevel: 0 } as any, // TODO: 加 SkillLearnedData
+    data: eventData,
     tick: state.tick,
   };
 

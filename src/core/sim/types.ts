@@ -49,6 +49,7 @@ export interface ItemTemplate {
 // ============ Buff ============
 
 export interface Buff {
+  type: 'buff';
   id: string;
   name: string;
   /** 剩余 tick 数 (向下衰减到 0 时移除) */
@@ -58,6 +59,42 @@ export interface Buff {
   /** 防御加成 (可选) */
   defenseBonus?: number;
 }
+
+// ============ 职业 / 经验 / 技能状态 ============
+
+export type ClassKind = 'warrior' | 'mage' | 'rogue';
+
+/** 经验值条目 (存 buffs) */
+export interface XpData {
+  type: 'xp';
+  xp: number;
+}
+
+/** 职业信息 (存 buffs) */
+export interface ClassData {
+  type: 'class';
+  classKind: ClassKind;
+  skillPoints: number;
+}
+
+/** 已学技能 (存 buffs) */
+export interface SkillLearnedData {
+  type: 'skill_learned';
+  skillId: string;
+}
+
+/** 连杀计数 (存 buffs) */
+export interface KillStreakData {
+  type: 'kill_streak';
+  count: number;
+}
+
+/**
+ * EntityData —— 判别联合类型
+ * SimEntity.buffs 从 Buff[] → EntityData[],
+ * 消除所有 (entity.buffs[i] as any).type 强制转换
+ */
+export type EntityData = Buff | XpData | ClassData | SkillLearnedData | KillStreakData;
 
 // ============ SimEntity ============
 
@@ -80,8 +117,8 @@ export interface SimEntity {
   inventory: string[];
   /** 装备:slot → 物品模板 id。同 slot 只能有一件。 */
   equipment: Partial<Record<EquipSlot, string>>;
-  /** Buff 列表 */
-  buffs: Buff[];
+  /** 实体数据列表 (Buff / Xp / Class / Skill / KillStreak) */
+  buffs: EntityData[];
 }
 
 // ============ Action ============

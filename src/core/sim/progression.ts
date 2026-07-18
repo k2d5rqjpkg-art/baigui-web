@@ -9,7 +9,7 @@
  *   - levelUp: 提升 atk/def/hp, 推 'level_up' event
  *   - 借鉴 WoC: 用 on_level_up 钩子 (我们用 GameEvent)
  */
-import type { GameState, SimEntity, EntityId, GameEvent } from './types';
+import type { GameState, SimEntity, EntityId, GameEvent, EntityData, XpData } from './types';
 
 export interface ProgressionConfig {
   /** xp 公式: nextLevelXp = BASE * (level ** EXPONENT) */
@@ -46,13 +46,6 @@ export interface XpGainResult {
   events: GameEvent[];
 }
 
-/** 经验值字段 (添加到 SimEntity, 用 inventory? 不行, 用 buffs? 不行) */
-// 借用 SimEntity.buffs 数组存 progression 状态: { type: 'xp', xp, level, level, ... }
-export interface XpBuff {
-  type: 'xp';
-  xp: number;
-}
-
 /** 给 entity 加经验, 检查升级 */
 export function gainXp(
   state: GameState,
@@ -65,11 +58,10 @@ export function gainXp(
     return { newState: state, leveledUp: false, newLevel: 0, totalXpGained: 0, events: [] };
   }
 
-  // 从 buffs 找 xp (类型断言: 我们自己存的 xp buff 一定有 type='xp' 和 xp 字段)
   let currentXp = 0;
-  for (const b of entity.buffs) {
-    if ((b as any).type === 'xp') {
-      currentXp = (b as any).xp ?? 0;
+  for (const d of entity.buffs) {
+    if (d.type === 'xp') {
+      currentXp = d.xp;
       break;
     }
   }
@@ -94,6 +86,10 @@ export function gainXp(
   }
 
   // 更新 entity.level
+  const newXpData: XpData = { type: 'xp', xp: currentXp };
+  const others = entity.buffs.filter((d) => d.type !== 'xp');
+  const newBuffs: EntityData[] = [...others, newXpData];
+
   const updatedEntity: SimEntity = {
     ...entity,
     level: currentLevel,
@@ -101,10 +97,7 @@ export function gainXp(
     maxHp: leveledUp ? entity.maxHp + cfg.hpPerLevel : entity.maxHp,
     atk: leveledUp ? entity.atk + cfg.atkPerLevel : entity.atk,
     def: leveledUp ? entity.def + cfg.defPerLevel : entity.def,
-    buffs: (() => {
-      const others = entity.buffs.filter((b) => (b as any).type !== 'xp');
-      return [...others, { type: 'xp', xp: currentXp } as any];
-    })(),
+    buffs: newBuffs,
   };
 
   return {
@@ -118,15 +111,14 @@ export function gainXp(
 
 /** 杀怪给 xp (基于怪等级) */
 export function killRewardXp(monsterLevel: number): number {
-  // 怪等级 * 10 + 10
   return monsterLevel * 10 + 10;
 }
 
-/** 查 entity 当前经验值 (从 buffs) */
+/** 查 entity 当前经验值 */
 export function getXp(entity: SimEntity): number {
-  for (const b of entity.buffs) {
-    if ((b as any).type === 'xp') {
-      return (b as any).xp ?? 0;
+  for (const d of entity.buffs) {
+    if (d.type === 'xp') {
+      return d.xp;
     }
   }
   return 0;

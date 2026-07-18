@@ -1,5 +1,18 @@
 import * as THREE from 'three';
-import { JobType, EnemyType, JOBS } from '../core/components';
+
+/** 职业类型 (原 src/core/components.ts) */
+type JobType = '书生' | '剑客' | '术士' | '医者';
+
+/** 怪物类型 (原 src/core/components.ts) */
+export type EnemyType = '游魂' | '兵煞' | '妖狐' | '夜叉';
+
+/** 职业定义 (原 src/core/components.ts JOBS) */
+const JOBS: Record<JobType, { name: string; color: string }> = {
+  书生: { name: '书生', color: '#f5e6c8' },
+  剑客: { name: '剑客', color: '#c0392b' },
+  术士: { name: '术士', color: '#8e44ad' },
+  医者: { name: '医者', color: '#2d7d3a' },
+};
 
 const PALETTE = {
   ink: 0x1a1a2e,

@@ -14,14 +14,16 @@
  *   客户端 /state 收到 entities + quest + npcs → HUD 显示
  *   玩家走到 NPC 邻接 (≤1) → 按 J → server 返 dialogue (LLM/fallback)
  *
- * 边界:
- *   - quest level 与 GameRoom level 同步 (Day1 固定 1)
- *   - NPC 数量固定 2 (避免地图太挤)
- *   - NPC 名字从固定池选 (Day6 不让 LLM 生成名字,Day7+ 可扩展)
+ * Day9+: 感知半径 LLM 节流 (借鉴 WoC 1800 AI 私服 "无真人时零 API 调用")
+ *   - 仅玩家周围 PROXIMITY_RADIUS 格内的 NPC 激活 LLM
+ *   - 其他 NPC 静默, 零 API 成本
  */
 
 import { generateQuest, generateDialogue, type QuestJson } from '../src/core/llm/index.js';
 import type { EntityId, SimEntity } from '../src/core/sim/types.js';
+
+/** NPC LLM 激活半径 (曼哈顿距离, 格) */
+export const PROXIMITY_RADIUS = 8;
 
 export interface NpcData {
   /** 唯一 id (不是 EntityId, NPC 不进 sim state) */
@@ -54,6 +56,26 @@ const NPC_NAMES = [
 ] as const;
 
 const BIOMES = ['forest', 'swamp', 'mountain', 'shrine', 'coast'] as const;
+
+/**
+ * 检查 NPC 是否在玩家感知半径内 (曼哈顿距离)
+ * 借鉴 WoC 1800 AI 私服的节流设计 — 无真人时零 API 调用
+ */
+function isNpcInProximity(
+  npcPos: { x: number; y: number },
+  playerPos: { x: number; y: number },
+  radius: number = PROXIMITY_RADIUS,
+): boolean {
+  return Math.abs(npcPos.x - playerPos.x) + Math.abs(npcPos.y - playerPos.y) <= radius;
+}
+
+/**
+ * 获取玩家感知半径内的活跃 NPC 列表
+ * 仅这些 NPC 可触发 LLM 调用, 其余静默
+ */
+export function getActiveNpcs(npcs: NpcData[], playerPos: { x: number; y: number }): NpcData[] {
+  return npcs.filter((npc) => isNpcInProximity(npc.pos, playerPos));
+}
 
 /**
  * 在给定 spawn points 里挑 NPC 位置 (避开已占用的)
@@ -144,10 +166,11 @@ export function findAdjacentNpc(
 }
 
 /**
- * 玩家与 NPC 对话 (有缓存)
+ * 玩家与 NPC 对话 (有缓存, 感知半径内)
  *
  * - 同玩家 (EntityId) 第二次对话返缓存
  * - 不同玩家对话重新生成 (各玩家独立)
+ * - 仅感知半径内的 NPC 激活 LLM (节流)
  */
 export async function talkToNpc(
   npc: NpcData,

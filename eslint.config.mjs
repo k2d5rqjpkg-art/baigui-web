@@ -14,8 +14,7 @@ export default [
       // rl/.venv/ 是 Python virtualenv 里的 JS 文件, 不应被 ESLint 扫
       'rl/.venv/**',
       'rl/**/__pycache__/**',
-      // Day0 旧入口, tsconfig 已排除, ESLint 同步排除
-      'src/main.ts',
+      // tsconfig 排除目录
       // scripts/ 是 Node CLI 入口 (用 process/fs), 不走 browser globals
       'scripts/**',
     ],
@@ -113,6 +112,15 @@ export default [
     // scripts/ 里的 console.log 是给用户看的测试输出,不走 log 分级
     files: ['scripts/**/*.ts'],
     rules: {
+      'no-console': 'off',
+    },
+  },
+  {
+    // __tests__ 里的 as any 不可避免 (mock data, test helpers)
+    files: ['**/__tests__/**/*.ts', 'src/test-helpers/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
       'no-console': 'off',
     },
   },

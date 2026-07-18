@@ -31,12 +31,23 @@ import { tick, emptyState, addEntity } from '../src/core/sim/tick.js';
 import { worldGen } from '../src/core/sim/world.js';
 import { generateEncounter } from '../src/core/sim/encounters.js';
 import { ITEM_TABLE, equipFromInventory } from '../src/core/sim/items.js';
-import { generateRoomContent, talkToNpc, findAdjacentNpc, type NpcData } from './quest.js';
+import {
+  generateRoomContent,
+  talkToNpc,
+  findAdjacentNpc,
+  getActiveNpcs,
+  type NpcData,
+} from './quest.js';
 import { log } from '../src/core/log.js';
 import type { PersistenceLayer } from './persistence.js';
 import { gainXp, killRewardXp } from '../src/core/sim/progression.js';
 import { gainSkillPointsOnLevelUp, learnSkill } from '../src/core/sim/skills.js';
-import { enterDungeon, distributeLoot, type DungeonConfig } from '../src/core/sim/dungeon.js';
+import {
+  enterDungeon,
+  distributeLoot,
+  type DungeonConfig,
+  getDungeonConfig,
+} from '../src/core/sim/dungeon.js';
 
 const MAX_PLAYERS = 4;
 
@@ -317,10 +328,16 @@ export class GameRoom {
       allEvents.push(...xpResult.events);
       if (xpResult.leveledUp) {
         nextState = gainSkillPointsOnLevelUp(nextState, e.source, xpResult.newLevel);
+        // Day10+: 事件触发 NPC 评论 (升级时周边 NPC 自动评论)
+        this.emitNpcReaction(`玩家${xpResult.newLevel}级了...`, e.source, nextState);
         log.info(
           `[room ${this.id}] ${e.source} +${xp}xp → lv${xpResult.newLevel} (+1 skill point)`,
         );
       }
+
+      // Day10+: 事件触发 NPC 评论 (击败怪物时周边 NPC 自动评论)
+      const victimName = victim?.id ?? '怪物';
+      this.emitNpcReaction(`有妖怪被击败了...`, e.source, nextState);
 
       // Day40: 连杀
       const streak = (this.killStreaks.get(e.source) ?? 0) + 1;
@@ -452,15 +469,20 @@ export class GameRoom {
    */
   enterDungeonRun(dungeonId: string = 'cave_1'): { ok: boolean; name: string } {
     const player = Object.values(this.state.entities).find((e) => e.kind === 'player');
-    const loot = ITEM_TABLE.slice(0, 4);
-    const dungeon: DungeonConfig = {
-      id: dungeonId,
-      name: dungeonId === 'cave_1' ? '百鬼洞窟' : dungeonId,
-      recommendedPartySize: 3,
-      bossId: `e_boss_${dungeonId}` as EntityId,
-      lootTable: loot,
-      bossLevel: Math.max(3, player?.level ?? 5),
-    };
+
+    // 优先用预定义副本配置, 兜底动态生成
+    let dungeon = getDungeonConfig(dungeonId);
+    if (!dungeon) {
+      const loot = ITEM_TABLE.slice(0, 4);
+      dungeon = {
+        id: dungeonId,
+        name: dungeonId,
+        recommendedPartySize: 3,
+        bossId: `e_boss_${dungeonId}` as EntityId,
+        lootTable: loot,
+        bossLevel: Math.max(3, player?.level ?? 5),
+      };
+    }
     const entered = enterDungeon(this.state, dungeon);
     // 把玩家带进副本 (保留属性)
     let s = entered.state;
@@ -497,5 +519,28 @@ export class GameRoom {
     };
     this.killStreaks.delete(entityId);
     return true;
+  }
+
+  /**
+   * Day10+: 事件触发 NPC 评论
+   * 借鉴 WoC 1800 AI 私服的 "事件触发对话" 设计 ——
+   * NPC 对关键玩家行为自动评论, 不依赖 LLM, 零成本
+   */
+  private emitNpcReaction(message: string, sourceId: EntityId, _state: GameState): void {
+    const player = this.state.entities[sourceId];
+    if (!player) return;
+    // 仅感知半径内的活跃 NPC 可发表评论
+    const activeNpcs = getActiveNpcs(this.content.npcs, player.pos);
+    if (activeNpcs.length === 0) return;
+    // 随机选一个活跃 NPC 发表评论
+    const npc = activeNpcs[Math.floor(Math.random() * activeNpcs.length)];
+    if (!npc) return;
+    this.unconsumedEvents.push({
+      type: 'unknown_action',
+      source: sourceId,
+      target: null,
+      data: { reason: `npc_reaction:${npc.name}:${message}` },
+      tick: this.state.tick,
+    });
   }
 }

@@ -144,8 +144,8 @@ async function callLLMAdvisor(
       payload: { targetId: parsed.nextAction.targetId as EntityId },
     };
   } else {
-    // idle: 不发 action, sim 不动
-    action = { type: 'idle' as any, entityId: playerId, payload: {} as any };
+    // idle: 不发 action, sim 不动 — 用 move {dx:0,dy:0} 代替
+    action = { type: 'move', entityId: playerId, payload: { dx: 0, dy: 0 } };
   }
 
   return { goal: parsed.goal, nextAction: action, reason: parsed.reason, source: 'llm' };

@@ -31,6 +31,21 @@ const TICK_DT_MS = Math.floor(1000 / TICK_HZ);
 const roomPool = new RoomPool();
 const defaultRoom = roomPool.getOrCreate('room-0', 1);
 
+// v2.0: 持久化 (异步初始化, 非阻塞)
+(async () => {
+  try {
+    const m = await import('./persistence.js');
+    const p = await m.createPersistence();
+    for (const info of roomPool.list()) {
+      const room = roomPool.getOrCreate(info.id, 1);
+      room.persistence = p;
+    }
+    log.info('[server] persistence initialized');
+  } catch (err) {
+    log.warn('[server] persistence not available (memory-only mode)', err);
+  }
+})();
+
 interface ClientMeta {
   roomId: string;
   entityId: EntityId;

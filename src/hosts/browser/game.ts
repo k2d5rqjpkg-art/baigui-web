@@ -37,6 +37,8 @@ import type {
   MapLayout,
   EntityId,
   ItemTemplate,
+  EntityData,
+  ClassKind,
 } from '../../core/sim';
 import { log } from '../../core/log';
 import type { GameClient, StateMessage, WelcomeMessage } from './network';
@@ -395,10 +397,10 @@ export class BrowserGame {
     const p = this.state.entities[id];
     if (!p) return false;
 
-    const buffs: any[] = [
-      { type: 'class', classKind: save.classKind, skillPoints: save.skillPoints },
+    const buffs: EntityData[] = [
+      { type: 'class', classKind: save.classKind as ClassKind, skillPoints: save.skillPoints },
       { type: 'xp', xp: save.xp },
-      ...save.learnedSkills.map((skillId) => ({ type: 'skill_learned', skillId })),
+      ...save.learnedSkills.map((skillId) => ({ type: 'skill_learned' as const, skillId })),
     ];
 
     this.state = {
@@ -414,7 +416,7 @@ export class BrowserGame {
           def: save.def,
           inventory: [...save.inventory],
           equipment: { ...save.equipment },
-          buffs: buffs as any,
+          buffs,
         },
       },
     };
@@ -581,7 +583,7 @@ export class BrowserGame {
       inventory: [],
       equipment: {},
       // Day18: 默认 warrior + 2 技能点 (可开技能树 K)
-      buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 } as any],
+      buffs: [{ type: 'class', classKind: 'warrior', skillPoints: 2 }],
     });
 
     // 怪物

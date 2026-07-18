@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import type { BrowserGame } from './game';
 import type { SimEntity, GameEvent } from '../../core/sim';
 import { createPlayerTexture, createEnemyTexture, createItemTexture } from '../../entities/sprites';
-import type { EnemyType } from '../../core/components';
+import type { EnemyType } from '../../entities/sprites';
 import { sfx } from '../../render/sfx-gen';
 import { AnimationMixer, ANIMATION_PRESETS } from '../../render/animation-mixer';
 import { terrainToMesh, buildTerrainMesh } from '../../render/terrain-mesh';

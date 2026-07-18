@@ -94,7 +94,7 @@ describe('Day42: Recorder + replay', () => {
     const seed = 7;
     const layout = worldGen(seed, 1);
     const rec = new Recorder(seed);
-    let state = makeWorld(seed);
+    const state = makeWorld(seed);
     const a: Action[] = [
       { type: 'attack', entityId: 'e_p1' as EntityId, payload: { targetId: 'e_m1' as EntityId } },
     ];

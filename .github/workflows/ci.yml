@@ -7,40 +7,81 @@ on:
     branches: [main, master]
 
 jobs:
-  test:
-    name: Typecheck · Lint · Test · Build
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+
+  test:
+    name: Unit + Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          name: coverage-report
+          path: coverage/
 
-      - name: Install (skip postinstall scripts for speed)
-        run: npm ci --ignore-scripts
+  ai-test:
+    name: AI Tests (fuzz + replay + property)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - run: npm run ai:test
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: AI test (fuzz + replay + property)
-        run: npm run ai:test
-
-      - name: Build
-        run: npm run build
-
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - run: npm run build
       - name: Verify bundle size
         run: |
+          echo "=== dist contents ==="
           ls -la dist/assets/ 2>/dev/null || ls -la dist/
-          # 主 bundle 应 < 50KB (gzipped)
-          find dist/ -name "*.js" -size +100k | head -5
+          echo "=== bundles > 100KB ==="
+          find dist/ -name "*.js" -size +100k | head -5 || echo "(none — all under 100KB)"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci --ignore-scripts
+      - name: npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true

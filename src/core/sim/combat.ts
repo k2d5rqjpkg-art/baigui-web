@@ -34,7 +34,7 @@ const BASE_DMG_MIN = 1;
 function attackBuffBonus(entity: SimEntity): number {
   let bonus = 0;
   for (const b of entity.buffs) {
-    if (typeof b.attackBonus === 'number') bonus += b.attackBonus;
+    if (b.type === 'buff' && typeof b.attackBonus === 'number') bonus += b.attackBonus;
   }
   return bonus;
 }
@@ -42,7 +42,7 @@ function attackBuffBonus(entity: SimEntity): number {
 function defenseBuffBonus(entity: SimEntity): number {
   let bonus = 0;
   for (const b of entity.buffs) {
-    if (typeof b.defenseBonus === 'number') bonus += b.defenseBonus;
+    if (b.type === 'buff' && typeof b.defenseBonus === 'number') bonus += b.defenseBonus;
   }
   return bonus;
 }

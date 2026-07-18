@@ -118,7 +118,6 @@ export class SfxEngine {
     } catch (err) {
       // SFX 失败不阻塞游戏
       if ((globalThis as any).__SFX_DEBUG__) {
-        // eslint-disable-next-line no-console
         console.warn('[sfx] play failed:', err);
       }
     }

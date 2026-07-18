@@ -8,7 +8,16 @@
  *             a typed error so callers (index.ts) can fall back to the static table.
  * - Retries:  up to 3 attempts on retryable failures with exponential backoff (500ms, 1s, 2s).
  * - Timeout:  30 s per attempt, via AbortController.
+ * - Async:    non-blocking via Promise; caller can fire-and-forget for NPC background dialogue
+ *             (借鉴 WoC 1800 AI 私服 mod-ollama-chat 的异步线程设计)
+ *
+ * Day11+: LLM Provider 接口抽象 — 支持 DeepSeek / OpenAI 切换
  */
+
+export interface LLMProvider {
+  generate(prompt: string, opts?: GenerateTextOptions): Promise<string>;
+  isAvailable(): boolean;
+}
 
 export interface GenerateTextOptions {
   temperature?: number;
@@ -40,7 +49,6 @@ const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 500;
 
 function getEnv(name: string, fallback?: string): string | undefined {
-  // Node 18+ exposes process.env in both CJS and ESM. Guard for browser/test envs.
   if (typeof process !== 'undefined' && process.env) {
     const v = process.env[name];
     if (v && v.length > 0) return v;
@@ -132,12 +140,10 @@ export async function generateText(
       if (!resp.ok) {
         const status = resp.status;
         const text = await readResponseText(resp);
-        // Non-retryable: 4xx other than 408/409/429
         const retryable = status === 408 || status === 409 || status === 429 || status >= 500;
         const err = new DeepSeekError(`DeepSeek HTTP ${status}: ${text.slice(0, 240)}`, status);
         if (!retryable || attempt === MAX_ATTEMPTS) throw err;
         lastError = err;
-        // fall through to backoff
       } else {
         const data = (await resp.json()) as {
           choices?: Array<{ message?: { content?: string } }>;
@@ -150,14 +156,12 @@ export async function generateText(
       }
     } catch (err) {
       lastError = err;
-      // AbortError / network / fetch-thrown — retry if attempts remain
       const isAbort = err instanceof Error && err.name === 'AbortError';
       const isDeepSeek = err instanceof DeepSeekError;
-      // DeepSeekError already handled its own retry decision above.
       if (isAbort && attempt === MAX_ATTEMPTS) {
         throw new DeepSeekError(`DeepSeek timed out after ${timeoutMs}ms`, undefined, err);
       }
-      if (isDeepSeek) throw err; // already decided non-retryable
+      if (isDeepSeek) throw err;
       if (attempt === MAX_ATTEMPTS) {
         throw new DeepSeekError(
           `DeepSeek request failed after ${MAX_ATTEMPTS} attempts: ${(err as Error).message}`,
@@ -169,17 +173,46 @@ export async function generateText(
       clearTimeout(timer);
     }
 
-    // Exponential backoff: 500ms, 1000ms, 2000ms …
     const wait = BASE_BACKOFF_MS * 2 ** (attempt - 1);
     await sleep(wait);
   }
 
-  // Should be unreachable — loop either returns or throws.
   throw new DeepSeekError(
     `DeepSeek request failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
     undefined,
     lastError,
   );
+}
+
+/** Day11+: LLMProvider 工厂 — 根据环境变量自动选择 DeepSeek / OpenAI */
+export function createLLMProvider(): LLMProvider {
+  const apiKey = getEnv('DEEPSEEK_API_KEY') ?? getEnv('OPENAI_API_KEY');
+  return {
+    async generate(prompt: string, opts?: GenerateTextOptions): Promise<string> {
+      return generateText(prompt, opts);
+    },
+    isAvailable(): boolean {
+      return Boolean(apiKey);
+    },
+  };
+}
+
+export const defaultProvider: LLMProvider = createLLMProvider();
+
+/**
+ * Day11+: 异步 NPC 对话生成 (不阻塞主循环)
+ * 借鉴 WoC 1800 AI 私服 mod-ollama-chat 的异步线程设计:
+ *   "对话在独立线程生成, 不阻塞主服务器循环"
+ * 通过 Promise + callback 实现, Node 端天然异步
+ */
+export function generateAsync(
+  prompt: string,
+  opts: GenerateTextOptions = {},
+  onDone?: (result: string | null, error: Error | null) => void,
+): void {
+  generateText(prompt, opts)
+    .then((result) => onDone?.(result, null))
+    .catch((err) => onDone?.(null, err));
 }
 
 /** Cheap predicate for callers: is the API usable right now (key configured)? */

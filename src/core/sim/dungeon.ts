@@ -19,6 +19,179 @@ export interface DungeonConfig {
   mapSize?: { width: number; height: number };
 }
 
+/**
+ * 预定义副本池 (5 个)
+ *
+ * 每个 dungeon 有独立的 boss、战利品表、推荐等级，
+ * 作为对 REPORT 第 78 行 "5+10 raid" 的基础实现。
+ */
+export const DUNGEON_POOL: Record<string, DungeonConfig> = {
+  cave_1: {
+    id: 'cave_1',
+    name: '百鬼洞窟',
+    recommendedPartySize: 3,
+    bossId: 'e_boss_cave_1',
+    bossLevel: 5,
+    lootTable: [
+      {
+        id: 'sword_iron',
+        name: '玄铁短剑',
+        slot: 'weapon',
+        affixes: [{ key: 'atk', value: 6 }],
+        rarity: 'common',
+      },
+      {
+        id: 'armor_leather',
+        name: '皮甲',
+        slot: 'armor',
+        affixes: [{ key: 'def', value: 5 }],
+        rarity: 'common',
+      },
+      {
+        id: 'ring_focus',
+        name: '凝神戒',
+        slot: 'accessory',
+        affixes: [{ key: 'atk', value: 2 }],
+        rarity: 'common',
+      },
+    ],
+  },
+  temple: {
+    id: 'temple',
+    name: '妖狐神社',
+    recommendedPartySize: 4,
+    bossId: 'e_boss_temple',
+    bossLevel: 8,
+    lootTable: [
+      {
+        id: 'sword_jade',
+        name: '青玉剑',
+        slot: 'weapon',
+        affixes: [{ key: 'atk', value: 10 }],
+        rarity: 'rare',
+      },
+      {
+        id: 'armor_metal',
+        name: '玄铁重甲',
+        slot: 'armor',
+        affixes: [{ key: 'def', value: 9 }],
+        rarity: 'rare',
+      },
+      {
+        id: 'ring_focus',
+        name: '凝神戒',
+        slot: 'accessory',
+        affixes: [{ key: 'atk', value: 2 }],
+        rarity: 'common',
+      },
+    ],
+  },
+  forest: {
+    id: 'forest',
+    name: '迷いの森',
+    recommendedPartySize: 3,
+    bossId: 'e_boss_forest',
+    bossLevel: 6,
+    lootTable: [
+      {
+        id: 'sword_iron',
+        name: '玄铁短剑',
+        slot: 'weapon',
+        affixes: [{ key: 'atk', value: 6 }],
+        rarity: 'common',
+      },
+      {
+        id: 'helm_bronze',
+        name: '青铜盔',
+        slot: 'helm',
+        affixes: [
+          { key: 'def', value: 3 },
+          { key: 'hp', value: 10 },
+        ],
+        rarity: 'common',
+      },
+      {
+        id: 'ring_focus',
+        name: '凝神戒',
+        slot: 'accessory',
+        affixes: [{ key: 'atk', value: 2 }],
+        rarity: 'common',
+      },
+    ],
+  },
+  necropolis: {
+    id: 'necropolis',
+    name: '怨灵墓地',
+    recommendedPartySize: 4,
+    bossId: 'e_boss_necropolis',
+    bossLevel: 10,
+    lootTable: [
+      {
+        id: 'sword_jade',
+        name: '青玉剑',
+        slot: 'weapon',
+        affixes: [{ key: 'atk', value: 10 }],
+        rarity: 'rare',
+      },
+      {
+        id: 'armor_metal',
+        name: '玄铁重甲',
+        slot: 'armor',
+        affixes: [{ key: 'def', value: 9 }],
+        rarity: 'rare',
+      },
+      {
+        id: 'helm_bronze',
+        name: '青铜盔',
+        slot: 'helm',
+        affixes: [
+          { key: 'def', value: 3 },
+          { key: 'hp', value: 10 },
+        ],
+        rarity: 'common',
+      },
+    ],
+  },
+  catacomb: {
+    id: 'catacomb',
+    name: '地底回廊',
+    recommendedPartySize: 5,
+    bossId: 'e_boss_catacomb',
+    bossLevel: 12,
+    lootTable: [
+      {
+        id: 'sword_legendary',
+        name: '百鬼斩',
+        slot: 'weapon',
+        affixes: [{ key: 'atk', value: 15 }],
+        rarity: 'legendary',
+      },
+      {
+        id: 'armor_metal',
+        name: '玄铁重甲',
+        slot: 'armor',
+        affixes: [{ key: 'def', value: 9 }],
+        rarity: 'rare',
+      },
+      {
+        id: 'helm_bronze',
+        name: '青铜盔',
+        slot: 'helm',
+        affixes: [
+          { key: 'def', value: 3 },
+          { key: 'hp', value: 10 },
+        ],
+        rarity: 'common',
+      },
+    ],
+  },
+};
+
+/** 按 ID 查找预定义副本 */
+export function getDungeonConfig(id: string): DungeonConfig | null {
+  return DUNGEON_POOL[id] ?? null;
+}
+
 export interface LootEntry {
   itemId: string;
   recipientId: EntityId | null;

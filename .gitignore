@@ -6,6 +6,9 @@ coverage/
 .vite/
 .env
 .env.local
+DEPLOY_REPORT.local.md
+dist.zip
+dist-upload.tar.gz
 # Python
 __pycache__/
 *.pyc

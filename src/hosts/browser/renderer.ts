@@ -220,22 +220,27 @@ export class GameRenderer {
     this.syncEntities(game);
 
     // 6. Day11: 程序化地形 + 村庄 (借鉴 WoC Three.js 几何)
-    // terrain mesh: 用 sim 网格宽高, 中心偏移对齐 renderer 坐标系
+    // 修: terrain-mesh 现在用 CELL_SIZE 0.18 直接生成 world 坐标, 不需缩放
+    //     中心偏移: 把 (0,0) 移到中心 (cx, cz) 网格单位
     const w = layout.width;
     const h = layout.height;
-    // 中心偏移: sim 中心 (w/2, h/2) → world 中心
-    const centerX = -((w - 1) / 2) * CELL_SIZE;
-    const centerY = ((h - 1) / 2) * CELL_SIZE;
-    this.terrainMesh = buildTerrainMesh(42, w, h);
-    this.terrainMesh.position.set(centerX, centerY, -1.5);
-    this.terrainMesh.scale.set(CELL_SIZE, CELL_SIZE, 1);
+    this.terrainMesh = buildTerrainMesh(42, w, h, CELL_SIZE);
+    // 把 sim 中心 (w/2, h/2) 移到 world (0, 0): x = (gx - w/2) * CELL_SIZE
+    this.terrainMesh.position.set(-(w / 2) * CELL_SIZE, 0, -(h / 2) * CELL_SIZE);
+    this.terrainMesh.position.y = 0; // 地形基础 y=0
     this.scene.add(this.terrainMesh);
 
-    // 村庄: 在地图中心生成 5 个建筑
-    this.buildingMeshes = settlementToMeshes(0, 0, 5, 42, 10);
+    // 村庄: 在地图 sim 中心 (w/2, h/2) 生成
+    this.buildingMeshes = settlementToMeshes(w / 2, h / 2, 5, 42, 10);
+    const ox = -(w / 2) * CELL_SIZE;
+    const oz = -(h / 2) * CELL_SIZE;
     for (const b of this.buildingMeshes) {
-      // building 的 x/z 是 sim 坐标, 转 world
-      b.position.set(b.position.x * CELL_SIZE, b.position.y * CELL_SIZE, b.position.z * CELL_SIZE);
+      // sim 中心 → world 中心: (sim_x - center) * CELL_SIZE
+      b.position.set(
+        b.position.x * CELL_SIZE + ox,
+        0,
+        b.position.z * CELL_SIZE + oz,
+      );
       this.scene.add(b);
     }
   }
